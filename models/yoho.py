@@ -2,6 +2,10 @@ import torch
 import torch.nn as nn
 
 class DepthwiseSeparableConv(nn.Module):
+    """
+    A depthwise separable convolution layer consisting of a depthwise convolution followed 
+    by a pointwise convolution, batch normalization, and ReLU activation.
+    """
     def __init__(self, in_channels, out_channels, kernel_size, stride):
         """
         Initializes the depthwise separable convolution layer.
@@ -56,6 +60,10 @@ class DepthwiseSeparableConv(nn.Module):
         return x
 
 class MobileNetBackbone(nn.Module):
+    """
+    The MobileNet backbone consisting of an initial convolution layer followed by 
+    a series of depthwise separable convolution layers.
+    """
     def __init__(self, input_shape):
         """
         Initializes the MobileNet backbone.
@@ -120,6 +128,10 @@ class MobileNetBackbone(nn.Module):
         return x
 
 class YOHO(MobileNetBackbone):
+    """
+    The YOHO model extending the MobileNet backbone with additional layers 
+    and final reshaping and convolution layers to match the desired output shape.
+    """
     def __init__(self, input_shape, output_shape):
         """
         Initializes the YOHO model by extending the MobileNet backbone.
@@ -173,8 +185,3 @@ class YOHO(MobileNetBackbone):
         # Apply the final Conv1D layer
         x = self.final_conv1d(x)
         return x
-
-if __name__ == "__main__":
-    input_shape = (1, 801, 64)  # Example input shape (channels, height, width)
-    output_shape = (6, 26, 2)   # Example output shape (channels, height, width)
-    model = YOHO(input_shape=input_shape, output_shape=output_shape)
