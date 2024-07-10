@@ -3,3 +3,6 @@
 
 # But not this file...
 !.gitignore
+
+# Not processed data
+!processed/
