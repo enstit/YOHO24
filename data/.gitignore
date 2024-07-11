@@ -4,5 +4,6 @@
 # But not this file...
 !.gitignore
 
-# Not processed data
-!processed/
+!musp.csv
+!tut.csv
+!urbansed.csv
