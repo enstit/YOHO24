@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import DataLoader
 import numpy as np
 
-from . import MelSpectrogram
+from . import AudioFile
 
 
 class YOHODataGenerator(DataLoader):
@@ -15,8 +15,8 @@ class YOHODataGenerator(DataLoader):
         input_shape: tuple,
         output_shape: tuple,
         batch_size: int = 32,
-        n_mels: int = 64,
-        fmax: int = 7500
+        shuffle: bool = True,
+
     ):
         """
         Initializes the data Generator.
@@ -34,35 +34,21 @@ class YOHODataGenerator(DataLoader):
         self.labels = labels
         self.input_shape = input_shape
         self.output_shape = output_shape
-        self.n_mels = n_mels
-        self.fmax = fmax
 
     def __len__(self):
         return len(self.file_paths)
 
     def __getitem__(self, idx):
-        file_path = self.file_paths[idx]
-        label = self.labels[idx]
 
-        print(f"Processing file: {file_path}")
-        print(f"Label: {label}")
+        audio_file = AudioFile(
+            file_path=self.file_paths[idx], labels=self.labels[idx])
 
         # Convert the audio file to a Mel spectrogram
-        mel_spectrogram = MelSpectrogram(
-            file_path=file_path,
-            n_mels=self.n_mels,
-            fmax=self.fmax
-        )
-
-        print(f"Mel spectrogram shape: {mel_spectrogram.array.shape}")
+        x = audio_file.mel_spectrogram
 
         # Normalize the Mel spectrogram
-        mel_spectrogram.normalize()
+        x.normalize()
 
-        print(
-            f"Normalized Mel spectrogram shape: {mel_spectrogram.array.shape}")
+        print(x)
 
-        # Convert to tensor: Mel spectrogram and label
-        label = torch.tensor(label, dtype=torch.long)
-
-        return mel_spectrogram.tensor, label
+        return x.tensor, audio_file.labels

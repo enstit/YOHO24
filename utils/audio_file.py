@@ -4,6 +4,22 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
+class AudioFile:
+    def __init__(self, file_path: str, labels: list = None):
+        """
+        Initializes the AudioFile class.
+
+        Args:
+            file_path (str): Path to the audio file.
+        """
+        self.file_path = file_path
+        self.labels = labels
+
+    @property
+    def mel_spectrogram(self):
+        return MelSpectrogram(file_path=self.file_path)
+
+
 class MelSpectrogram:
 
     def __init__(self, file_path: str, n_mels: int = 64, hop_lenght: int = 10, win_length: int = 25, sr: int = 16000, fmin: int = 0, fmax: int = 7500):
@@ -25,10 +41,9 @@ class MelSpectrogram:
         self.sr = sr
         self.fmin = fmin
         self.fmax = fmax
-        self.mel_spectrogram = None
+        self.mel_spectrogram = self.compute()
 
-    @property
-    def array(self, mono=True) -> np.ndarray:
+    def compute(self, mono: bool = True, normalize: bool = False) -> np.ndarray:
         """
         Converts a wav file to a Mel spectrogram.
 
@@ -38,8 +53,6 @@ class MelSpectrogram:
         Returns:
         - np.ndarray: The Mel spectrogram.
         """
-        if self.mel_spectrogram is not None:
-            return self.mel_spectrogram
 
         # Load the audio file using the native sampling rate
         y, origin_sr = librosa.load(self.file_path, sr=None)
@@ -64,9 +77,13 @@ class MelSpectrogram:
         )
 
         # Convert the Mel spectrogram to a log scale (dB)
-        if self.mel_spectrogram is None:
-            self.mel_spectrogram = librosa.power_to_db(
-                mel_spectrogram, ref=np.max)
+        mel_spectrogram = librosa.power_to_db(
+            mel_spectrogram, ref=np.max)
+
+        self.mel_spectrogram = mel_spectrogram
+
+        if normalize is True:
+            self.normalize()
 
         return self.mel_spectrogram
 
@@ -75,7 +92,7 @@ class MelSpectrogram:
         Normalizes the Mel spectrogram.
         """
         self.mel_spectrogram = (
-            self.array - np.mean(self.array)) / np.std(self.array)
+            self.mel_spectrogram - np.mean(self.mel_spectrogram)) / np.std(self.mel_spectrogram)
 
     def plot(self):
         """
@@ -83,7 +100,7 @@ class MelSpectrogram:
         """
         plt.figure(figsize=(10, 4))
         librosa.display.specshow(
-            self.array, x_axis='time', y_axis='mel', sr=self.sr, fmax=self.fmax)
+            self.mel_spectrogram, x_axis='time', y_axis='mel', sr=self.sr, fmax=self.fmax)
         plt.colorbar(format='%+2.0f dB')
         plt.title('Mel spectrogram')
         plt.tight_layout()
@@ -94,6 +111,4 @@ class MelSpectrogram:
         """
         Converts the Mel spectrogram to a PyTorch tensor.
         """
-        if self.mel_spectrogram is None:
-            return None
-        return torch.tensor(self.array).unsqueeze(0).float()
+        return torch.tensor(self.mel_spectrogram).unsqueeze(0).float()
