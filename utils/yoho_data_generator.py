@@ -1,12 +1,13 @@
+#!/usr/bin/env python
 
 import torch
-import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 import numpy as np
-from utils.mel_spectrogram import wav_to_mel_spectrogram
+
+from . import MelSpectrogram
 
 
-class AudioDataset(DataLoader):
+class YOHODataGenerator(DataLoader):
     def __init__(
         self,
         file_paths: list,
@@ -18,7 +19,7 @@ class AudioDataset(DataLoader):
         fmax: int = 7500
     ):
         """
-        Initializes the AudioDataset.
+        Initializes the data Generator.
 
         Args:
             file_paths (list): List of file paths to the audio files.
@@ -43,34 +44,25 @@ class AudioDataset(DataLoader):
         file_path = self.file_paths[idx]
         label = self.labels[idx]
 
+        print(f"Processing file: {file_path}")
+        print(f"Label: {label}")
+
         # Convert the audio file to a Mel spectrogram
-        mel_spectrogram, _ = wav_to_mel_spectrogram(
+        mel_spectrogram = MelSpectrogram(
             file_path=file_path,
             n_mels=self.n_mels,
             fmax=self.fmax
         )
 
-        # Normalize the Mel spectrogram
-        mel_spectrogram = (mel_spectrogram -
-                           np.mean(mel_spectrogram)) / np.std(mel_spectrogram)
+        print(f"Mel spectrogram shape: {mel_spectrogram.array.shape}")
 
-        # Ensure the Mel spectrogram has the right shape
-        if mel_spec.shape[1] < self.input_shape[2]:
-            """
-            If the number of time steps in the Mel spectrogram (mel_spec.shape[1]) is less than the required width 
-            (self.input_shape[2]), the spectrogram is padded with zeros (constant padding) along the time dimension to match the required width.
-            """
-            mel_spec = np.pad(
-                mel_spec, ((0, 0), (0, self.input_shape[2] - mel_spec.shape[1])), mode='constant')
-        elif mel_spec.shape[1] > self.input_shape[2]:
-            """
-            If the number of time steps in the Mel spectrogram is greater than the required width, 
-            the spectrogram is truncated by slicing it to match the required width.
-            """
-            mel_spec = mel_spec[:, :self.input_shape[2]]
+        # Normalize the Mel spectrogram
+        mel_spectrogram.normalize()
+
+        print(
+            f"Normalized Mel spectrogram shape: {mel_spectrogram.array.shape}")
 
         # Convert to tensor: Mel spectrogram and label
-        mel_spectrogram = torch.tensor(mel_spectrogram, dtype=torch.float32)
         label = torch.tensor(label, dtype=torch.long)
 
-        return mel_spectrogram, label
+        return mel_spectrogram.tensor, label
