@@ -1,50 +1,52 @@
 #!/usr/bin/env python
 
-import torch
-from torch.utils.data import DataLoader
-import numpy as np
+import pandas as pd
+from torch.utils.data import Dataset, DataLoader
 
 from . import AudioFile
+
+
+class YOHODataset(Dataset):
+    def __init__(self, annotations_file, transform=None, target_transform=None):
+        self.annotations = pd.read_csv(annotations_file)
+        self.transform = transform
+        self.target_transform = target_transform
+
+    def __len__(self):
+        return len(self.annotations)
+
+    def __getitem__(self, idx):
+
+        audio_file = AudioFile(
+            file_path=self.annotations.filepath[idx], labels=self.annotations.events[idx])
+
+        mel_spectrogram = audio_file.mel_spectrogram
+        labels = eval(audio_file.labels)
+
+        # Normalize the Mel spectrogram
+        if not mel_spectrogram.is_normalized:
+            mel_spectrogram.normalize()
+
+        mel_spectrogram = mel_spectrogram.tensor
+
+        # if self.transform:
+        #    mel_spectrogram = self.transform(mel_spectrogram)
+        # if self.target_transform:
+        #    label = self.target_transform(label)
+
+        return mel_spectrogram, labels
 
 
 class YOHODataGenerator(DataLoader):
     def __init__(
         self,
-        file_paths: list,
-        labels: list[tuple],
-        input_shape: tuple,
-        output_shape: tuple,
+        dataset: YOHODataset,
         batch_size: int = 32,
         shuffle: bool = True,
 
     ):
-        """
-        Initializes the data Generator.
-
-        Args:
-            file_paths (list): List of file paths to the audio files.
-            labels (list): List of corresponding labels.
-            input_shape (tuple): Shape of the input tensor (channels, height, width).
-            output_shape (tuple): Shape of the output tensor (channels, height, width).
-            n_mels (int): Number of Mel bands to generate.
-            fmax (int): Maximum frequency in Hz.
-          """
-
-        self.file_paths = file_paths
-        self.labels = labels
-        self.input_shape = input_shape
-        self.output_shape = output_shape
-
-    def __len__(self):
-        return len(self.file_paths)
-
-    def __getitem__(self, idx):
-
-        audio_file = AudioFile(
-            file_path=self.file_paths[idx], labels=self.labels[idx])
-
-        # Normalize the Mel spectrogram
-        if not audio_file.mel_spectrogram.is_normalized:
-            audio_file.mel_spectrogram.normalize()
-
-        return audio_file.mel_spectrogram.tensor, audio_file.labels
+        super().__init__(
+            dataset=dataset,
+            batch_size=batch_size,
+            shuffle=shuffle
+        )
