@@ -43,12 +43,8 @@ class YOHODataGenerator(DataLoader):
         audio_file = AudioFile(
             file_path=self.file_paths[idx], labels=self.labels[idx])
 
-        # Convert the audio file to a Mel spectrogram
-        x = audio_file.mel_spectrogram
-
         # Normalize the Mel spectrogram
-        x.normalize()
+        if not audio_file.mel_spectrogram.is_normalized:
+            audio_file.mel_spectrogram.normalize()
 
-        print(x)
-
-        return x.tensor, audio_file.labels
+        return audio_file.mel_spectrogram.tensor, audio_file.labels

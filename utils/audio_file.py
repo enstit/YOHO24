@@ -42,6 +42,7 @@ class MelSpectrogram:
         self.fmin = fmin
         self.fmax = fmax
         self.mel_spectrogram = self.compute()
+        self.is_normalized = False
 
     def compute(self, mono: bool = True, normalize: bool = False) -> np.ndarray:
         """
@@ -91,8 +92,11 @@ class MelSpectrogram:
         """
         Normalizes the Mel spectrogram.
         """
+        if self.is_normalized:
+            return
         self.mel_spectrogram = (
             self.mel_spectrogram - np.mean(self.mel_spectrogram)) / np.std(self.mel_spectrogram)
+        self.is_normalized = True
 
     def plot(self):
         """
