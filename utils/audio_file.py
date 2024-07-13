@@ -1,11 +1,16 @@
-import torch
 import librosa
 import numpy as np
 from matplotlib import pyplot as plt
 
 
 class AudioFile:
-    def __init__(self, filepath: str, labels: list = None, duration: float = None, sampling_rate: int = 16_000):
+    """
+    The AudioFile class represents an audio file.
+    It provides methods to load the audio file, extract features, and plot the
+    waveform and the Mel spectrogram.
+    """
+
+    def __init__(self, filepath: str, labels: list = None, duration: float = None, n_channels: int = 1, sr: int = 44_100):
         """
         Initializes the AudioFile class.
 
@@ -13,24 +18,60 @@ class AudioFile:
             filepath (str): Path to the audio file.
             labels (list): List of labels for the audio file.
             duration (float): Duration of the audio file, in seconds.
-            sampling_rate (int): Sampling rate for the audio file (default: 16,000 Hz).
+            n_channels (int): Number of channels in the audio file.
+            sr (int): Sampling rate for the audio file.
         """
-        self.filepath = filepath
-        self.labels = labels
+        self.filepath = filepath  # Path to the audio file
+        self.labels = labels  # List of labels for the audio file
+        self.duration = duration  # Duration of the audio file, in seconds
+        self.n_channels = n_channels  # Number of channels in the audio file
+        self.sr = sr  # Sampling rate for the audio file
+
+    @property
+    def frequency_bins(self):
+        raise NotImplementedError
+
+    @property
+    def waveform(self):
+        y, _ = librosa.load(self.filepath, sr=self.sr)
+        return y
 
     @property
     def mel_spectrogram(self):
         return MelSpectrogram(audiofile=self)
 
+    def plot(self):
+        plt.figure(figsize=(10, 4))
+        plt.plot(self.waveform)
+        plt.title(f'Audio waveform: {self.filepath}')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Amplitude (dB)')
+        # Format the x labels to show the seconds in the [MM:SS.sss] format (until the last tick that shows the total duration)
+        plt.xticks(
+            np.arange(0, len(self.waveform), step=int(
+                len(self.waveform) / 10)),
+            [f'{int(i / self.sr // 60):02d}:{int(i / self.sr % 60):02d}.{int(i % self.sr):03d}' for i in np.arange(
+                0, len(self.waveform), step=int(len(self.waveform) / 10))],
+            rotation=45, ha='right'
+        )
+        plt.tight_layout()
+        plt.show()
+
 
 class MelSpectrogram:
+    """
+    The MelSpectrogram class represents a Mel spectrogram.
+    It provides methods to compute and plot the Mel spectrogram of a given
+    audio file.
+    """
 
-    def __init__(self, audiofile: AudioFile, n_mels: int = 64, hop_lenght: int = 10, win_length: int = 25, sr: int = 16_000, fmin: int = 0, fmax: int = 7_500):
+    def __init__(self, audiofile: AudioFile, n_mels: int = 64, hop_lenght: int = 10, win_length: int = 25, sr: int = 44_100, fmin: int = 0, fmax: int = 7_500):
         """
         Initializes the MelSpectrogram class.
 
         Args:
             n_mels (int): The number of Mel bands to generate.
+            hop_lenght (int): Number of samples between successive frames (hop size).
             fmin (int): Minimum frequency in Hz.
             fmax (int): Maximum frequency in Hz.
             sr (int): Sampling rate for the audio file.
@@ -45,23 +86,16 @@ class MelSpectrogram:
         self.fmin = fmin
         self.fmax = fmax
         self.raw = None
-        self.compute_spectrogram()
+        self._compute_spectrogram()
 
     @property
-    def tensor(self):
+    def normalized(self) -> np.ndarray:
         """
-        Converts the Mel spectrogram to a PyTorch tensor.
-        """
-        return torch.tensor(self.raw).unsqueeze(0).float()
-
-    @property
-    def normalized(self):
-        """
-        Retunr the normalized Mel spectrogram.
+        Return the normalized Mel spectrogram.
         """
         return (self.raw - np.mean(self.raw)) / np.std(self.raw)
 
-    def compute_spectrogram(self, mono: bool = True) -> np.ndarray:
+    def _compute_spectrogram(self, mono: bool = True) -> np.ndarray:
         """
         Converts a wav file to a Mel spectrogram.
 
