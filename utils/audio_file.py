@@ -5,24 +5,27 @@ from matplotlib import pyplot as plt
 
 
 class AudioFile:
-    def __init__(self, file_path: str, labels: list = None):
+    def __init__(self, filepath: str, labels: list = None, duration: float = None, sampling_rate: int = 16_000):
         """
         Initializes the AudioFile class.
 
         Args:
-            file_path (str): Path to the audio file.
+            filepath (str): Path to the audio file.
+            labels (list): List of labels for the audio file.
+            duration (float): Duration of the audio file, in seconds.
+            sampling_rate (int): Sampling rate for the audio file (default: 16,000 Hz).
         """
-        self.file_path = file_path
+        self.filepath = filepath
         self.labels = labels
 
     @property
     def mel_spectrogram(self):
-        return MelSpectrogram(file_path=self.file_path)
+        return MelSpectrogram(audiofile=self)
 
 
 class MelSpectrogram:
 
-    def __init__(self, file_path: str, n_mels: int = 64, hop_lenght: int = 10, win_length: int = 25, sr: int = 16000, fmin: int = 0, fmax: int = 7500):
+    def __init__(self, audiofile: AudioFile, n_mels: int = 64, hop_lenght: int = 10, win_length: int = 25, sr: int = 16_000, fmin: int = 0, fmax: int = 7_500):
         """
         Initializes the MelSpectrogram class.
 
@@ -34,7 +37,7 @@ class MelSpectrogram:
             hop_length (int): Number of samples between successive frames (hop size).
             win_length (int): Size of the FFT window (window size).
         """
-        self.file_path = file_path
+        self.audiofile = audiofile
         self.n_mels = n_mels
         self.hop_lenght = hop_lenght
         self.win_length = win_length
@@ -56,7 +59,7 @@ class MelSpectrogram:
         """
 
         # Load the audio file using the native sampling rate
-        y, origin_sr = librosa.load(self.file_path, sr=None)
+        y, origin_sr = librosa.load(self.audiofile.filepath, sr=None)
 
         # Resample the target sample rate
         if origin_sr != self.sr:

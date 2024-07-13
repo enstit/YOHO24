@@ -7,21 +7,20 @@ from . import AudioFile
 
 
 class YOHODataset(Dataset):
-    def __init__(self, annotations_file, transform=None, target_transform=None):
-        self.annotations = pd.read_csv(annotations_file)
+    def __init__(self, audios: list[AudioFile], transform=None, target_transform=None):
+        self.audios = audios
         self.transform = transform
         self.target_transform = target_transform
 
     def __len__(self):
-        return len(self.annotations)
+        return len(self.audios)
 
     def __getitem__(self, idx):
 
-        audio_file = AudioFile(
-            file_path=self.annotations.filepath[idx], labels=self.annotations.events[idx])
+        audio = self.audios[idx]
 
-        mel_spectrogram = audio_file.mel_spectrogram
-        labels = eval(audio_file.labels)
+        mel_spectrogram = audio.mel_spectrogram
+        labels = eval(audio.labels)
 
         # Normalize the Mel spectrogram
         if not mel_spectrogram.is_normalized:
