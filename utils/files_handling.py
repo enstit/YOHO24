@@ -4,6 +4,7 @@ import requests
 import zipfile
 import tarfile
 from tqdm import tqdm
+import librosa
 
 
 def get_files(data_path: str, extensions: str) -> list:
@@ -30,11 +31,10 @@ def write_data_to_csv(data: dict, output_path: str) -> None:
     """
     with open(output_path, 'w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['filepath', 'events'])
+        writer.writerow(['filepath', 'events', 'freq_bins', 'duration'])
 
         for key, value in data.items():
-            if value:
-                writer.writerow([key, value])
+            writer.writerow([key, value['events'], value['freq_bins'], value['duration']])
 
 
 def download_file(url: str, save_path: str) -> None:
@@ -69,3 +69,16 @@ def uncompress_file(compressed_path: str, extract_to: str) -> None:
             tar_ref.extractall(extract_to)
     print(f"Extracted {compressed_path} to {extract_to}")
     os.remove(compressed_path)
+
+
+def get_audio_duration(filepath: str) -> float:
+    """
+    Get the duration of an audio file in seconds.
+
+    Parameters:
+    - filepath (str): Path to the audio file.
+
+    Returns:
+    - duration (float): Duration of the audio file in seconds.
+    """
+    return librosa.get_duration(filename=filepath)
