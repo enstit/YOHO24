@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import pandas as pd
+import torch
 from torch.utils.data import Dataset, DataLoader
 
 from . import AudioFile
@@ -17,23 +17,19 @@ class YOHODataset(Dataset):
 
     def __getitem__(self, idx):
 
-        audio = self.audios[idx]
+        # Get the audio object related to the index
+        audio: AudioFile = self.audios[idx]
 
-        mel_spectrogram = audio.mel_spectrogram
-        labels = eval(audio.labels)
+        normalized_mel_spectrogram = audio.mel_spectrogram.normalized
 
-        # Normalize the Mel spectrogram
-        if not mel_spectrogram.is_normalized:
-            mel_spectrogram.normalize()
+        # Convert the Mel spectrogram to a PyTorch tensor
+        normalized_mel_spectrogram_tensor = torch.tensor(
+            normalized_mel_spectrogram).unsqueeze(0).float()
 
-        mel_spectrogram = mel_spectrogram.tensor
+        # Get the labels for the audio file
+        labels = audio.labels
 
-        # if self.transform:
-        #    mel_spectrogram = self.transform(mel_spectrogram)
-        # if self.target_transform:
-        #    label = self.target_transform(label)
-
-        return mel_spectrogram, labels
+        return normalized_mel_spectrogram_tensor, labels
 
 
 class YOHODataGenerator(DataLoader):

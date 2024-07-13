@@ -44,10 +44,24 @@ class MelSpectrogram:
         self.sr = sr
         self.fmin = fmin
         self.fmax = fmax
-        self.mel_spectrogram = self.compute()
-        self.is_normalized = False
+        self.raw = None
+        self.compute_spectrogram()
 
-    def compute(self, mono: bool = True, normalize: bool = False) -> np.ndarray:
+    @property
+    def tensor(self):
+        """
+        Converts the Mel spectrogram to a PyTorch tensor.
+        """
+        return torch.tensor(self.raw).unsqueeze(0).float()
+
+    @property
+    def normalized(self):
+        """
+        Retunr the normalized Mel spectrogram.
+        """
+        return (self.raw - np.mean(self.raw)) / np.std(self.raw)
+
+    def compute_spectrogram(self, mono: bool = True) -> np.ndarray:
         """
         Converts a wav file to a Mel spectrogram.
 
@@ -84,22 +98,7 @@ class MelSpectrogram:
         mel_spectrogram = librosa.power_to_db(
             mel_spectrogram, ref=np.max)
 
-        self.mel_spectrogram = mel_spectrogram
-
-        if normalize is True:
-            self.normalize()
-
-        return self.mel_spectrogram
-
-    def normalize(self):
-        """
-        Normalizes the Mel spectrogram.
-        """
-        if self.is_normalized:
-            return
-        self.mel_spectrogram = (
-            self.mel_spectrogram - np.mean(self.mel_spectrogram)) / np.std(self.mel_spectrogram)
-        self.is_normalized = True
+        self.raw = mel_spectrogram
 
     def plot(self):
         """
@@ -112,10 +111,3 @@ class MelSpectrogram:
         plt.title('Mel spectrogram')
         plt.tight_layout()
         plt.show()
-
-    @property
-    def tensor(self):
-        """
-        Converts the Mel spectrogram to a PyTorch tensor.
-        """
-        return torch.tensor(self.mel_spectrogram).unsqueeze(0).float()
