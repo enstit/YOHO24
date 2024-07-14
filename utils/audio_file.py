@@ -49,11 +49,11 @@ class AudioFile:
         plt.ylabel('Amplitude (dB)')
         # Format the x labels to show the seconds in the [MM:SS.sss] format (until the last tick that shows the total duration)
         plt.xticks(
-            np.arange(0, len(self.waveform), step=int(
+            np.arange(0, len(self.waveform) + 1, step=int(
                 len(self.waveform) / 10)),
-            [f'{int(i / self.sr // 60):02d}:{int(i / self.sr % 60):02d}.{int(i % self.sr):03d}' for i in np.arange(
-                0, len(self.waveform), step=int(len(self.waveform) / 10))],
-            rotation=45, ha='right'
+            [f"[{int(i / self.sr // 60):02d}:{int(i / self.sr % 60):02d}.{int(i % self.sr):03d}]" for i in np.arange(
+                0, len(self.waveform) + 1, step=int(len(self.waveform) / 10))],
+            rotation=60, ha='right'
         )
         plt.tight_layout()
         plt.show()

@@ -23,8 +23,8 @@ class YOHODataset(Dataset):
         self.target_transform = target_transform
 
         self.n_mels = n_mels  # Number of Mel bins
-        self.hop_length = hop_length
-        self.win_length = win_length
+        self.hop_length = hop_length  # Length of the hop between STFT windows
+        self.win_length = win_length  # Length of the STFT window
 
     def __len__(self):
         return len(self.audios)
@@ -43,6 +43,17 @@ class YOHODataset(Dataset):
         labels = self.audios[idx].labels
 
         return normalized_mel_spectrogram_tensor, labels
+
+
+class UrbanSEDYOHODataset(YOHODataset):
+
+    def __init__(self, audios: list[AudioFile], labels: list[str], transform=None, target_transform=None):
+        # The UrbanSEDYOHODataset class is a subclass of the YOHODataset class
+        # where the number of Mel bins is set to 40, the hop length is set to 441,
+        # and the window length is set to 1764 as specifyied in the original
+        # YOHO paper.
+        super().__init__(audios, labels, transform, target_transform,
+                         n_mels=40, hop_length=441, win_length=1764)
 
 
 class YOHODataGenerator(DataLoader):
