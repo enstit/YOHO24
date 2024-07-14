@@ -10,31 +10,40 @@ class AudioFile:
     waveform and the Mel spectrogram.
     """
 
-    def __init__(self, filepath: str, labels: list = None, duration: float = None, n_channels: int = 1, sr: int = 44_100):
+    def __init__(
+        self,
+        filepath: str,
+        labels: list = None,
+        n_channels: int = 1,
+    ):
         """
         Initializes the AudioFile class.
 
         Args:
-            filepath (str): Path to the audio file.
-            labels (list): List of labels for the audio file.
-            duration (float): Duration of the audio file, in seconds.
-            n_channels (int): Number of channels in the audio file.
-            sr (int): Sampling rate for the audio file.
+            filepath (str): Path to the audio file
+            labels (list): List of labels for the audio file with related start and stop times
+            n_channels (int): Number of channels in the audio file
         """
         self.filepath = filepath  # Path to the audio file
-        self.labels = labels  # List of labels for the audio file
-        self.duration = duration  # Duration of the audio file, in seconds
+        self.labels = labels  # List of labels for the audio file with related start and stop times
         self.n_channels = n_channels  # Number of channels in the audio file
-        self.sr = sr  # Sampling rate for the audio file
 
     @property
-    def frequency_bins(self):
-        raise NotImplementedError
+    def duration(self):
+        return librosa.get_duration(path=self.filepath)
+
+    @property
+    def sr(self):
+        return librosa.get_samplerate(path=self.filepath)
 
     @property
     def waveform(self):
         y, _ = librosa.load(self.filepath, sr=self.sr)
         return y
+
+    @property
+    def frequency_bins(self):
+        raise NotImplementedError
 
     @property
     def mel_spectrogram(self):
@@ -82,9 +91,6 @@ class MelSpectrogram:
         self.n_mels = n_mels
         self.hop_lenght = hop_lenght
         self.win_length = win_length
-        self.sr = sr
-        self.fmin = fmin
-        self.fmax = fmax
         self.raw = None
         self._compute_spectrogram()
 
@@ -95,7 +101,7 @@ class MelSpectrogram:
         """
         return (self.raw - np.mean(self.raw)) / np.std(self.raw)
 
-    def _compute_spectrogram(self, mono: bool = True) -> np.ndarray:
+    def _compute_spectrogram(self) -> np.ndarray:
         """
         Converts a wav file to a Mel spectrogram.
 
@@ -107,23 +113,17 @@ class MelSpectrogram:
         """
 
         # Load the audio file using the native sampling rate
-        y, origin_sr = librosa.load(self.audiofile.filepath, sr=None)
+        y, origin_sr = self.audiofile.waveform, self.audiofile.sr
 
         # Resample the target sample rate
         if origin_sr != self.sr:
             y = librosa.resample(y=y, orig_sr=origin_sr, target_sr=self.sr)
-
-        # Convert to mono by averaging channels (if needed)
-        if mono is True and y.ndim > 1:
-            y = np.mean(y, axis=0)
 
         # Compute the Mel spectrogram
         mel_spectrogram = librosa.feature.melspectrogram(
             y=y,
             sr=self.sr,
             n_mels=self.n_mels,
-            fmin=self.fmin,
-            fmax=self.fmax,
             hop_length=self.hop_lenght,
             win_length=self.win_length
         )

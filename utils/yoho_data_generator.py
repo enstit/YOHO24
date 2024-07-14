@@ -7,9 +7,18 @@ from . import AudioFile
 
 
 class YOHODataset(Dataset):
-    def __init__(self, audios: list[AudioFile], transform=None, target_transform=None):
-        self.audios = audios
+    """
+    The YOHODataset class represents a dataset of audio files.
+    It provides methods to load the audio files and their labels, and to apply
+    transformations to the audio files and labels.
+    """
+
+    def __init__(self, audios: list[AudioFile], labels: list[str], transform=None, target_transform=None):
+        self.audios = audios  # List of AudioFile objects representing the audio files
+        self.labels = labels  # List of unique labels in the dataset
+        # Function to apply to the audio files before returning them
         self.transform = transform
+        # Function to apply to the labels before returning them
         self.target_transform = target_transform
 
     def __len__(self):
