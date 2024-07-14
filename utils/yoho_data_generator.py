@@ -13,7 +13,8 @@ class YOHODataset(Dataset):
     transformations to the audio files and labels.
     """
 
-    def __init__(self, audios: list[AudioFile], labels: list[str], transform=None, target_transform=None):
+    def __init__(self, audios: list[AudioFile], labels: list[str], transform=None, target_transform=None, n_mels: int = None, hop_length: int = None, win_length: int = None):
+
         self.audios = audios  # List of AudioFile objects representing the audio files
         self.labels = labels  # List of unique labels in the dataset
         # Function to apply to the audio files before returning them
@@ -21,22 +22,25 @@ class YOHODataset(Dataset):
         # Function to apply to the labels before returning them
         self.target_transform = target_transform
 
+        self.n_mels = n_mels  # Number of Mel bins
+        self.hop_length = hop_length
+        self.win_length = win_length
+
     def __len__(self):
         return len(self.audios)
 
     def __getitem__(self, idx):
 
-        # Get the audio object related to the index
-        audio: AudioFile = self.audios[idx]
+        # Get the Mel spectrogram of the idx-AudioFile of the dataset
+        mel_spectrogram = self.audios[idx].mel_spectrogram(
+            n_mels=self.n_mels, hop_length=self.hop_length, win_length=self.win_length)
 
-        normalized_mel_spectrogram = audio.mel_spectrogram.normalized
-
-        # Convert the Mel spectrogram to a PyTorch tensor
+        # Convert the normalized Mel spectrogram to a PyTorch tensor
         normalized_mel_spectrogram_tensor = torch.tensor(
-            normalized_mel_spectrogram).unsqueeze(0).float()
+            mel_spectrogram.normalized).unsqueeze(0).float()
 
         # Get the labels for the audio file
-        labels = audio.labels
+        labels = self.audios[idx].labels
 
         return normalized_mel_spectrogram_tensor, labels
 

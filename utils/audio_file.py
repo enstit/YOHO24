@@ -41,14 +41,6 @@ class AudioFile:
         y, _ = librosa.load(self.filepath, sr=self.sr)
         return y
 
-    @property
-    def frequency_bins(self):
-        raise NotImplementedError
-
-    @property
-    def mel_spectrogram(self):
-        return MelSpectrogram(audiofile=self)
-
     def plot(self):
         plt.figure(figsize=(10, 4))
         plt.plot(self.waveform)
@@ -66,6 +58,9 @@ class AudioFile:
         plt.tight_layout()
         plt.show()
 
+    def mel_spectrogram(self, n_mels: int = 64, hop_length: int = 10, win_length: int = 25):
+        return MelSpectrogram(audiofile=self, n_mels=n_mels, hop_length=hop_length, win_length=win_length)
+
 
 class MelSpectrogram:
     """
@@ -74,22 +69,18 @@ class MelSpectrogram:
     audio file.
     """
 
-    def __init__(self, audiofile: AudioFile, n_mels: int = 64, hop_lenght: int = 10, win_length: int = 25, sr: int = 44_100, fmin: int = 0, fmax: int = 7_500):
+    def __init__(self, audiofile: AudioFile, n_mels: int = 64, hop_length: int = 10, win_length: int = 25):
         """
         Initializes the MelSpectrogram class.
 
         Args:
             n_mels (int): The number of Mel bands to generate.
-            hop_lenght (int): Number of samples between successive frames (hop size).
-            fmin (int): Minimum frequency in Hz.
-            fmax (int): Maximum frequency in Hz.
-            sr (int): Sampling rate for the audio file.
             hop_length (int): Number of samples between successive frames (hop size).
             win_length (int): Size of the FFT window (window size).
         """
         self.audiofile = audiofile
         self.n_mels = n_mels
-        self.hop_lenght = hop_lenght
+        self.hop_length = hop_length
         self.win_length = win_length
         self.raw = None
         self._compute_spectrogram()
@@ -112,19 +103,12 @@ class MelSpectrogram:
         - np.ndarray: The Mel spectrogram.
         """
 
-        # Load the audio file using the native sampling rate
-        y, origin_sr = self.audiofile.waveform, self.audiofile.sr
-
-        # Resample the target sample rate
-        if origin_sr != self.sr:
-            y = librosa.resample(y=y, orig_sr=origin_sr, target_sr=self.sr)
-
-        # Compute the Mel spectrogram
+        # Compute the Mel spectrogram with provided parameters
         mel_spectrogram = librosa.feature.melspectrogram(
-            y=y,
-            sr=self.sr,
+            y=self.audiofile.waveform,
+            sr=self.audiofile.sr,
             n_mels=self.n_mels,
-            hop_length=self.hop_lenght,
+            hop_length=self.hop_length,
             win_length=self.win_length
         )
 
@@ -134,14 +118,18 @@ class MelSpectrogram:
 
         self.raw = mel_spectrogram
 
+    @property
+    def shape(self):
+        return self.raw.shape
+
     def plot(self):
         """
         Plots the Mel spectrogram.
         """
         plt.figure(figsize=(10, 4))
+        plt.title(f'Mel spectrogram: {self.audiofile.filepath}')
         librosa.display.specshow(
-            self.mel_spectrogram, x_axis='time', y_axis='mel', sr=self.sr, fmax=self.fmax)
+            data=self.raw, sr=self.audiofile.sr, x_axis='frames', y_axis='mel')
         plt.colorbar(format='%+2.0f dB')
-        plt.title('Mel spectrogram')
         plt.tight_layout()
         plt.show()
