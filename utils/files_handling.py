@@ -31,10 +31,10 @@ def write_data_to_csv(data: dict, output_path: str) -> None:
     """
     with open(output_path, 'w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['filepath', 'events', 'freq_bins', 'duration'])
+        writer.writerow(['filepath', 'events'])
 
         for key, value in data.items():
-            writer.writerow([key, value['events'], value['freq_bins'], value['duration']])
+            writer.writerow([key, value])
 
 
 def download_file(url: str, save_path: str) -> None:
