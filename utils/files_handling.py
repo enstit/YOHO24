@@ -69,19 +69,6 @@ def uncompress_file(compressed_path: str, extract_to: str) -> None:
             tar_ref.extractall(extract_to)
     else:
         raise ValueError("Unsupported file type for uncompression.")
-    
+
     print(f"Extracted {compressed_path} to {extract_to}")
     os.remove(compressed_path)
-
-
-def get_audio_duration(filepath: str) -> float:
-    """
-    Get the duration of an audio file in seconds.
-
-    Parameters:
-    - filepath (str): Path to the audio file.
-
-    Returns:
-    - duration (float): Duration of the audio file in seconds.
-    """
-    return librosa.get_duration(filename=filepath)

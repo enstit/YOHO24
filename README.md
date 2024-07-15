@@ -13,7 +13,7 @@ Following the introduction of You-Only-Look-Once (YOLO) model in 2015[^1], which
 
 ## Datasets
 The datasets used in this project are (almost) the same ones used in [the original YOHO paper](https://doi.org/10.48550/arXiv.2109.00962) to evaluate its prformances, with the exception of the *18h of audio from BBC Radio Devon* dataset.
-We could not update in this repository all the raw files, but the [`datasets.ipynb`](./notebooks/datasets.ipynb) file contains the code to automatically download them.
+We could not update in this repository all the raw files, but the [`00_datasets.ipynb`](./notebooks/00_datasets.ipynb) file contains the code to automatically download them.
 Regarding the relevant licenses, please refer to the individual sources.
 
 ## License
