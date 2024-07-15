@@ -67,6 +67,9 @@ def uncompress_file(compressed_path: str, extract_to: str) -> None:
     elif compressed_path.endswith('.tar') or compressed_path.endswith('.tar.gz') or compressed_path.endswith('.tar.bz2'):
         with tarfile.open(compressed_path, 'r') as tar_ref:
             tar_ref.extractall(extract_to)
+    else:
+        raise ValueError("Unsupported file type for uncompression.")
+    
     print(f"Extracted {compressed_path} to {extract_to}")
     os.remove(compressed_path)
 

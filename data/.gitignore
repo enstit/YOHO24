@@ -4,6 +4,5 @@
 # But not this file...
 !.gitignore
 
-!musp.csv
-!tut.csv
-!urbansed.csv
+!tut.train.csv
+!tut.evaluation.csv
