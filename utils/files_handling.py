@@ -1,10 +1,9 @@
 import os
 import csv
-import requests
+import httpx
 import zipfile
 import tarfile
 from tqdm import tqdm
-import librosa
 
 
 def get_files(data_path: str, extensions: str) -> list:
@@ -45,10 +44,10 @@ def download_file(url: str, save_path: str) -> None:
     - url (str): URL of the file to download.
     - save_path (str): Local path to save the downloaded file.
     """
-    response = requests.get(url, stream=True)
-    with open(save_path, 'wb') as file:
-        for chunk in tqdm(response.iter_content(chunk_size=128)):
-            file.write(chunk)
+    with httpx.stream("GET", url) as response:
+        with open(save_path, 'wb') as file:
+            for chunk in tqdm(response.iter_bytes(chunk_size=128)):
+                file.write(chunk)
     print(f"Downloaded {url} to {save_path}")
 
 

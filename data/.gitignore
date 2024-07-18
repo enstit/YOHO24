@@ -1,8 +1,7 @@
 # Ignore everything
 *
 
-# But not this file...
+# But not these files...
 !.gitignore
-
 !tut.train.csv
 !tut.evaluation.csv
