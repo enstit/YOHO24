@@ -25,7 +25,9 @@ class AudioFile:
             n_channels (int): Number of channels in the audio file
         """
         self.filepath = filepath  # Path to the audio file
-        self.labels = labels  # List of labels for the audio file with related start and stop times
+        self.labels = eval(
+            labels
+        )  # List of labels for the audio file with related start and stop times
         self.n_channels = n_channels  # Number of channels in the audio file
 
     @property
@@ -44,22 +46,30 @@ class AudioFile:
     def plot(self):
         plt.figure(figsize=(10, 4))
         plt.plot(self.waveform)
-        plt.title(f'Audio waveform: {self.filepath}')
-        plt.xlabel('Time (s)')
-        plt.ylabel('Amplitude (dB)')
+        plt.title(f"Audio waveform: {self.filepath}")
+        plt.xlabel("Time (s)")
+        plt.ylabel("Amplitude (dB)")
         # Format the x labels to show the seconds in the [MM:SS.sss] format (until the last tick that shows the total duration)
         plt.xticks(
-            np.arange(0, len(self.waveform) + 1, step=int(
-                len(self.waveform) / 10)),
-            [f"[{int(i / self.sr // 60):02d}:{int(i / self.sr % 60):02d}.{int(i % self.sr):03d}]" for i in np.arange(
-                0, len(self.waveform) + 1, step=int(len(self.waveform) / 10))],
-            rotation=60, ha='right'
+            np.arange(0, len(self.waveform) + 1, step=int(len(self.waveform) / 10)),
+            [
+                f"[{int(i / self.sr // 60):02d}:{int(i / self.sr % 60):02d}.{int(i % self.sr):03d}]"
+                for i in np.arange(
+                    0, len(self.waveform) + 1, step=int(len(self.waveform) / 10)
+                )
+            ],
+            rotation=60,
+            ha="right",
         )
         plt.tight_layout()
         plt.show()
 
-    def mel_spectrogram(self, n_mels: int = 64, hop_length: int = 10, win_length: int = 25):
-        return MelSpectrogram(audiofile=self, n_mels=n_mels, hop_length=hop_length, win_length=win_length)
+    def mel_spectrogram(
+        self, n_mels: int = 64, hop_length: int = 10, win_length: int = 25
+    ):
+        return MelSpectrogram(
+            audiofile=self, n_mels=n_mels, hop_length=hop_length, win_length=win_length
+        )
 
 
 class MelSpectrogram:
@@ -69,7 +79,13 @@ class MelSpectrogram:
     audio file.
     """
 
-    def __init__(self, audiofile: AudioFile, n_mels: int = 64, hop_length: int = 10, win_length: int = 25):
+    def __init__(
+        self,
+        audiofile: AudioFile,
+        n_mels: int = 64,
+        hop_length: int = 10,
+        win_length: int = 25,
+    ):
         """
         Initializes the MelSpectrogram class.
 
@@ -109,12 +125,11 @@ class MelSpectrogram:
             sr=self.audiofile.sr,
             n_mels=self.n_mels,
             hop_length=self.hop_length,
-            win_length=self.win_length
+            win_length=self.win_length,
         )
 
         # Convert the Mel spectrogram to a log scale (dB)
-        mel_spectrogram = librosa.power_to_db(
-            mel_spectrogram, ref=np.max)
+        mel_spectrogram = librosa.power_to_db(mel_spectrogram, ref=np.max)
 
         self.raw = mel_spectrogram
 
@@ -127,9 +142,10 @@ class MelSpectrogram:
         Plots the Mel spectrogram.
         """
         plt.figure(figsize=(10, 4))
-        plt.title(f'Mel spectrogram: {self.audiofile.filepath}')
+        plt.title(f"Mel spectrogram: {self.audiofile.filepath}")
         librosa.display.specshow(
-            data=self.raw, sr=self.audiofile.sr, x_axis='frames', y_axis='mel')
-        plt.colorbar(format='%+2.0f dB')
+            data=self.raw, sr=self.audiofile.sr, x_axis="frames", y_axis="mel"
+        )
+        plt.colorbar(format="%+2.0f dB")
         plt.tight_layout()
         plt.show()
