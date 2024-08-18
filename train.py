@@ -11,12 +11,6 @@ from models import YOHO
 def get_loss_function():
     return nn.MSELoss()
 
-def get_optimizer(model):
-    return optim.Adam(
-        model.parameters(), 
-        lr=0.001
-    )
-
 def save_checkpoint(state, filename="checkpoint.pth.tar"):
     torch.save(state, filename)
 
@@ -149,7 +143,7 @@ if __name__ == "__main__":
     model = model.to(device)
     
     # Get optimizer
-    optimizer = get_optimizer(model)
+    optimizer = model.get_optimizer()
 
     # Load the model checkpoint if it exists
     model, optimizer, start_epoch, _ = load_checkpoint(model, optimizer)

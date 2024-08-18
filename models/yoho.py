@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import torch.nn as nn
-
+import torch.optim as optim
 
 class DepthwiseSeparableConv(nn.Module):
     """
@@ -15,7 +15,8 @@ class DepthwiseSeparableConv(nn.Module):
         in_channels: int,
         out_channels: int,
         kernel_size: int | tuple,
-        stride: int | tuple
+        stride: int | tuple,
+        dropout_rate: float = 0.1
     ):
         """
         Initializes the depthwise separable convolution layer.
@@ -29,27 +30,21 @@ class DepthwiseSeparableConv(nn.Module):
         super(DepthwiseSeparableConv, self).__init__()
 
         self.depthwise = nn.Conv2d(
-            in_channels,
-            in_channels,
-            kernel_size=kernel_size,
-            stride=stride,
-            padding=kernel_size//2,
-            groups=in_channels,
-            bias=False
+            in_channels, in_channels, kernel_size=kernel_size,
+            stride=stride, padding=kernel_size//2,
+            groups=in_channels, bias=False
         )
 
         self.pointwise = nn.Conv2d(
-            in_channels,
-            out_channels,
-            kernel_size=1,
-            stride=1,
-            padding=0,
-            bias=False
+            in_channels, out_channels,
+            kernel_size=1, stride=1,
+            padding=0, bias=False
         )
 
         self.bn_depthwise = nn.BatchNorm2d(in_channels, eps=1e-4)
         self.bn_pointwise = nn.BatchNorm2d(out_channels, eps=1e-4)
         self.relu = nn.ReLU(inplace=True)
+        self.dropout = nn.Dropout(p=dropout_rate)
 
     def forward(self, x):
         """
@@ -67,6 +62,7 @@ class DepthwiseSeparableConv(nn.Module):
         x = self.pointwise(x)
         x = self.bn_pointwise(x)
         x = self.relu(x)
+        x = self.dropout(x)
         return x
 
 
@@ -76,7 +72,7 @@ class MobileNetBackbone(nn.Module):
     by a series of depthwise separable convolution layers.
     """
 
-    def __init__(self, input_shape: tuple):
+    def __init__(self, input_shape: tuple, dropout_rate: float = 0.1):
         """
         Initializes the MobileNet backbone.
 
@@ -118,14 +114,14 @@ class MobileNetBackbone(nn.Module):
         for kernel_size, stride, out_channels in LAYER_DEFS:
             layers.append(
                 DepthwiseSeparableConv(
-                    in_channels,
-                    out_channels,
-                    kernel_size=kernel_size[0],
-                    stride=stride
+                    in_channels, out_channels,
+                    kernel_size=kernel_size[0], stride=stride,
+                    dropout_rate=dropout_rate
                 )
             )
-            in_channels = out_channels  # Update the input channels for the
-            # next layer
+
+            # Update the input channels for the next layer
+            in_channels = out_channels  
 
         self.layers = nn.Sequential(*layers)
 
@@ -151,7 +147,12 @@ class YOHO(MobileNetBackbone):
     shape.
     """
 
-    def __init__(self, input_shape: tuple, output_shape: tuple):
+    def __init__(
+            self, 
+            input_shape: tuple, 
+            output_shape: tuple, 
+            dropout_rate: float = 0.1
+            ):
         """
         Initializes the YOHO model by extending the MobileNet backbone.
 
@@ -161,7 +162,7 @@ class YOHO(MobileNetBackbone):
             output_shape (tuple): Shape of the output tensor (channels, height,
                                   width).
         """
-        super(YOHO, self).__init__(input_shape)
+        super(YOHO, self).__init__(input_shape, dropout_rate)
 
         self.output_shape = output_shape
 
@@ -177,8 +178,10 @@ class YOHO(MobileNetBackbone):
         for kernel_size, stride, out_channels in ADDITIONAL_LAYER_DEFS:
             layers.append(DepthwiseSeparableConv(
                 in_channels, out_channels, kernel_size=kernel_size[0],
-                stride=stride)
+                stride=stride, dropout_rate=dropout_rate)
             )
+
+            # Update the input channels for the next layer
             in_channels = out_channels
 
         self.additional_layers = nn.Sequential(*layers)
@@ -207,9 +210,36 @@ class YOHO(MobileNetBackbone):
         # Reshape the output tensor
         x = self.final_reshape(x)
         batch_size, _, sx, sy = x.shape
+
         # Reshape to match (batch_size, channels, time)
         x = x.view(batch_size, 256, -1)
 
         # Apply the final Conv1D layer
         x = self.final_conv1d(x)
         return x
+
+
+    def get_optimizer(model, lr=0.001, weight_decay=0.01):
+        """
+        Get the optimizer for the YOHO model.
+
+        Args:
+            model (YOHO): The YOHO model.
+            lr (float): Learning rate.
+            weight_decay (float): Weight decay.
+
+        Returns:
+            torch.optim.Adam: The Adam optimizer
+        """
+
+        params_to_optimize = [
+            # L2 on the first Conv2D layer
+            {'params': model.initial_conv.parameters(), 'weight_decay': 0.001},  
+            # L2 on subsequent Conv2D layers
+            {'params': model.layers.parameters(), 'weight_decay': weight_decay},  
+            {'params': model.additional_layers.parameters(), 'weight_decay': weight_decay},
+            {'params': model.final_reshape.parameters(), 'weight_decay': 0},
+            {'params': model.final_conv1d.parameters(), 'weight_decay': 0},
+        ]
+        optimizer = optim.Adam(params_to_optimize, lr=lr)
+        return optimizer
