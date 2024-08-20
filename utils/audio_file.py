@@ -1,6 +1,22 @@
 import librosa
+import math
 import numpy as np
 from matplotlib import pyplot as plt
+
+
+class AudioClip:
+
+    def __init__(self, waveform: list[float], sr: int, labels: list = None):
+        self.waveform = waveform
+        self.sr = sr
+        self.labels = labels
+
+    @property
+    def duration(self):
+        """
+        Returns the duration of the audio clip in seconds.
+        """
+        return self.waveform.shape[0] / self.sr
 
 
 class AudioFile:
@@ -14,7 +30,6 @@ class AudioFile:
         self,
         filepath: str,
         labels: list = None,
-        n_channels: int = 1,
     ):
         """
         Initializes the AudioFile class.
@@ -28,7 +43,6 @@ class AudioFile:
         self.labels = eval(
             labels
         )  # List of labels for the audio file with related start and stop times
-        self.n_channels = n_channels  # Number of channels in the audio file
 
     @property
     def duration(self):
@@ -41,7 +55,45 @@ class AudioFile:
     @property
     def waveform(self):
         y, _ = librosa.load(self.filepath, sr=self.sr)
-        return y
+        return librosa.to_mono(y)  # Convert the audio to mono
+
+    def audioclips(self, win_ms: float = None, hop_ms: float = None):
+        """
+
+        Args:
+            win_len (float, optional): number of seconds of the window. Defaults to 2.56.
+            hop_len (float, optional): number of seconds of the hop. Defaults to 1.00.
+
+        Returns:
+            list: list of the audio samples
+            list: list of the time ranges of each window
+        """
+
+        if win_ms <= 0 or hop_ms <= 0:
+            raise ValueError("Both win_ms and hop_ms must be positive")
+
+        win_points = int(win_ms / 1000 * self.sr)
+        hop_points = int(hop_ms / 1000 * self.sr)
+
+        if self.waveform.shape[0] < win_points:
+            waveform_padded = np.zeros((win_points,))
+            waveform_padded[: self.waveform.shape[0]] = self.waveform
+
+        else:
+            hops_no = math.ceil((self.waveform.shape[0] - win_points) / hop_points)
+            waveform_padded = np.zeros((int(win_points + hops_no * hop_points),))
+            waveform_padded[: self.waveform.shape[0]] = self.waveform
+
+        windows_waveforms = [
+            AudioClip(waveform_padded[i - win_points : i], self.sr)
+            for i in range(win_points, waveform_padded.shape[0] + 1, hop_points)
+        ]
+        windows_ranges = [
+            ((i - win_points) / self.sr, i / self.sr)
+            for i in range(win_points, waveform_padded.shape[0] + 1, hop_points)
+        ]
+
+        return windows_waveforms, windows_ranges
 
     def plot(self):
         plt.figure(figsize=(10, 4))
@@ -64,13 +116,6 @@ class AudioFile:
         plt.tight_layout()
         plt.show()
 
-    def mel_spectrogram(
-        self, n_mels: int = 64, hop_length: int = 10, win_length: int = 25
-    ):
-        return MelSpectrogram(
-            audiofile=self, n_mels=n_mels, hop_length=hop_length, win_length=win_length
-        )
-
 
 class MelSpectrogram:
     """
@@ -81,23 +126,17 @@ class MelSpectrogram:
 
     def __init__(
         self,
-        audiofile: AudioFile,
-        n_mels: int = 64,
-        hop_length: int = 10,
-        win_length: int = 25,
+        waveform: list[float],  # The audio waveform as a 1D numpy array
+        sr: int = 44_100,  # The sample rate of the audio file
+        n_mels: int = 64,  # Number of Mel bands to generate
+        hop_ms: int = None,  # Number of milliseconds between successive frames (hop size).
+        win_ms: int = None,  # Size, in milliseconds, of the FFT window (window size).
     ):
-        """
-        Initializes the MelSpectrogram class.
-
-        Args:
-            n_mels (int): The number of Mel bands to generate.
-            hop_length (int): Number of samples between successive frames (hop size).
-            win_length (int): Size of the FFT window (window size).
-        """
-        self.audiofile = audiofile
+        self.waveform = waveform
+        self.sr = sr
         self.n_mels = n_mels
-        self.hop_length = hop_length
-        self.win_length = win_length
+        self.hop_ms = hop_ms
+        self.win_ms = win_ms
         self.raw = None
         self._compute_spectrogram()
 
@@ -121,11 +160,11 @@ class MelSpectrogram:
 
         # Compute the Mel spectrogram with provided parameters
         mel_spectrogram = librosa.feature.melspectrogram(
-            y=self.audiofile.waveform,
-            sr=self.audiofile.sr,
+            y=self.waveform,
+            sr=self.sr,
             n_mels=self.n_mels,
-            hop_length=self.hop_length,
-            win_length=self.win_length,
+            hop_length=self.hop_ms,
+            win_length=self.win_ms,
         )
 
         # Convert the Mel spectrogram to a log scale (dB)
@@ -142,9 +181,9 @@ class MelSpectrogram:
         Plots the Mel spectrogram.
         """
         plt.figure(figsize=(10, 4))
-        plt.title(f"Mel spectrogram: {self.audiofile.filepath}")
+        plt.title(f"Mel spectrogram")
         librosa.display.specshow(
-            data=self.raw, sr=self.audiofile.sr, x_axis="frames", y_axis="mel"
+            data=self.raw, sr=self.sr, x_axis="frames", y_axis="mel"
         )
         plt.colorbar(format="%+2.0f dB")
         plt.tight_layout()

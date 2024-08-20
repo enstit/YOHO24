@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-from . import AudioFile
+from . import AudioClip, MelSpectrogram
 
 
 class YOHODataset(Dataset):
@@ -16,34 +16,39 @@ class YOHODataset(Dataset):
 
     def __init__(
         self,
-        audios: list[AudioFile],
+        audioclips: list[AudioClip],
         labels: list[str],
         transform=None,
         target_transform=None,
         n_mels: int = None,
-        hop_length: int = None,
-        win_length: int = None,
+        hop_ms: float = None,
+        win_ms: float = None,
     ):
 
-        self.audios = audios  # List of AudioFile objects representing the audio files
+        self.audioclips = (
+            audioclips  # List of AudioClip objects representing the audio files
+        )
         self.labels = labels  # List of unique labels in the dataset
         # Function to apply to the audio files before returning them
         self.transform = transform
         # Function to apply to the labels before returning them
         self.target_transform = target_transform
+        self.hop_ms = hop_ms  # Hop length in milliseconds
+        self.win_ms = win_ms  # Window length in milliseconds
 
         self.n_mels = n_mels  # Number of Mel bins
-        self.hop_length = hop_length  # Length of the hop between STFT windows
-        self.win_length = win_length  # Length of the STFT window
 
     def __len__(self):
-        return len(self.audios)
+        return len(self.audioclips)
 
     def __getitem__(self, idx):
 
-        # Get the Mel spectrogram of the idx-AudioFile of the dataset
-        mel_spectrogram = self.audios[idx].mel_spectrogram(
-            n_mels=self.n_mels, hop_length=self.hop_length, win_length=self.win_length
+        # Get the Mel spectrogram of the idx-AudioClip of the dataset
+        mel_spectrogram = MelSpectrogram(
+            self.audioclips[idx].waveform,
+            n_mels=self.n_mels,
+            hop_ms=self.hop_ms,
+            win_ms=self.win_ms,
         )
 
         # Convert the normalized Mel spectrogram to a PyTorch tensor
@@ -60,7 +65,7 @@ class YOHODataset(Dataset):
 
         STEP_SIZE = 0.3125
 
-        duration = self.audios[idx].duration
+        duration = self.audioclips[idx].duration
 
         output_size = ((len(self.labels) * 3), int(duration // STEP_SIZE))
 
@@ -74,7 +79,9 @@ class YOHODataset(Dataset):
             window_start = timeadvancement_no * STEP_SIZE
             window_end = (timeadvancement_no + 1) * STEP_SIZE
 
-            for audio_label in self.audios[idx].labels:
+            for audio_label in (
+                self.audioclips[idx].labels if self.audioclips[idx].labels else []
+            ):
                 if (audio_label[1] <= window_start <= audio_label[2]) or (
                     audio_label[1] <= window_end <= audio_label[2]
                 ):
@@ -97,7 +104,7 @@ class TUTDataset(YOHODataset):
 
     def __init__(
         self,
-        audios: list[AudioFile],
+        audioclips: list[AudioClip],
         transform=None,
         target_transform=None,
     ):
@@ -106,7 +113,7 @@ class TUTDataset(YOHODataset):
         # and the window length is set to 1764 as specified in the original
         # YOHO paper. The labels are the ones from the TUT challenge.
         super().__init__(
-            audios=audios,
+            audioclips=audioclips,
             labels=[
                 "brakes squeaking",
                 "car",
@@ -118,8 +125,8 @@ class TUTDataset(YOHODataset):
             transform=transform,
             target_transform=target_transform,
             n_mels=40,
-            hop_length=441,
-            win_length=1764,
+            hop_ms=10,
+            win_ms=40,
         )
 
 
