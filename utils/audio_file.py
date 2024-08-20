@@ -163,8 +163,8 @@ class MelSpectrogram:
             y=self.waveform,
             sr=self.sr,
             n_mels=self.n_mels,
-            hop_length=self.hop_ms,
-            win_length=self.win_ms,
+            hop_length=self.hop_ms * self.sr // 1000,
+            win_length=self.win_ms * self.sr // 1000,
         )
 
         # Convert the Mel spectrogram to a log scale (dB)
