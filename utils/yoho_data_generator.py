@@ -124,9 +124,9 @@ class TUTDataset(YOHODataset):
             ],
             transform=transform,
             target_transform=target_transform,
-            n_mels=40,
-            hop_ms=10,
-            win_ms=40,
+            n_mels=40,  # As defined in the YOHO paper for the TUT dataset
+            hop_ms=10,  # As defined in the YOHO paper for the TUT dataset
+            win_ms=40,  # As defined in the YOHO paper for the TUT dataset
         )
 
 

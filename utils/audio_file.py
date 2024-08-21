@@ -84,16 +84,36 @@ class AudioFile:
             waveform_padded = np.zeros((int(win_points + hops_no * hop_points),))
             waveform_padded[: self.waveform.shape[0]] = self.waveform
 
-        windows_waveforms = [
-            AudioClip(waveform_padded[i - win_points : i], self.sr)
-            for i in range(win_points, waveform_padded.shape[0] + 1, hop_points)
-        ]
-        windows_ranges = [
-            ((i - win_points) / self.sr, i / self.sr)
-            for i in range(win_points, waveform_padded.shape[0] + 1, hop_points)
-        ]
+        audioclips = []
 
-        return windows_waveforms, windows_ranges
+        for i in range(win_points, waveform_padded.shape[0] + 1, hop_points):
+
+            labels = []
+            for label in self.labels if self.labels else []:
+                # Check if the label is within the current window.
+                # If so, add it to the labels list by changing the start and stop times
+                # to be relative to the current window.
+                if label[1] < i / self.sr and label[2] > (i - win_points) / self.sr:
+                    labels.append(
+                        (
+                            label[0],
+                            max(0, label[1] - (i - win_points) / self.sr),
+                            min(
+                                win_points / self.sr,
+                                label[2] - (i - win_points) / self.sr,
+                            ),
+                        )
+                    )
+
+            audioclips.append(
+                AudioClip(
+                    waveform=waveform_padded[i - win_points : i],
+                    sr=self.sr,
+                    labels=labels,
+                )
+            )
+
+        return audioclips
 
     def plot(self):
         plt.figure(figsize=(10, 4))
