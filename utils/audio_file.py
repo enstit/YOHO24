@@ -6,17 +6,48 @@ from matplotlib import pyplot as plt
 
 class AudioClip:
 
-    def __init__(self, waveform: list[float], sr: int, labels: list = None):
-        self.waveform = waveform
+    def __init__(
+        self,
+        filepath: str,
+        offset: float,
+        duration: float,
+        sr: int,
+        labels: list = None,
+    ):
+        self.filepath = filepath
+        self.offset = offset
+        self.duration = duration
         self.sr = sr
         self.labels = labels
 
     @property
-    def duration(self):
-        """
-        Returns the duration of the audio clip in seconds.
-        """
-        return self.waveform.shape[0] / self.sr
+    def waveform(self):
+
+        y, _ = librosa.load(
+            self.filepath,
+            sr=self.sr,
+            mono=True,
+            offset=max(0, self.offset),
+            duration=self.duration,
+        )
+
+        if self.offset < 0:
+            y = np.concatenate(
+                [
+                    np.zeros((int(-self.offset * self.sr),)),
+                    y,
+                ]
+            )
+
+        if self.duration > y.shape[0] / self.sr:
+            y = np.concatenate(
+                [
+                    y,
+                    np.zeros((int(self.duration * self.sr - y.shape[0]),)),
+                ]
+            )
+
+        return y
 
 
 class AudioFile:
@@ -54,8 +85,8 @@ class AudioFile:
 
     @property
     def waveform(self):
-        y, _ = librosa.load(self.filepath, sr=self.sr)
-        return librosa.to_mono(y)  # Convert the audio to mono
+        y, _ = librosa.load(self.filepath, sr=self.sr, mono=True)
+        return y
 
     def audioclips(self, win_ms: float = None, hop_ms: float = None):
         """
@@ -75,18 +106,9 @@ class AudioFile:
         win_points = int(win_ms / 1000 * self.sr)
         hop_points = int(hop_ms / 1000 * self.sr)
 
-        if self.waveform.shape[0] < win_points:
-            waveform_padded = np.zeros((win_points,))
-            waveform_padded[: self.waveform.shape[0]] = self.waveform
-
-        else:
-            hops_no = math.ceil((self.waveform.shape[0] - win_points) / hop_points)
-            waveform_padded = np.zeros((int(win_points + hops_no * hop_points),))
-            waveform_padded[: self.waveform.shape[0]] = self.waveform
-
         audioclips = []
 
-        for i in range(win_points, waveform_padded.shape[0] + 1, hop_points):
+        for i in range(win_points, int(self.duration * self.sr) + 1, hop_points):
 
             labels = []
             for label in self.labels if self.labels else []:
@@ -107,7 +129,9 @@ class AudioFile:
 
             audioclips.append(
                 AudioClip(
-                    waveform=waveform_padded[i - win_points : i],
+                    filepath=self.filepath,
+                    offset=(i - win_points) / self.sr,
+                    duration=win_points / self.sr,
                     sr=self.sr,
                     labels=labels,
                 )
