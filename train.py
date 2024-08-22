@@ -103,20 +103,26 @@ if __name__ == "__main__":
     # Set the seed for reproducibility
     torch.manual_seed(0)
 
+    audioclips = [
+        audioclip
+        for _, file in pd.read_csv("./data/tut.train.csv").iterrows()
+        for audioclip in AudioFile(filepath=file.filepath, labels=file.events).audioclips(
+            win_ms=2560, hop_ms=1960
+        )
+    ]
+
     # Load the TUT dataset (train)
     tut_train = TUTDataset(
-        audioclips=[
-            AudioFile(filepath=file.filepath, labels=file.events)
-            for _, file in pd.read_csv("./data/tut.train.csv").iterrows()
-        ], 
-    )  
+        audioclips=audioclips,
+    ) 
 
     train_dataloader = YOHODataGenerator(
-        dataset=tut_train,
-        batch_size=32,
+        tut_train, 
+        batch_size=32, 
         shuffle=True
     )
 
+    """
     # Load the TUT dataset (evaluation)
     tut_eval = TUTDataset(
         audioclips=[
@@ -129,7 +135,7 @@ if __name__ == "__main__":
         dataset=tut_eval,
         batch_size=32,
         shuffle=False
-    )
+    )"""
 
     # Define the input and output shapes
     input_shape = train_dataloader.dataset[0][0].shape
@@ -139,6 +145,8 @@ if __name__ == "__main__":
         input_shape=input_shape, 
         output_shape=output_shape
     )
+
+
     # Move the model to the device
     model = model.to(device)
     
