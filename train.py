@@ -7,9 +7,40 @@ import pandas as pd
 from utils import AudioFile, TUTDataset, YOHODataGenerator
 from models import YOHO
 
+class YOHOLoss(nn.Module):
+    def __init__(self):
+        super(YOHOLoss, self).__init__()
+
+    def forward(self, predictions, targets):
+        """
+        Calculate the YOHO loss for a batch of predictions and targets.
+        
+        Args:
+            predictions (torch.Tensor): The predicted values from the model (batch_size, num_classes, 3).
+            targets (torch.Tensor): The ground truth values (batch_size, num_classes, 3).
+
+        Returns:
+            torch.Tensor: The computed loss.
+        """
+        y_pred_class = predictions[:, :, 0]
+        y_pred_start = predictions[:, :, 1]
+        y_pred_end = predictions[:, :, 2]
+
+        y_true_class = targets[:, :, 0]
+        y_true_start = targets[:, :, 1]
+        y_true_end = targets[:, :, 2]
+
+        # Compute the classification loss
+        classification_loss = (y_pred_class - y_true_class).pow(2)
+        # Compute the regression loss
+        regression_loss = ((y_pred_start - y_true_start).pow(2) + (y_pred_end - y_true_end).pow(2)) * y_true_class
+        # The total loss is the sum of the classification and regression loss
+        total_loss = classification_loss + regression_loss
+        return total_loss.mean()
+
 
 def get_loss_function():
-    return nn.MSELoss()
+    return YOHOLoss()
 
 def save_checkpoint(state, filename="checkpoint.pth.tar"):
     torch.save(state, filename)
@@ -28,6 +59,7 @@ def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
     optimizer.load_state_dict(
         checkpoint["optimizer"]
     )
+
     start_epoch = checkpoint["epoch"]
     loss = checkpoint["loss"]
     return model, optimizer, start_epoch, loss
@@ -57,7 +89,7 @@ def train_model(model, train_loader, eval_loader, num_epochs, start_epoch=0):
             # Optimize the model
             optimizer.step()
             # Accumulate the loss
-            running_loss += loss.item() # Accumulate the loss
+            running_loss += loss.item()
         
         # Compute the average loss for the epoch
         avg_loss = running_loss / len(train_loader)
@@ -96,13 +128,14 @@ def validate_model(model, val_loader):
     print(f"Validation Loss: {running_loss / len(val_loader)}")
 
 if __name__ == "__main__":
-
+    print("Training YOHO model")
     # Device agnostic code
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Set the seed for reproducibility
     torch.manual_seed(0)
-
+    
+    print("Loading TUT dataset")
     audioclips = [
         audioclip
         for _, file in pd.read_csv("./data/tut.train.csv").iterrows()
@@ -112,15 +145,10 @@ if __name__ == "__main__":
     ]
 
     # Load the TUT dataset (train)
-    tut_train = TUTDataset(
-        audioclips=audioclips,
-    ) 
+    print("Creating dataloader")
+    tut_train = TUTDataset(audioclips=audioclips) 
 
-    train_dataloader = YOHODataGenerator(
-        tut_train, 
-        batch_size=32, 
-        shuffle=True
-    )
+    train_dataloader = YOHODataGenerator(tut_train, batch_size=32, shuffle=True)
 
     """
     # Load the TUT dataset (evaluation)
@@ -141,11 +169,7 @@ if __name__ == "__main__":
     input_shape = train_dataloader.dataset[0][0].shape
     output_shape = (train_dataloader.dataset[0][1].shape[0],)
 
-    model = YOHO(
-        input_shape=input_shape, 
-        output_shape=output_shape
-    )
-
+    model = YOHO(input_shape=input_shape, output_shape=output_shape)
 
     # Move the model to the device
     model = model.to(device)
