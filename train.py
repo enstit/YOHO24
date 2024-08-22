@@ -35,7 +35,7 @@ def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
 def train_model(model, train_loader, eval_loader, num_epochs, start_epoch=0):
 
     criterion = get_loss_function()
-    optimizer = get_optimizer(model)
+    optimizer = model.get_optimizer()
     
     for epoch in range(start_epoch, num_epochs):
         # Set the model to training mode
@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
     # Load the TUT dataset (train)
     tut_train = TUTDataset(
-        audios=[
+        audioclips=[
             AudioFile(filepath=file.filepath, labels=file.events)
             for _, file in pd.read_csv("./data/tut.train.csv").iterrows()
         ], 
@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
     # Load the TUT dataset (evaluation)
     tut_eval = TUTDataset(
-        audios=[
+        audioclips=[
             AudioFile(filepath=file.filepath, labels=file.events)
             for _, file in pd.read_csv("./data/tut.evaluation.csv").iterrows()
         ],
