@@ -69,7 +69,7 @@ class YOHODataset(Dataset):
 
         output_size = (int(duration // STEP_SIZE), 3 * len(self.labels))
 
-        output = np.empty(output_size)
+        output = np.zeros(output_size)
 
         # Initialize columns equal to 1 module 3 to 0
         output[1::3] = 0

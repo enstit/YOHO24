@@ -106,7 +106,7 @@ def train_model(model, train_loader, eval_loader, num_epochs, start_epoch=0):
             }
         )
 
-        #validate_model(model, eval_loader)
+        validate_model(model, eval_loader)
         
 def validate_model(model, val_loader):
 
@@ -128,15 +128,14 @@ def validate_model(model, val_loader):
     print(f"Validation Loss: {running_loss / len(val_loader)}")
 
 if __name__ == "__main__":
-    print("Training YOHO model")
+
     # Device agnostic code
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Set the seed for reproducibility
     torch.manual_seed(0)
     
-    print("Loading TUT dataset")
-    audioclips = [
+    training_audioclips = [
         audioclip
         for _, file in pd.read_csv("./data/tut.train.csv").iterrows()
         for audioclip in AudioFile(filepath=file.filepath, labels=file.events).audioclips(
@@ -144,32 +143,34 @@ if __name__ == "__main__":
         )
     ]
 
-    # Load the TUT dataset (train)
-    print("Creating dataloader")
-    tut_train = TUTDataset(audioclips=audioclips) 
+    evaluation_audioclips = [
+        audioclip
+        for _, file in pd.read_csv("./data/tut.evaluation.csv").iterrows()
+        for audioclip in AudioFile(filepath=file.filepath, labels=file.events).audioclips(
+            win_ms=2560, hop_ms=1960
+        )
+    ]
 
-    train_dataloader = YOHODataGenerator(tut_train, batch_size=32, shuffle=True)
-
-    """
-    # Load the TUT dataset (evaluation)
-    tut_eval = TUTDataset(
-        audioclips=[
-            AudioFile(filepath=file.filepath, labels=file.events)
-            for _, file in pd.read_csv("./data/tut.evaluation.csv").iterrows()
-        ],
+    train_dataloader = YOHODataGenerator(
+        dataset=TUTDataset(audioclips=training_audioclips), 
+        batch_size=1, 
+        shuffle=True
     )
 
     eval_dataloader = YOHODataGenerator(
-        dataset=tut_eval,
-        batch_size=32,
+        dataset=TUTDataset(audioclips=evaluation_audioclips),
+        batch_size=1,
         shuffle=False
-    )"""
+    )
 
     # Define the input and output shapes
     input_shape = train_dataloader.dataset[0][0].shape
-    output_shape = (train_dataloader.dataset[0][1].shape[0],)
+    output_shape = train_dataloader.dataset[0][1].shape
 
-    model = YOHO(input_shape=input_shape, output_shape=output_shape)
+    model = YOHO(
+        input_shape=input_shape, 
+        output_shape=output_shape
+    )
 
     # Move the model to the device
     model = model.to(device)
@@ -186,7 +187,8 @@ if __name__ == "__main__":
     train_model(
         model=model, 
         train_loader=train_dataloader, 
-        eval_loader=None, 
+        eval_loader=eval_dataloader, 
         num_epochs=EPOCHS,
         start_epoch=start_epoch
     )
+    
