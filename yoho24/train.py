@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import pandas as pd
 from .utils import AudioFile, TUTDataset, YOHODataGenerator
-from models import YOHO
+from .yoho import YOHO
 
 
 class YOHOLoss(nn.Module):

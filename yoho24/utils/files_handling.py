@@ -28,9 +28,9 @@ def write_data_to_csv(data: dict, output_path: str) -> None:
     - data (dict): A dictionary containing the data to be written to the CSV file.
     - output_path (str): The path to the output CSV file.
     """
-    with open(output_path, 'w', newline='') as file:
+    with open(output_path, "w", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(['filepath', 'events'])
+        writer.writerow(["filepath", "events"])
 
         for key, value in data.items():
             writer.writerow([key, value])
@@ -45,7 +45,7 @@ def download_file(url: str, save_path: str) -> None:
     - save_path (str): Local path to save the downloaded file.
     """
     with httpx.stream("GET", url) as response:
-        with open(save_path, 'wb') as file:
+        with open(save_path, "wb") as file:
             for chunk in tqdm(response.iter_bytes(chunk_size=128)):
                 file.write(chunk)
     print(f"Downloaded {url} to {save_path}")
@@ -60,11 +60,15 @@ def uncompress_file(compressed_path: str, extract_to: str) -> None:
     - compressed_path (str): Path of the compressed file to uncompress.
     - extract_to (str): Directory to save the uncompress file.
     """
-    if compressed_path.endswith('.zip'):
-        with zipfile.ZipFile(compressed_path, 'r') as zip_ref:
+    if compressed_path.endswith(".zip"):
+        with zipfile.ZipFile(compressed_path, "r") as zip_ref:
             zip_ref.extractall(extract_to)
-    elif compressed_path.endswith('.tar') or compressed_path.endswith('.tar.gz') or compressed_path.endswith('.tar.bz2'):
-        with tarfile.open(compressed_path, 'r') as tar_ref:
+    elif (
+        compressed_path.endswith(".tar")
+        or compressed_path.endswith(".tar.gz")
+        or compressed_path.endswith(".tar.bz2")
+    ):
+        with tarfile.open(compressed_path, "r") as tar_ref:
             tar_ref.extractall(extract_to)
     else:
         raise ValueError("Unsupported file type for uncompression.")
