@@ -2,8 +2,8 @@ import os
 import torch
 import torch.nn as nn
 import pandas as pd
-from .utils import AudioFile, TUTDataset, YOHODataGenerator
-from .yoho import YOHO
+from utils import AudioFile, TUTDataset, YOHODataGenerator
+from yoho import YOHO
 
 
 class YOHOLoss(nn.Module):
@@ -142,7 +142,7 @@ if __name__ == "__main__":
         for _, file in pd.read_csv("./data/tut.train.csv").iterrows()
         for audioclip in AudioFile(
             filepath=file.filepath, labels=file.events
-        ).audioclips(win_ms=2560, hop_ms=1960)
+        ).subdivide(win_len=2.56, hop_len=1.96)
     ]
 
     evaluation_audioclips = [
@@ -150,15 +150,15 @@ if __name__ == "__main__":
         for _, file in pd.read_csv("./data/tut.evaluation.csv").iterrows()
         for audioclip in AudioFile(
             filepath=file.filepath, labels=file.events
-        ).audioclips(win_ms=2560, hop_ms=1960)
+        ).subdivide(win_len=2.56, hop_len=1.96)
     ]
 
     train_dataloader = YOHODataGenerator(
-        dataset=TUTDataset(audioclips=training_audioclips), batch_size=1, shuffle=True
+        dataset=TUTDataset(audios=training_audioclips), batch_size=1, shuffle=True
     )
 
     eval_dataloader = YOHODataGenerator(
-        dataset=TUTDataset(audioclips=evaluation_audioclips),
+        dataset=TUTDataset(audios=evaluation_audioclips),
         batch_size=1,
         shuffle=False,
     )
