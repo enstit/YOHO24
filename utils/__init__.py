@@ -1,6 +1,6 @@
 from .files_handling import get_files, write_data_to_csv, download_file, uncompress_file
 
-from .audio_file import AudioClip, AudioFile, MelSpectrogram
+from .audio_file import AudioClip, AudioFile
 from .yoho_data_generator import (
     YOHODataset,
     TUTDataset,
@@ -14,7 +14,6 @@ __all__ = [
     "uncompress_file",
     "AudioClip",
     "AudioFile",
-    "MelSpectrogram",
     "YOHODataset",
     "TUTDataset",
     "YOHODataGenerator",

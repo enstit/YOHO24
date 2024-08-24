@@ -4,72 +4,74 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-from . import AudioClip, MelSpectrogram
+from . import AudioFile
 
 
 class YOHODataset(Dataset):
     """
-    The YOHODataset class represents a dataset of audio files.
-    It provides methods to load the audio files and their labels, and to apply
-    transformations to the audio files and labels.
+    The YOHODataset class is used to construct audio Dataset for the YOHO model.
     """
 
     def __init__(
         self,
-        audioclips: list[AudioClip],
+        audios: list[AudioFile],
         labels: list[str],
         transform=None,
         target_transform=None,
         n_mels: int = None,
-        hop_ms: float = None,
-        win_ms: float = None,
+        hop_len: float = None,
+        win_len: float = None,
     ):
 
-        self.audioclips = (
-            audioclips  # List of AudioClip objects representing the audio files
-        )
+        # Check that all the AudioFiles have the same sample rate and duration
+        sample_rate = audios[0].sr
+        duration = audios[0].duration
+        for audioclip in audios:
+            if not (audioclip.sr == sample_rate or audioclip.duration == duration):
+                raise ValueError(
+                    "All AudioFiles must have the same duration and sample rate"
+                )
+
+        self.audios = audios  # List of Audios objects representing the audio files
         self.labels = labels  # List of unique labels in the dataset
         # Function to apply to the audio files before returning them
         self.transform = transform
         # Function to apply to the labels before returning them
         self.target_transform = target_transform
-        self.hop_ms = hop_ms  # Hop length in milliseconds
-        self.win_ms = win_ms  # Window length in milliseconds
-
+        self.hop_len = hop_len  # Hop length in seconds
+        self.win_len = win_len  # Window length in seconds
         self.n_mels = n_mels  # Number of Mel bins
 
     def __len__(self):
-        return len(self.audioclips)
+        return len(self.audios)
 
     def __getitem__(self, idx):
 
         # Get the Mel spectrogram of the idx-AudioClip of the dataset
-        mel_spectrogram = MelSpectrogram(
-            self.audioclips[idx].waveform,
+        spect = self.audios[idx].mel_spectrogram(
             n_mels=self.n_mels,
-            hop_ms=self.hop_ms,
-            win_ms=self.win_ms,
+            hop_len=self.hop_len,
+            win_len=self.win_len,
+            normalized=True,
         )
 
         # Convert the normalized Mel spectrogram to a PyTorch tensor
-        normalized_mel_spectrogram_tensor = (
-            torch.tensor(mel_spectrogram.normalized.T).unsqueeze(0).float()
-        )
+        spect_tensor = torch.tensor(spect.T).unsqueeze(0).float()
 
         # Get the labels for the audio file
         labels = self._get_output(idx)
 
-        return normalized_mel_spectrogram_tensor, labels
+        return spect_tensor, labels
 
     def _get_output(self, idx: int) -> np.array:
 
         STEP_SIZE = 0.284
 
-        duration = self.audioclips[idx].duration
+        duration = self.audios[idx].duration
 
         output_size = (int(duration // STEP_SIZE), 3 * len(self.labels))
 
-        output = np.zeros(output_size)
+        output = np.empty(output_size)
 
         # Initialize columns equal to 1 module 3 to 0
         output[1::3] = 0
@@ -80,7 +82,7 @@ class YOHODataset(Dataset):
             window_end = (timeadvancement_no + 1) * STEP_SIZE
 
             for audio_label in (
-                self.audioclips[idx].labels if self.audioclips[idx].labels else []
+                self.audios[idx].labels if self.audios[idx].labels else []
             ):
                 if (audio_label[1] <= window_start <= audio_label[2]) or (
                     audio_label[1] <= window_end <= audio_label[2]
@@ -104,7 +106,7 @@ class TUTDataset(YOHODataset):
 
     def __init__(
         self,
-        audioclips: list[AudioClip],
+        audios: list[AudioFile],
         transform=None,
         target_transform=None,
     ):
@@ -113,7 +115,7 @@ class TUTDataset(YOHODataset):
         # and the window length is set to 1764 as specified in the original
         # YOHO paper. The labels are the ones from the TUT challenge.
         super().__init__(
-            audioclips=audioclips,
+            audios=audios,
             labels=[
                 "brakes squeaking",
                 "car",
@@ -125,8 +127,8 @@ class TUTDataset(YOHODataset):
             transform=transform,
             target_transform=target_transform,
             n_mels=40,  # As defined in the YOHO paper for the TUT dataset
-            hop_ms=10,  # As defined in the YOHO paper for the TUT dataset
-            win_ms=40,  # As defined in the YOHO paper for the TUT dataset
+            hop_len=0.01,  # As defined in the YOHO paper for the TUT dataset
+            win_len=0.04,  # As defined in the YOHO paper for the TUT dataset
         )
 
 
