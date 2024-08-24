@@ -53,7 +53,7 @@ class YOHODataset(Dataset):
 
         # Convert the normalized Mel spectrogram to a PyTorch tensor
         normalized_mel_spectrogram_tensor = (
-            torch.tensor(mel_spectrogram.normalized).unsqueeze(0).float()
+            torch.tensor(mel_spectrogram.normalized.T).unsqueeze(0).float()
         )
 
         # Get the labels for the audio file
@@ -63,11 +63,11 @@ class YOHODataset(Dataset):
 
     def _get_output(self, idx: int) -> np.array:
 
-        STEP_SIZE = 0.3125
+        STEP_SIZE = 0.284
 
         duration = self.audioclips[idx].duration
 
-        output_size = ((len(self.labels) * 3), int(duration // STEP_SIZE))
+        output_size = (int(duration // STEP_SIZE), 3 * len(self.labels))
 
         output = np.empty(output_size)
 
@@ -75,7 +75,7 @@ class YOHODataset(Dataset):
         output[1::3] = 0
 
         timeadvancement_no = 0
-        while timeadvancement_no < output.shape[1]:
+        while timeadvancement_no < output.shape[0]:
             window_start = timeadvancement_no * STEP_SIZE
             window_end = (timeadvancement_no + 1) * STEP_SIZE
 
@@ -91,9 +91,9 @@ class YOHODataset(Dataset):
                     )
 
                     label_index = self.labels.index(audio_label[0])
-                    output[label_index * 3, timeadvancement_no] = 1
-                    output[label_index * 3 + 1, timeadvancement_no] = normalized_start
-                    output[label_index * 3 + 2, timeadvancement_no] = normalized_end
+                    output[timeadvancement_no, label_index * 3] = 1
+                    output[timeadvancement_no, label_index * 3 + 1] = normalized_start
+                    output[timeadvancement_no, label_index * 3 + 2] = normalized_end
 
             timeadvancement_no += 1
 
