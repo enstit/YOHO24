@@ -51,7 +51,9 @@ def download_file(url: str, save_path: str) -> None:
     print(f"Downloaded {url} to {save_path}")
 
 
-def uncompress_file(compressed_path: str, extract_to: str) -> None:
+def uncompress_file(
+    compressed_path: str, extract_to: str, remove_compressed: bool = True
+) -> None:
     """
     Uncompress a file to a specified directory.
     Supported file types: .zip, .tar, .tar.gz, .tar.bz2
@@ -73,5 +75,7 @@ def uncompress_file(compressed_path: str, extract_to: str) -> None:
     else:
         raise ValueError("Unsupported file type for uncompression.")
 
+    if remove_compressed:
+        os.remove(compressed_path)
+
     print(f"Extracted {compressed_path} to {extract_to}")
-    os.remove(compressed_path)

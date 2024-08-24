@@ -5,6 +5,8 @@ import pandas as pd
 from utils import AudioFile, TUTDataset, YOHODataGenerator
 from yoho import YOHO
 
+SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
+
 
 class YOHOLoss(nn.Module):
     def __init__(self):
@@ -139,7 +141,12 @@ if __name__ == "__main__":
 
     training_audioclips = [
         audioclip
-        for _, file in pd.read_csv("./data/tut.train.csv").iterrows()
+        for _, file in pd.read_csv(
+            os.path.join(
+                SCRIPT_DIRPATH,
+                "../data/processed/TUT/TUT-sound-events-2017-development.csv",
+            )
+        ).iterrows()
         for audioclip in AudioFile(
             filepath=file.filepath, labels=eval(file.events)
         ).subdivide(win_len=2.56, hop_len=1.96)
@@ -147,7 +154,12 @@ if __name__ == "__main__":
 
     evaluation_audioclips = [
         audioclip
-        for _, file in pd.read_csv("./data/tut.evaluation.csv").iterrows()
+        for _, file in pd.read_csv(
+            os.path.join(
+                SCRIPT_DIRPATH,
+                "../data/processed/TUT/TUT-sound-events-2017-evaluation.csv",
+            )
+        ).iterrows()
         for audioclip in AudioFile(
             filepath=file.filepath, labels=eval(file.events)
         ).subdivide(win_len=2.56, hop_len=1.96)

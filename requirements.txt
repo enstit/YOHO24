@@ -8,3 +8,4 @@ zipfile==3.12.4
 tarfile==3.12.4
 tqdm==4.66.4
 httpx[http2]==0.27.0
+soundfile==0.11.0
