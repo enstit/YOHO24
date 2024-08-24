@@ -141,7 +141,7 @@ if __name__ == "__main__":
         audioclip
         for _, file in pd.read_csv("./data/tut.train.csv").iterrows()
         for audioclip in AudioFile(
-            filepath=file.filepath, labels=file.events
+            filepath=file.filepath, labels=eval(file.events)
         ).subdivide(win_len=2.56, hop_len=1.96)
     ]
 
@@ -149,7 +149,7 @@ if __name__ == "__main__":
         audioclip
         for _, file in pd.read_csv("./data/tut.evaluation.csv").iterrows()
         for audioclip in AudioFile(
-            filepath=file.filepath, labels=file.events
+            filepath=file.filepath, labels=eval(file.events)
         ).subdivide(win_len=2.56, hop_len=1.96)
     ]
 
