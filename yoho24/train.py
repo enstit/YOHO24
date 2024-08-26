@@ -4,9 +4,10 @@ import torch.nn as nn
 import pandas as pd
 from utils import AudioFile, TUTDataset, YOHODataGenerator
 from yoho import YOHO
+import json
+from datetime import datetime
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
-
 
 class YOHOLoss(nn.Module):
     def __init__(self):
@@ -41,14 +42,11 @@ class YOHOLoss(nn.Module):
         total_loss = classification_loss + regression_loss
         return total_loss.mean()
 
-
 def get_loss_function():
     return YOHOLoss()
 
-
 def save_checkpoint(state, filename="checkpoint.pth.tar"):
     torch.save(state, filename)
-
 
 def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
     if not os.path.isfile(filename):
@@ -65,11 +63,24 @@ def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
     loss = checkpoint["loss"]
     return model, optimizer, start_epoch, loss
 
+def save_loss_dict(loss_dict):
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"losses_{timestamp}.json"
+    with open(filename, 'w') as f:
+        json.dump(loss_dict, f)
 
-def train_model(model, train_loader, eval_loader, num_epochs, start_epoch=0):
+def load_loss_dict(filename):
+    if os.path.exists(filename):
+        with open(filename, 'r') as f:
+            return json.load(f)
+    return {}
+
+def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
 
     criterion = get_loss_function()
     optimizer = model.get_optimizer()
+
+    loss_dict = {}  # Initialize an empty loss dictionary
 
     for epoch in range(start_epoch, num_epochs):
         # Set the model to training mode
@@ -93,11 +104,28 @@ def train_model(model, train_loader, eval_loader, num_epochs, start_epoch=0):
             # Accumulate the loss
             running_loss += loss.item()
 
-        # Compute the average loss for the epoch
+        # Compute the average loss for this epoch
         avg_loss = running_loss / len(train_loader)
 
-        print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss}")
+        if val_loader is not None:
+            model.eval()
+            running_val_loss = 0.0
+            with torch.no_grad():
+                for _, (inputs, labels) in enumerate(val_loader):
+                    inputs, labels = inputs.to(device), labels.to(device)
+                    outputs = model(inputs)
+                    loss = criterion(outputs, labels)
+                    running_val_loss += loss.item()
+            avg_val_loss = running_val_loss / len(val_loader)
+        else:
+            avg_val_loss = None
 
+        # Save the average losses for this epoch
+        loss_dict[epoch + 1] = (avg_loss, avg_val_loss)
+        save_loss_dict(loss_dict)  # Save the updated dictionary to disk
+
+        print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {avg_loss}, Val Loss: {avg_val_loss}")
+        
         # Save the model checkpoint after each epoch
         save_checkpoint(
             {
@@ -108,27 +136,10 @@ def train_model(model, train_loader, eval_loader, num_epochs, start_epoch=0):
             }
         )
 
-        validate_model(model, eval_loader)
+        
 
 
-def validate_model(model, val_loader):
 
-    # Set the model to evaluation mode
-    model.eval()
-
-    running_loss = 0.0
-    criterion = get_loss_function()
-
-    # Disable gradient computation
-    # And compute the loss on the validation set
-    with torch.no_grad():
-        for _, (inputs, labels) in enumerate(val_loader):
-            inputs, labels = inputs.to(device), labels.to(device)
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
-            running_loss += loss.item()
-
-    print(f"Validation Loss: {running_loss / len(val_loader)}")
 
 
 if __name__ == "__main__":
