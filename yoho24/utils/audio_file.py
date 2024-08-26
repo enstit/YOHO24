@@ -1,6 +1,7 @@
-import librosa
 import numpy as np
 from matplotlib import pyplot as plt
+import librosa
+from IPython.display import Audio
 
 
 class AudioFile:
@@ -24,6 +25,9 @@ class AudioFile:
         self.filepath = filepath  # Path to the audio file
         self.labels = labels  # List of labels for the audio file with related start and stop times
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}(filepath={self.filepath})"
+
     @property
     def duration(self):
         return librosa.get_duration(path=self.filepath)
@@ -36,6 +40,9 @@ class AudioFile:
     def waveform(self):
         y, _ = librosa.load(self.filepath, sr=self.sr, mono=True)
         return y
+
+    def play(self):
+        return Audio(self.waveform, rate=self.sr, autoplay=True)
 
     def mel_spectrogram(
         self,
@@ -109,6 +116,50 @@ class AudioFile:
             )
 
         return audioclips
+
+    def plot_labels(self):
+        # TODO: Refactor this method
+        plt.figure(figsize=(20, 6))
+
+        librosa.display.specshow(
+            data=self.mel_spectrogram(n_mels=40, win_len=0.04, hop_len=0.01),
+            sr=self.sr,
+            x_axis="frames",
+            y_axis="mel",
+        )
+
+        for label in self.labels:
+            # Calculate the initial frame and the final frame of the label
+            # with the same window size and hop size used to calculate the Mel spectrogram
+            # (win_len=0.04, hop_len=0.01)
+            frames_n = self.mel_spectrogram(
+                n_mels=40, win_len=0.04, hop_len=0.01
+            ).shape[1]
+            WINDOW_SIZE = 2.56
+            normalized_start = int(label[1] * frames_n / WINDOW_SIZE)
+            normalized_stop = int(label[2] * frames_n / WINDOW_SIZE) - 1
+            plt.axvspan(
+                normalized_start,
+                normalized_stop,
+                facecolor="red",
+                alpha=0.25,
+                label=label[0],
+            )
+            plt.text(
+                x=normalized_start + 2,
+                y=44_100 / 16,
+                s=label[0],
+                fontsize=12,
+                color="white",
+                ha="center",
+                va="center",
+                rotation=90,
+            )
+
+        plt.title("Audio waveform with labels")
+        plt.xlabel("Time (frames)")
+        plt.ylabel("Amplitude")
+        plt.show()
 
 
 class AudioClip(AudioFile):

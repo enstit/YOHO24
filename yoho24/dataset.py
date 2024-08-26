@@ -10,8 +10,6 @@ SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 
 if __name__ == "__main__":
 
-    """
-
     if not os.path.exists(os.path.join(SCRIPT_DIRPATH, "../data/raw")):
         os.makedirs(os.path.join(SCRIPT_DIRPATH, "../data/raw"))
 
@@ -102,9 +100,6 @@ if __name__ == "__main__":
         ),
     )
 
-    """
-
-    """
     import soundfile as sf
 
     DATA_PATH = os.path.join(DATA_PATH, "TUT-sound-events-2017-development")
@@ -123,11 +118,10 @@ if __name__ == "__main__":
                 data=audioclip.waveform,
                 samplerate=audioclip.sr,
             )
-    """
 
     AUDIO_1_PATH = os.path.join(
         SCRIPT_DIRPATH,
-        "./data/raw/TUT/TUT-sound-events-2017-evaluation/TUT-sound-events-2017-evaluation.audio/TUT-sound-events-2017-evaluation/audio/street/",
+        "../data/raw/TUT/TUT-sound-events-2017-evaluation/TUT-sound-events-2017-evaluation.audio/TUT-sound-events-2017-evaluation/audio/street/",
     )
     DATA_PATH = os.path.join(SCRIPT_DIRPATH, "../data/processed/TUT/")
 
