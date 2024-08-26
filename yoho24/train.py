@@ -63,13 +63,11 @@ def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
     loss = checkpoint["loss"]
     return model, optimizer, start_epoch, loss
 
-def save_loss_dict(loss_dict):
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"losses_{timestamp}.json"
+def save_loss_dict(loss_dict, filename="losses.json"):
     with open(filename, 'w') as f:
         json.dump(loss_dict, f)
 
-def load_loss_dict(filename):
+def load_loss_dict(filename="losses.json"):
     if os.path.exists(filename):
         with open(filename, 'r') as f:
             return json.load(f)
@@ -80,7 +78,8 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
     criterion = get_loss_function()
     optimizer = model.get_optimizer()
 
-    loss_dict = {}  # Initialize an empty loss dictionary
+    # Load previous losses if available
+    loss_dict = load_loss_dict()
 
     for epoch in range(start_epoch, num_epochs):
         # Set the model to training mode
@@ -120,12 +119,11 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
         else:
             avg_val_loss = None
 
-        # Save the average losses for this epoch
-        loss_dict[epoch + 1] = (avg_loss, avg_val_loss)
-        save_loss_dict(loss_dict)  # Save the updated dictionary to disk
+        # Update the loss dictionary
+        loss_dict[epoch + 1] = {"train_loss": avg_loss, "val_loss": avg_val_loss}
 
         print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {avg_loss}, Val Loss: {avg_val_loss}")
-        
+
         # Save the model checkpoint after each epoch
         save_checkpoint(
             {
@@ -136,10 +134,8 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
             }
         )
 
-        
-
-
-
+    # Save the updated loss dictionary at the end of training
+    save_loss_dict(loss_dict)
 
 
 if __name__ == "__main__":
