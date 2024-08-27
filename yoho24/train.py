@@ -203,7 +203,7 @@ if __name__ == "__main__":
     train_model(
         model=model,
         train_loader=train_dataloader,
-        eval_loader=eval_dataloader,
+        val_loader=eval_dataloader,
         num_epochs=EPOCHS,
         start_epoch=start_epoch,
     )
