@@ -27,12 +27,16 @@ class YOHODataset(Dataset):
         sample_rate = audios[0].sr
         duration = audios[0].duration
         for audioclip in audios:
-            if not (audioclip.sr == sample_rate or audioclip.duration == duration):
+            if not (
+                audioclip.sr == sample_rate or audioclip.duration == duration
+            ):
                 raise ValueError(
                     "All AudioFiles must have the same duration and sample rate"
                 )
 
-        self.audios = audios  # List of Audios objects representing the audio files
+        self.audios = (
+            audios  # List of Audios objects representing the audio files
+        )
         self.labels = labels  # List of unique labels in the dataset
         # Function to apply to the audio files before returning them
         self.transform = transform
@@ -56,7 +60,7 @@ class YOHODataset(Dataset):
         )
 
         # Convert the normalized Mel spectrogram to a PyTorch tensor
-        spect_tensor = torch.tensor(spect.T).unsqueeze(0).float()
+        spect_tensor = torch.tensor(spect.T).unsqueeze(-1).float()
 
         # Get the labels for the audio file
         labels = self._get_output(idx)
@@ -87,15 +91,22 @@ class YOHODataset(Dataset):
                 if (audio_label[1] <= window_start <= audio_label[2]) or (
                     audio_label[1] <= window_end <= audio_label[2]
                 ):
-                    normalized_start = max(0, audio_label[1] - window_start) / STEP_SIZE
+                    normalized_start = (
+                        max(0, audio_label[1] - window_start) / STEP_SIZE
+                    )
                     normalized_end = (
-                        min(STEP_SIZE, audio_label[2] - window_start) / STEP_SIZE
+                        min(STEP_SIZE, audio_label[2] - window_start)
+                        / STEP_SIZE
                     )
 
                     label_index = self.labels.index(audio_label[0])
                     output[timeadvancement_no, label_index * 3] = 1
-                    output[timeadvancement_no, label_index * 3 + 1] = normalized_start
-                    output[timeadvancement_no, label_index * 3 + 2] = normalized_end
+                    output[timeadvancement_no, label_index * 3 + 1] = (
+                        normalized_start
+                    )
+                    output[timeadvancement_no, label_index * 3 + 2] = (
+                        normalized_end
+                    )
 
             timeadvancement_no += 1
 
@@ -139,4 +150,6 @@ class YOHODataGenerator(DataLoader):
         batch_size: int = 32,
         shuffle: bool = True,
     ):
-        super().__init__(dataset=dataset, batch_size=batch_size, shuffle=shuffle)
+        super().__init__(
+            dataset=dataset, batch_size=batch_size, shuffle=shuffle
+        )
