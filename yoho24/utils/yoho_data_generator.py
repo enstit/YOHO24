@@ -74,7 +74,7 @@ class YOHODataset(Dataset):
         output = np.zeros(output_size)
 
         # Initialize columns equal to 1 module 3 to 0
-        output[1::3] = 0
+        output[:, 0::3] = 0
 
         timeadvancement_no = 0
         while timeadvancement_no < output.shape[0]:
