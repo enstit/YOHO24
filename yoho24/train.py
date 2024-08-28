@@ -198,7 +198,7 @@ if __name__ == "__main__":
     model, optimizer, start_epoch, _ = load_checkpoint(model, optimizer)
 
     # Set the number of epochs
-    EPOCHS = 10
+    EPOCHS = 20
 
     train_model(
         model=model,
