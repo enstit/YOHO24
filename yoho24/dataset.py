@@ -39,12 +39,16 @@ if __name__ == "__main__":
         for item in os.listdir(tut_extract_to_subfolder):
             if item.endswith(".zip"):
                 zipped_file = os.path.join(tut_extract_to_subfolder, item)
-                unzipped_file = zipped_file.rsplit(".", 1)[0]  # Remove .zip extension
+                unzipped_file = zipped_file.rsplit(".", 1)[
+                    0
+                ]  # Remove .zip extension
                 uncompress_file(zipped_file, unzipped_file)
 
     if not os.path.exists(os.path.join(SCRIPT_DIRPATH, "../data/processed")):
         os.makedirs(os.path.join(SCRIPT_DIRPATH, "../data/processed"))
-    if not os.path.exists(os.path.join(SCRIPT_DIRPATH, "../data/processed/TUT")):
+    if not os.path.exists(
+        os.path.join(SCRIPT_DIRPATH, "../data/processed/TUT")
+    ):
         os.makedirs(os.path.join(SCRIPT_DIRPATH, "../data/processed/TUT"))
 
     AUDIO_1_PATH = os.path.join(
@@ -114,7 +118,9 @@ if __name__ == "__main__":
 
         for i, audioclip in enumerate(audioclips):
             sf.write(
-                os.path.join(DATA_PATH, f"{os.path.basename(f).split('.')[0]}_{i}.wav"),
+                os.path.join(
+                    DATA_PATH, f"{os.path.basename(f).split('.')[0]}_{i}.wav"
+                ),
                 data=audioclip.waveform,
                 samplerate=audioclip.sr,
             )

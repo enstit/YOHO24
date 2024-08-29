@@ -60,7 +60,7 @@ class YOHODataset(Dataset):
         )
 
         # Convert the normalized Mel spectrogram to a PyTorch tensor
-        spect_tensor = torch.tensor(spect.T).unsqueeze(0).float()
+        spect_tensor = torch.tensor(spect).unsqueeze(0).float()
 
         # Get the labels for the audio file
         labels = self._get_output(idx)

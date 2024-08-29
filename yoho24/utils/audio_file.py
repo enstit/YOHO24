@@ -19,7 +19,8 @@ class AudioFile:
 
         Args:
             filepath (str): Path to the audio file on the filesystem
-            labels (list): List of labels for the audio file with related start and stop times
+            labels (list): List of labels for the audio file with related start
+            and stop times
             n_channels (int): Number of channels in the audio file
         """
         self.filepath = filepath  # Path to the audio file
@@ -87,14 +88,19 @@ class AudioFile:
 
         audioclips = []
 
-        for i in range(win_points, int(self.duration * self.sr) + 1, hop_points):
+        for i in range(
+            win_points, int(self.duration * self.sr) + 1, hop_points
+        ):
 
             labels = []
             for label in self.labels if self.labels else []:
                 # Check if the label is within the current window.
                 # If so, add it to the labels list by changing the start and stop times
                 # to be relative to the current window.
-                if label[1] < i / self.sr and label[2] > (i - win_points) / self.sr:
+                if (
+                    label[1] < i / self.sr
+                    and label[2] > (i - win_points) / self.sr
+                ):
                     labels.append(
                         (
                             label[0],

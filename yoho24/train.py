@@ -9,6 +9,7 @@ from datetime import datetime
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 
+
 class YOHOLoss(nn.Module):
     def __init__(self):
         super(YOHOLoss, self).__init__()
@@ -36,17 +37,21 @@ class YOHOLoss(nn.Module):
         classification_loss = (y_pred_class - y_true_class).pow(2)
         # Compute the regression loss
         regression_loss = (
-            (y_pred_start - y_true_start).pow(2) + (y_pred_end - y_true_end).pow(2)
+            (y_pred_start - y_true_start).pow(2)
+            + (y_pred_end - y_true_end).pow(2)
         ) * y_true_class
         # The total loss is the sum of the classification and regression loss
         total_loss = classification_loss + regression_loss
         return total_loss.mean()
 
+
 def get_loss_function():
     return YOHOLoss()
 
+
 def save_checkpoint(state, filename="checkpoint.pth.tar"):
     torch.save(state, filename)
+
 
 def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
     if not os.path.isfile(filename):
@@ -63,15 +68,18 @@ def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
     loss = checkpoint["loss"]
     return model, optimizer, start_epoch, loss
 
+
 def save_loss_dict(loss_dict, filename="losses.json"):
-    with open(filename, 'w') as f:
+    with open(filename, "w") as f:
         json.dump(loss_dict, f)
+
 
 def load_loss_dict(filename="losses.json"):
     if os.path.exists(filename):
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             return json.load(f)
     return {}
+
 
 def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
 
@@ -120,9 +128,14 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
             avg_val_loss = None
 
         # Update the loss dictionary
-        loss_dict[epoch + 1] = {"train_loss": avg_loss, "val_loss": avg_val_loss}
+        loss_dict[epoch + 1] = {
+            "train_loss": avg_loss,
+            "val_loss": avg_val_loss,
+        }
 
-        print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {avg_loss}, Val Loss: {avg_val_loss}")
+        print(
+            f"Epoch [{epoch + 1}/{num_epochs}], Loss: {avg_loss}, Val Loss: {avg_val_loss}"
+        )
 
         # Save the model checkpoint after each epoch
         save_checkpoint(
@@ -173,7 +186,9 @@ if __name__ == "__main__":
     ]
 
     train_dataloader = YOHODataGenerator(
-        dataset=TUTDataset(audios=training_audioclips), batch_size=1, shuffle=True
+        dataset=TUTDataset(audios=training_audioclips),
+        batch_size=1,
+        shuffle=True,
     )
 
     eval_dataloader = YOHODataGenerator(
