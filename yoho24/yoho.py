@@ -46,7 +46,7 @@ class DepthwiseSeparableConv(nn.Module):
             out_channels,
             kernel_size=1,
             stride=pw_stride,
-            padding='same',
+            padding="same",
         )
 
         self.bn_depthwise = nn.BatchNorm2d(in_channels, eps=1e-4)
@@ -80,20 +80,19 @@ class MobileNetBackbone(nn.Module):
     by a series of depthwise separable convolution layers.
     """
 
-    def __init__(self, input_shape: tuple, dropout_rate: float = 0.1):
+    def __init__(self, input_channels: int, dropout_rate: float = 0.1):
         """
         Initializes the MobileNet backbone.
 
         Args:
-            input_shape (tuple): Shape of the input tensor (channels, height,
-                                 width).
+            input_channels (int): Number of channels in the input tensor.
         """
         super(MobileNetBackbone, self).__init__()
-        input_channels = input_shape[1]
+        self.input_channels = input_channels
 
         self.initial_conv = nn.Sequential(
             nn.Conv2d(
-                input_channels,
+                self.input_channels,
                 out_channels=32,
                 kernel_size=(3, 3),
                 stride=2,
@@ -103,6 +102,8 @@ class MobileNetBackbone(nn.Module):
             nn.BatchNorm2d(32, eps=1e-4),
             nn.ReLU(inplace=True),
         )
+
+        self.output_channels = 32
 
         LAYER_DEFS = [
             # kernel_size, pw_stride, dw_stride, out_channels
@@ -122,13 +123,11 @@ class MobileNetBackbone(nn.Module):
         ]
 
         layers = []
-        in_channels = 32  # Starting from the output channels of the initial
-        # convolution layer
 
         for kernel_size, pw_stride, dw_stride, out_channels in LAYER_DEFS:
             layers.append(
                 DepthwiseSeparableConv(
-                    in_channels,
+                    self.output_channels,
                     out_channels,
                     kernel_size=kernel_size,
                     pw_stride=pw_stride,
@@ -138,7 +137,7 @@ class MobileNetBackbone(nn.Module):
             )
 
             # Update the input channels for the next layer
-            in_channels = out_channels
+            self.output_channels = out_channels
 
         self.layers = nn.Sequential(*layers)
 
@@ -153,7 +152,7 @@ class MobileNetBackbone(nn.Module):
             torch.Tensor: Output tensor.
         """
         x = self.initial_conv(x)
-        
+
         x = self.layers(x)
         return x
 
@@ -180,7 +179,9 @@ class YOHO(MobileNetBackbone):
             output_shape (tuple): Shape of the output tensor (channels, height,
                                   width).
         """
-        super(YOHO, self).__init__(input_shape, dropout_rate)
+        super(YOHO, self).__init__(
+            input_channels=input_shape[-3], dropout_rate=dropout_rate
+        )
 
         self.output_shape = output_shape
 
@@ -191,12 +192,11 @@ class YOHO(MobileNetBackbone):
         ]
 
         layers = []
-        in_channels = 1024  # Starting from the output channels of the last
 
         for kernel_size, stride, out_channels in ADDITIONAL_LAYER_DEFS:
             layers.append(
                 DepthwiseSeparableConv(
-                    in_channels,
+                    self.output_channels,
                     out_channels,
                     kernel_size=kernel_size,
                     pw_stride=stride,
@@ -206,7 +206,7 @@ class YOHO(MobileNetBackbone):
             )
 
             # Update the input channels for the next layer
-            in_channels = out_channels
+            self.output_channels = out_channels
 
         self.additional_layers = nn.Sequential(*layers)
 
