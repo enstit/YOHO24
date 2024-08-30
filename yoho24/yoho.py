@@ -166,7 +166,7 @@ class YOHO(MobileNetBackbone):
 
     def __init__(
         self,
-        input_shape: tuple,
+        input_shape: tuple[int, int, int],
         n_classes: int,
         dropout_rate: float = 0.1,
     ):
