@@ -201,7 +201,7 @@ if __name__ == "__main__":
     input_shape = train_dataloader.dataset[0][0].shape
     output_shape = train_dataloader.dataset[0][1].shape
 
-    model = YOHO(input_shape=input_shape, output_shape=output_shape)
+    model = YOHO(input_shape=input_shape, n_classes=6)
 
     # Move the model to the device
     model = model.to(device)
