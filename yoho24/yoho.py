@@ -167,7 +167,7 @@ class YOHO(MobileNetBackbone):
     def __init__(
         self,
         input_shape: tuple,
-        output_shape: tuple,
+        n_classes: int,
         dropout_rate: float = 0.1,
     ):
         """
@@ -183,7 +183,7 @@ class YOHO(MobileNetBackbone):
             input_channels=input_shape[-3], dropout_rate=dropout_rate
         )
 
-        self.output_shape = output_shape
+        self.n_classes = n_classes
 
         ADDITIONAL_LAYER_DEFS = [
             ((3, 3), 1, 512),
@@ -214,7 +214,7 @@ class YOHO(MobileNetBackbone):
         self.final_reshape = nn.Conv2d(128, 256, kernel_size=1)
 
         # Adjust according to the final Conv1D layer
-        self.final_conv1d = nn.Conv1d(256, output_shape[-2], kernel_size=1)
+        self.final_conv1d = nn.Conv1d(256, 3 * self.n_classes, kernel_size=1)
 
     def forward(self, x):
         """
@@ -232,17 +232,14 @@ class YOHO(MobileNetBackbone):
         # Forward pass through the additional layers
         x = self.additional_layers(x)
 
-        # Reshape the output tensor
-        # x = self.final_reshape(x)
-
-        # Reshape to match (time, channels, batch_size)
+        # Reshape the tensor to match the desired output shape
         x = x.flatten(-3, -2)
 
         # Apply the final Conv1D layer
         x = self.final_conv1d(x)
         return x
 
-    def get_optimizer(model, lr=0.001, weight_decay=0.01):
+    def get_optimizer(self, lr=0.001, weight_decay=0.01):
         """
         Get the optimizer for the YOHO model.
 
@@ -257,18 +254,18 @@ class YOHO(MobileNetBackbone):
 
         params_to_optimize = [
             # L2 on the first Conv2D layer
-            {"params": model.initial_conv.parameters(), "weight_decay": 0.001},
+            {"params": self.initial_conv.parameters(), "weight_decay": 0.001},
             # L2 on subsequent Conv2D layers
             {
-                "params": model.layers.parameters(),
+                "params": self.layers.parameters(),
                 "weight_decay": weight_decay,
             },
             {
-                "params": model.additional_layers.parameters(),
+                "params": self.additional_layers.parameters(),
                 "weight_decay": weight_decay,
             },
-            {"params": model.final_reshape.parameters(), "weight_decay": 0},
-            {"params": model.final_conv1d.parameters(), "weight_decay": 0},
+            {"params": self.final_reshape.parameters(), "weight_decay": 0},
+            {"params": self.final_conv1d.parameters(), "weight_decay": 0},
         ]
         optimizer = optim.Adam(params_to_optimize, lr=lr)
         return optimizer
