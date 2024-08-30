@@ -35,7 +35,7 @@ class DepthwiseSeparableConv(nn.Module):
             in_channels,
             kernel_size=kernel_size,
             stride=stride,
-            padding=kernel_size // 2,
+            padding=1,
             groups=in_channels,
             bias=False,
         )
@@ -45,7 +45,7 @@ class DepthwiseSeparableConv(nn.Module):
             out_channels,
             kernel_size=1,
             stride=1,
-            padding=0,
+            padding=1,
             bias=False,
         )
 
@@ -89,7 +89,7 @@ class MobileNetBackbone(nn.Module):
                                  width).
         """
         super(MobileNetBackbone, self).__init__()
-        input_channels = input_shape[0]
+        input_channels = input_shape[1]
 
         self.initial_conv = nn.Sequential(
             nn.Conv2d(
@@ -135,6 +135,7 @@ class MobileNetBackbone(nn.Module):
                     dropout_rate=dropout_rate,
                 )
             )
+            print(in_channels, out_channels)
 
             # Update the input channels for the next layer
             in_channels = out_channels
@@ -151,7 +152,10 @@ class MobileNetBackbone(nn.Module):
         Returns:
             torch.Tensor: Output tensor.
         """
+        print("Initial Conv")
         x = self.initial_conv(x)
+        
+        print("Layers")
         x = self.layers(x)
         return x
 
@@ -190,7 +194,6 @@ class YOHO(MobileNetBackbone):
 
         layers = []
         in_channels = 1024  # Starting from the output channels of the last
-        # backbone layer
 
         for kernel_size, stride, out_channels in ADDITIONAL_LAYER_DEFS:
             layers.append(
@@ -202,6 +205,7 @@ class YOHO(MobileNetBackbone):
                     dropout_rate=dropout_rate,
                 )
             )
+            print(in_channels, out_channels)
 
             # Update the input channels for the next layer
             in_channels = out_channels
@@ -210,6 +214,7 @@ class YOHO(MobileNetBackbone):
 
         # Adjust according to the required final reshape layer
         self.final_reshape = nn.Conv2d(128, 256, kernel_size=1)
+
         # Adjust according to the final Conv1D layer
         self.final_conv1d = nn.Conv1d(256, output_shape[0], kernel_size=1)
 
@@ -225,12 +230,15 @@ class YOHO(MobileNetBackbone):
         """
         # Forward pass through the backbone
         x = super().forward(x)
+        print("Backbone output shape:", x.shape)
 
         # Forward pass through the additional layers
-        # x = self.additional_layers(x)
+        x = self.additional_layers(x)
+        print("Additional layers output shape:", x.shape)
 
         # Reshape the output tensor
         x = self.final_reshape(x)
+
         batch_size, _, sx, sy = x.shape
 
         # Reshape to match (batch_size, channels, time)
