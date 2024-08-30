@@ -214,7 +214,7 @@ class YOHO(MobileNetBackbone):
         self.final_reshape = nn.Conv2d(128, 256, kernel_size=1)
 
         # Adjust according to the final Conv1D layer
-        self.final_conv1d = nn.Conv1d(256, output_shape[0], kernel_size=1)
+        self.final_conv1d = nn.Conv1d(256, output_shape[-2], kernel_size=1)
 
     def forward(self, x):
         """
@@ -233,12 +233,10 @@ class YOHO(MobileNetBackbone):
         x = self.additional_layers(x)
 
         # Reshape the output tensor
-        x = self.final_reshape(x)
+        # x = self.final_reshape(x)
 
-        batch_size, _, sx, sy = x.shape
-
-        # Reshape to match (batch_size, channels, time)
-        x = x.view(batch_size, 256, -1)
+        # Reshape to match (time, channels, batch_size)
+        x = x.flatten(-3, -2)
 
         # Apply the final Conv1D layer
         x = self.final_conv1d(x)
