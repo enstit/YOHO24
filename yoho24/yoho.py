@@ -46,7 +46,7 @@ class DepthwiseSeparableConv(nn.Module):
             out_channels,
             kernel_size=1,
             stride=pw_stride,
-            #padding=1,
+            padding='same',
         )
 
         self.bn_depthwise = nn.BatchNorm2d(in_channels, eps=1e-4)
