@@ -25,6 +25,7 @@ class YOHOLoss(nn.Module):
         Returns:
             torch.Tensor: The computed loss.
         """
+        print(predictions.shape, targets.shape)
         y_pred_class = predictions[:, :, 0]
         y_pred_start = predictions[:, :, 1]
         y_pred_end = predictions[:, :, 2]
@@ -187,21 +188,18 @@ if __name__ == "__main__":
 
     train_dataloader = YOHODataGenerator(
         dataset=TUTDataset(audios=training_audioclips),
-        batch_size=1,
+        batch_size=32,
         shuffle=True,
     )
 
     eval_dataloader = YOHODataGenerator(
         dataset=TUTDataset(audios=evaluation_audioclips),
-        batch_size=1,
+        batch_size=32,
         shuffle=False,
     )
 
-    # Define the input and output shapes
-    input_shape = train_dataloader.dataset[0][0].shape
-    output_shape = train_dataloader.dataset[0][1].shape
-
-    model = YOHO(input_shape=input_shape, n_classes=6)
+    model = YOHO(input_shape=(1, 40, 257), n_classes=6)
+    print(model.output_channels)
 
     # Move the model to the device
     model = model.to(device)

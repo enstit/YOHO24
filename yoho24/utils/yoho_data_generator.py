@@ -110,7 +110,7 @@ class YOHODataset(Dataset):
 
             timeadvancement_no += 1
 
-        return output
+        return output.T
 
 
 class TUTDataset(YOHODataset):
