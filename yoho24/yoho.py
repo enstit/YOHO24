@@ -16,7 +16,8 @@ class DepthwiseSeparableConv(nn.Module):
         in_channels: int,
         out_channels: int,
         kernel_size: int | tuple,
-        stride: int | tuple,
+        dw_stride: int | tuple = 1,
+        pw_stride: int | tuple = 1,
         dropout_rate: float = 0.1,
     ):
         """
@@ -34,7 +35,7 @@ class DepthwiseSeparableConv(nn.Module):
             in_channels,
             in_channels,
             kernel_size=kernel_size,
-            stride=stride,
+            stride=dw_stride,
             padding=1,
             groups=in_channels,
             bias=False,
@@ -44,7 +45,7 @@ class DepthwiseSeparableConv(nn.Module):
             in_channels,
             out_channels,
             kernel_size=1,
-            stride=1,
+            stride=pw_stride,
             padding=1,
             bias=False,
         )
@@ -105,37 +106,37 @@ class MobileNetBackbone(nn.Module):
         )
 
         LAYER_DEFS = [
-            # kernel_size, stride, out_channels
-            ((3, 3), 1, 64),
-            ((3, 3), 2, 128),
-            ((3, 3), 1, 128),
-            ((3, 3), 2, 256),
-            ((3, 3), 1, 256),
-            ((3, 3), 2, 512),
-            ((3, 3), 1, 512),
-            ((3, 3), 1, 512),
-            ((3, 3), 1, 512),
-            ((3, 3), 1, 512),
-            ((3, 3), 1, 512),
-            ((3, 3), 2, 1024),
-            ((3, 3), 1, 1024),
+            # kernel_size, pw_stride, dw_stride, out_channels
+            ((3, 3), 1, 1, 64),
+            ((3, 3), 1, 2, 128),
+            ((3, 3), 1, 1, 128),
+            ((3, 3), 1, 2, 256),
+            ((3, 3), 1, 1, 256),
+            ((3, 3), 1, 2, 512),
+            ((3, 3), 1, 1, 512),
+            ((3, 3), 1, 1, 512),
+            ((3, 3), 1, 1, 512),
+            ((3, 3), 1, 1, 512),
+            ((3, 3), 1, 1, 512),
+            ((3, 3), 1, 2, 1024),
+            ((3, 3), 1, 1, 1024),
         ]
 
         layers = []
         in_channels = 32  # Starting from the output channels of the initial
         # convolution layer
 
-        for kernel_size, stride, out_channels in LAYER_DEFS:
+        for kernel_size, pw_stride, dw_stride, out_channels in LAYER_DEFS:
             layers.append(
                 DepthwiseSeparableConv(
                     in_channels,
                     out_channels,
                     kernel_size=kernel_size,
-                    stride=stride,
+                    pw_stride=pw_stride,
+                    dw_stride=dw_stride,
                     dropout_rate=dropout_rate,
                 )
             )
-            print(in_channels, out_channels)
 
             # Update the input channels for the next layer
             in_channels = out_channels
@@ -152,10 +153,8 @@ class MobileNetBackbone(nn.Module):
         Returns:
             torch.Tensor: Output tensor.
         """
-        print("Initial Conv")
         x = self.initial_conv(x)
         
-        print("Layers")
         x = self.layers(x)
         return x
 
@@ -201,11 +200,11 @@ class YOHO(MobileNetBackbone):
                     in_channels,
                     out_channels,
                     kernel_size=kernel_size,
-                    stride=stride,
+                    pw_stride=stride,
+                    dw_stride=stride,
                     dropout_rate=dropout_rate,
                 )
             )
-            print(in_channels, out_channels)
 
             # Update the input channels for the next layer
             in_channels = out_channels
@@ -230,11 +229,9 @@ class YOHO(MobileNetBackbone):
         """
         # Forward pass through the backbone
         x = super().forward(x)
-        print("Backbone output shape:", x.shape)
 
         # Forward pass through the additional layers
         x = self.additional_layers(x)
-        print("Additional layers output shape:", x.shape)
 
         # Reshape the output tensor
         x = self.final_reshape(x)
