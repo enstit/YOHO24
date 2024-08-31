@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
-
+REPORTS_DIR = os.path.join(SCRIPT_DIRPATH, "reports")
 
 class YOHOLoss(nn.Module):
     def __init__(self):
@@ -70,8 +70,9 @@ def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
 
 
 def append_loss_dict(epoch, train_loss, val_loss, filename="losses.json"):
-    if os.path.exists(filename):
-        with open(filename, "r") as f:
+    filepath = os.path.join(REPORTS_DIR, filename)
+    if os.path.exists(filepath):
+        with open(filepath, "r") as f:
             loss_dict = json.load(f)
     else:
         loss_dict = {}
@@ -81,7 +82,7 @@ def append_loss_dict(epoch, train_loss, val_loss, filename="losses.json"):
         "val_loss": val_loss,
     }
 
-    with open(filename, "w") as f:
+    with open(filepath, "w") as f:
         json.dump(loss_dict, f)
 
 
