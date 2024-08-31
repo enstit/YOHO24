@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
-
+REPORTS_DIR = os.path.join(SCRIPT_DIRPATH, "reports")
 
 class YOHOLoss(nn.Module):
     def __init__(self):
@@ -25,7 +25,6 @@ class YOHOLoss(nn.Module):
         Returns:
             torch.Tensor: The computed loss.
         """
-        print(predictions.shape, targets.shape)
         y_pred_class = predictions[:, :, 0]
         y_pred_start = predictions[:, :, 1]
         y_pred_end = predictions[:, :, 2]
@@ -70,25 +69,27 @@ def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
     return model, optimizer, start_epoch, loss
 
 
-def save_loss_dict(loss_dict, filename="losses.json"):
-    with open(filename, "w") as f:
+def append_loss_dict(epoch, train_loss, val_loss, filename="losses.json"):
+    filepath = os.path.join(REPORTS_DIR, filename)
+    if os.path.exists(filepath):
+        with open(filepath, "r") as f:
+            loss_dict = json.load(f)
+    else:
+        loss_dict = {}
+
+    loss_dict[epoch] = {
+        "train_loss": train_loss,
+        "val_loss": val_loss,
+    }
+
+    with open(filepath, "w") as f:
         json.dump(loss_dict, f)
-
-
-def load_loss_dict(filename="losses.json"):
-    if os.path.exists(filename):
-        with open(filename, "r") as f:
-            return json.load(f)
-    return {}
 
 
 def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
 
     criterion = get_loss_function()
     optimizer = model.get_optimizer()
-
-    # Load previous losses if available
-    loss_dict = load_loss_dict()
 
     for epoch in range(start_epoch, num_epochs):
         # Set the model to training mode
@@ -128,11 +129,8 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
         else:
             avg_val_loss = None
 
-        # Update the loss dictionary
-        loss_dict[epoch + 1] = {
-            "train_loss": avg_loss,
-            "val_loss": avg_val_loss,
-        }
+        # Append the losses to the file
+        append_loss_dict(epoch + 1, avg_loss, avg_val_loss)
 
         print(
             f"Epoch [{epoch + 1}/{num_epochs}], Loss: {avg_loss}, Val Loss: {avg_val_loss}"
@@ -147,9 +145,6 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
                 "loss": avg_loss,
             }
         )
-
-    # Save the updated loss dictionary at the end of training
-    save_loss_dict(loss_dict)
 
 
 if __name__ == "__main__":
