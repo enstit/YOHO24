@@ -65,6 +65,9 @@ class YOHODataset(Dataset):
         # Get the labels for the audio file
         labels = self._get_output(idx)
 
+        if self.transform:
+            spect_tensor = self.transform(spect_tensor)
+
         return spect_tensor, labels
 
     def _get_output(self, idx: int) -> np.array:
