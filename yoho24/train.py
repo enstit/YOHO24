@@ -1,11 +1,12 @@
 import os
 import torch
 import torch.nn as nn
+from torchvision.transforms import v2
+from torchaudio.transforms import TimeMasking, FrequencyMasking
 import pandas as pd
 from utils import AudioFile, TUTDataset, YOHODataGenerator
 from yoho import YOHO
 import json
-from datetime import datetime
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 REPORTS_DIR = os.path.join(SCRIPT_DIRPATH, "reports")
@@ -181,10 +182,19 @@ if __name__ == "__main__":
         ).subdivide(win_len=2.56, hop_len=1.96)
     ]
 
+    transforms = v2.Compose(
+        [
+            TimeMasking(time_mask_param=25),
+            TimeMasking(time_mask_param=25),
+            FrequencyMasking(freq_mask_param=8),
+        ]
+    )
+
     train_dataloader = YOHODataGenerator(
         dataset=TUTDataset(audios=training_audioclips),
         batch_size=32,
         shuffle=True,
+        transforms=transforms,
     )
 
     eval_dataloader = YOHODataGenerator(
