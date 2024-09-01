@@ -9,10 +9,10 @@
 In this project we - Davide Capone ([`@davidecapone`](https://github.com/davidecapone)) and Enrico Stefanel ([`@enstit`](https://github.com/enstit)), Master's student at [University of Trieste](https://www.units.it/en) - try to improve the performance of **YOHO** algorithm for Audio Segmentation and Sound Event Detection by applying features introduced in more recent YOLO models.
 
 ## Abstract
-Following the introduction of You-Only-Look-Once (YOLO) model in 2015[^1], which quickly revolutionised the way the Object Detection problem was approached due to its extremely lightweight structure but that offered very good accuracy, many researchers focused their work on such models family. In the following years new versions of YOLO were presented[^2][^3][^4][^6][^7][^8], which further lightened the model and made it more reliable. Some other studies, instead, concentrated on applying YOLO concepts to data types other than visual ones: this is the case of the YOHO algorithm (You-Only-Hear-Once)[^5], which targets the Audio Segmentation and Sound Event Detection problems. In this project we propose to select the improvements applied to YOLO in the latest versions, and apply them to the YOHO structure to see if these bring significant improvements to the model, testing it on the same datasets as the YOHO paper and comparing the two.
+Following the introduction of You-Only-Look-Once (YOLO) model in 2015[^1], which quickly revolutionized the way the Object Detection problem was approached due to its extremely lightweight structure but that offered very good accuracy, many researchers focused their work on such models family. In the following years new versions of YOLO were presented[^2][^3][^5][^7][^8][^9], which further lightened the model and made it more reliable. Some other studies, instead, concentrated on applying YOLO concepts to data types other than visual ones: this is the case of the YOHO algorithm (You-Only-Hear-Once)[^6], which targets the Audio Segmentation and Sound Event Detection problems. In this project we propose to select the improvements applied to YOLO in the latest versions, and apply them to the YOHO structure to see if these bring significant improvements to the model, testing it on the same datasets as the YOHO paper and comparing the two.
 
 ## Datasets
-The datasets used in this project are (almost) the same ones used in [the original YOHO paper](https://doi.org/10.48550/arXiv.2109.00962) to evaluate its prformances, with the exception of the *18h of audio from BBC Radio Devon* dataset.
+The datasets used in this project are (almost) the same ones used in [the original YOHO paper](https://doi.org/10.48550/arXiv.2109.00962) to evaluate its performances, with the exception of the *18h of audio from BBC Radio Devon* dataset.
 We could not update in this repository all the raw files, but the [`00_datasets.ipynb`](./notebooks/00_datasets.ipynb) file contains the code to automatically download them.
 Regarding the relevant licenses, please refer to the individual sources.
 
@@ -29,16 +29,19 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
     Redmon, J. and Farhadi, A., "YOLOv3: An Incremental Improvement", *arXiv e-prints*, 2018. [doi:10.48550/arXiv.1804.02767](https://doi.org/10.48550/arXiv.1804.02767).
 
 [^4]:
-    Bochkovskiy, A., Wang, C.-Y., and Liao, H.-Y. M., "YOLOv4: Optimal Speed and Accuracy of Object Detection", *arXiv e-prints*, 2020. [doi:10.48550/arXiv.2004.10934](https://doi.org/10.48550/arXiv.2004.10934).
+    Daniel S.-P., William C., Yu Z., Chung-Cheng C., Barret Z., Ekin D.-C., Quoc V.-L., "SpecAugment: A Simple Data Augmentation Method for Automatic Speech Recognition", *arXiv e-prints*, 2019. [doi:10.48550/arXiv:1904.08779](https://doi.org/10.48550/arXiv:1904.08779).
 
 [^5]:
-    Venkatesh, S., Moffat, D., and Reck Miranda, E., "You Only Hear Once: A YOLO-like Algorithm for Audio Segmentation and Sound Event Detection", *arXiv e-prints*, 2021. [doi:10.48550/arXiv.2109.00962](https://doi.org/10.48550/arXiv.2109.00962).
+    Bochkovskiy, A., Wang, C.-Y., and Liao, H.-Y. M., "YOLOv4: Optimal Speed and Accuracy of Object Detection", *arXiv e-prints*, 2020. [doi:10.48550/arXiv.2004.10934](https://doi.org/10.48550/arXiv.2004.10934).
 
 [^6]:
-    Ultralytics, "YOLOv5: A state-of-the-art real-time object detection system", 2021. [https://docs.ultralytics.com](https://docs.ultralytics.com).
+    Venkatesh, S., Moffat, D., and Reck Miranda, E., "You Only Hear Once: A YOLO-like Algorithm for Audio Segmentation and Sound Event Detection", *arXiv e-prints*, 2021. [doi:10.48550/arXiv.2109.00962](https://doi.org/10.48550/arXiv.2109.00962).
 
 [^7]:
-    Li, C., "YOLOv6: A Single-Stage Object Detection Framework for Industrial Applications", *arXiv e-prints*, 2022. [doi:10.48550/arXiv.2209.02976](https://doi.org/10.48550/arXiv.2209.02976).
+    Ultralytics, "YOLOv5: A state-of-the-art real-time object detection system", 2021. [https://docs.ultralytics.com](https://docs.ultralytics.com).
 
 [^8]:
+    Li, C., "YOLOv6: A Single-Stage Object Detection Framework for Industrial Applications", *arXiv e-prints*, 2022. [doi:10.48550/arXiv.2209.02976](https://doi.org/10.48550/arXiv.2209.02976).
+
+[^9]:
     Wang, C.-Y., Bochkovskiy, A., and Liao, H.-Y. M., "YOLOv7: Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors", *arXiv e-prints*, 2022. [doi:10.48550/arXiv.2207.02696](https://doi.org/10.48550/arXiv.2207.02696).
