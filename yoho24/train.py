@@ -11,6 +11,7 @@ import json
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 REPORTS_DIR = os.path.join(SCRIPT_DIRPATH, "reports")
 
+
 class YOHOLoss(nn.Module):
     def __init__(self):
         super(YOHOLoss, self).__init__()
@@ -191,10 +192,12 @@ if __name__ == "__main__":
     )
 
     train_dataloader = YOHODataGenerator(
-        dataset=TUTDataset(audios=training_audioclips),
+        dataset=TUTDataset(
+            audios=training_audioclips,
+            transforms=transforms,
+        ),
         batch_size=32,
         shuffle=True,
-        transforms=transforms,
     )
 
     eval_dataloader = YOHODataGenerator(
