@@ -194,7 +194,7 @@ if __name__ == "__main__":
     train_dataloader = YOHODataGenerator(
         dataset=TUTDataset(
             audios=training_audioclips,
-            transforms=transforms,
+            transform=transforms,
         ),
         batch_size=32,
         shuffle=True,
