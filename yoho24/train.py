@@ -8,7 +8,9 @@ from utils import AudioFile, TUTDataset, YOHODataGenerator
 from yoho import YOHO
 import json
 import sed_eval
-import dcase_util
+from sed_eval.sound_event import EventBasedMetrics
+from dcase_util.data import EventList, Event
+from dcase_util.containers import MetaDataContainer
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 REPORTS_DIR = os.path.join(SCRIPT_DIRPATH, "..", "reports")
@@ -48,14 +50,11 @@ class YOHOLoss(nn.Module):
         total_loss = classification_loss + regression_loss
         return total_loss.mean()
 
-
 def get_loss_function():
     return YOHOLoss()
 
-
 def save_checkpoint(state, filename="checkpoint.pth.tar"):
     torch.save(state, filename)
-
 
 def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
     if not os.path.isfile(filename):
@@ -71,7 +70,6 @@ def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
     start_epoch = checkpoint["epoch"]
     loss = checkpoint["loss"]
     return model, optimizer, start_epoch, loss
-
 
 def append_loss_dict(epoch, train_loss, val_loss, filename="losses.json"):
     filepath = os.path.join(REPORTS_DIR, filename)
@@ -90,22 +88,42 @@ def append_loss_dict(epoch, train_loss, val_loss, filename="losses.json"):
     with open(filepath, "w") as f:
         json.dump(loss_dict, f)
 
+def convert_to_sed_format(tensor, label_map, file_id="audio_file"):
+    event_list = []
+    for i in range(tensor.shape[0]):
+        for j in range(tensor.shape[1]):
+            onset = tensor[i, j, 1].item()
+            offset = tensor[i, j, 2].item()
+            event_label = tensor[i, j, 0].item()
+
+            if event_label in label_map:
+                event_label_str = label_map[event_label]
+                event_list.append({
+                    "file": file_id,
+                    "onset": onset,
+                    "offset": offset,
+                    "event_label": event_label_str
+                })
+    return event_list
 
 def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
 
     criterion = get_loss_function()
     optimizer = model.get_optimizer()
 
-    evaluator = sed_eval.sound_event.SegmentBasedMetrics(
-        event_label_list=[
-                "brakes squeaking",
-                "car",
-                "children",
-                "large vehicle",
-                "people speaking",
-                "people walking",
-        ],
-        time_resolution=1.0,
+    # Define event labels mapping
+    label_map = {
+        0: "brakes squeaking",
+        1: "car",
+        2: "children",
+        3: "large vehicle",
+        4: "people speaking",
+        5: "people walking",
+    }
+
+    # Set up sed_eval metrics
+    evaluator = EventBasedMetrics(
+        event_label_list=list(label_map.values())
     )
 
     for epoch in range(start_epoch, num_epochs):
@@ -160,8 +178,7 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
                 estimated_event_list=prediction_list,
             )
 
-            results = evaluator.results()
-            print(f"Validation results: {results}")
+            evaluation_results = evaluator.results()
 
         else:
             avg_val_loss = None
@@ -170,7 +187,10 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
         append_loss_dict(epoch + 1, avg_loss, avg_val_loss)
 
         print(
-            f"Epoch [{epoch + 1}/{num_epochs}], Loss: {avg_loss}, Val Loss: {avg_val_loss}"
+            f"Epoch [{epoch + 1}/{num_epochs}], "
+            f"Loss: {avg_loss}, Val Loss: {avg_val_loss}, "
+            f"F1: {evaluation_results['overall']['f_measure']['f_measure']:.4f}, "
+            f"ER: {evaluation_results['overall']['error_rate']['error_rate']:.4f}"
         )
 
         # Save the model checkpoint after each epoch
