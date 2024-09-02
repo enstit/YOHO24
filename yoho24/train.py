@@ -7,6 +7,8 @@ import pandas as pd
 from utils import AudioFile, TUTDataset, YOHODataGenerator
 from yoho import YOHO
 import json
+import sed_eval
+import dcase_util
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 REPORTS_DIR = os.path.join(SCRIPT_DIRPATH, "..", "reports")
@@ -94,6 +96,18 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
     criterion = get_loss_function()
     optimizer = model.get_optimizer()
 
+    evaluator = sed_eval.sound_event.SegmentBasedMetrics(
+        event_label_list=[
+                "brakes squeaking",
+                "car",
+                "children",
+                "large vehicle",
+                "people speaking",
+                "people walking",
+        ],
+        time_resolution=1.0,
+    )
+
     for epoch in range(start_epoch, num_epochs):
         # Set the model to training mode
         model.train()
@@ -122,13 +136,33 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
         if val_loader is not None:
             model.eval()
             running_val_loss = 0.0
+
+            ground_truth_list = []
+            prediction_list = []
+
             with torch.no_grad():
                 for _, (inputs, labels) in enumerate(val_loader):
                     inputs, labels = inputs.to(device), labels.to(device)
                     outputs = model(inputs)
                     loss = criterion(outputs, labels)
                     running_val_loss += loss.item()
+
+                    predictions = convert_to_sed_format(outputs)
+                    ground_truth = convert_to_sed_format(labels)
+
+                    ground_truth_list.extend(ground_truth)
+                    prediction_list.extend(predictions)
+
             avg_val_loss = running_val_loss / len(val_loader)
+
+            evaluator.evaluate(
+                reference_event_list=ground_truth_list,
+                estimated_event_list=prediction_list,
+            )
+
+            results = evaluator.results()
+            print(f"Validation results: {results}")
+
         else:
             avg_val_loss = None
 
@@ -148,6 +182,24 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
                 "loss": avg_loss,
             }
         )
+
+def convert_to_sed_format(tensor, filename="audio_file"):
+    event_list = []
+    for i in range(tensor.shape[0]):
+        onset = tensor[i, :, 1].item()
+        offset = tensor[i, :, 2].item()
+        event_label = tensor[i, :, 0].item()
+
+        event_list.append(
+            {
+                "file": filename,
+                "event_label": event_label,
+                "onset": onset,
+                "offset": offset,
+            }
+        )
+
+    return event_list
 
 
 if __name__ == "__main__":
