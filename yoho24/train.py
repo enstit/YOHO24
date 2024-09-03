@@ -4,10 +4,11 @@ import torch.nn as nn
 from torchvision.transforms import v2
 from torchaudio.transforms import TimeMasking, FrequencyMasking
 import pandas as pd
-from utils import AudioFile, TUTDataset, YOHODataGenerator
-from yoho import YOHO
+from .utils import AudioFile, TUTDataset, YOHODataGenerator
+from .yoho import YOHO
 import json
-#import sed_eval
+
+# import sed_eval
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 REPORTS_DIR = os.path.join(SCRIPT_DIRPATH, "..", "reports")
@@ -28,13 +29,13 @@ class YOHOLoss(nn.Module):
         Returns:
             torch.Tensor: The computed loss.
         """
-        y_pred_class = predictions[:, :, 0]
-        y_pred_start = predictions[:, :, 1]
-        y_pred_end = predictions[:, :, 2]
+        y_pred_class = predictions[:, 0::3]
+        y_pred_start = predictions[:, 1::3]
+        y_pred_end = predictions[:, 2::3]
 
-        y_true_class = targets[:, :, 0]
-        y_true_start = targets[:, :, 1]
-        y_true_end = targets[:, :, 2]
+        y_true_class = targets[:, 0::3]
+        y_true_start = targets[:, 1::3]
+        y_true_end = targets[:, 2::3]
 
         # Compute the classification loss
         classification_loss = (y_pred_class - y_true_class).pow(2)
@@ -47,11 +48,14 @@ class YOHOLoss(nn.Module):
         total_loss = classification_loss + regression_loss
         return total_loss.mean()
 
+
 def get_loss_function():
     return YOHOLoss()
 
+
 def save_checkpoint(state, filename="checkpoint.pth.tar"):
     torch.save(state, filename)
+
 
 def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
     if not os.path.isfile(filename):
@@ -67,6 +71,7 @@ def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
     start_epoch = checkpoint["epoch"]
     loss = checkpoint["loss"]
     return model, optimizer, start_epoch, loss
+
 
 def append_loss_dict(epoch, train_loss, val_loss, filename="losses.json"):
     filepath = os.path.join(REPORTS_DIR, filename)
@@ -85,6 +90,7 @@ def append_loss_dict(epoch, train_loss, val_loss, filename="losses.json"):
     with open(filepath, "w") as f:
         json.dump(loss_dict, f)
 
+
 def convert_to_sed_format(tensor, label_map, file_id="audio_file"):
     event_list = []
     for i in range(tensor.shape[0]):
@@ -95,13 +101,16 @@ def convert_to_sed_format(tensor, label_map, file_id="audio_file"):
 
             if event_label in label_map:
                 event_label_str = label_map[event_label]
-                event_list.append({
-                    "file": file_id,
-                    "onset": onset,
-                    "offset": offset,
-                    "event_label": event_label_str
-                })
+                event_list.append(
+                    {
+                        "file": file_id,
+                        "onset": onset,
+                        "offset": offset,
+                        "event_label": event_label_str,
+                    }
+                )
     return event_list
+
 
 def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
 
@@ -152,8 +161,8 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
             model.eval()
             running_val_loss = 0.0
 
-            #ground_truth_list = []
-            #prediction_list = []
+            # ground_truth_list = []
+            # prediction_list = []
 
             with torch.no_grad():
                 for _, (inputs, labels) in enumerate(val_loader):
@@ -200,6 +209,7 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
             }
         )
 
+
 def convert_to_sed_format(tensor, filename="audio_file"):
     event_list = []
     for i in range(tensor.shape[0]):
@@ -218,14 +228,14 @@ def convert_to_sed_format(tensor, filename="audio_file"):
 
     return event_list
 
+
 def get_device():
     return (
         "cuda"
         if torch.cuda.is_available()
-        else "mps"
-        if torch.backends.mps.is_available()
-        else "cpu"
+        else "mps" if torch.backends.mps.is_available() else "cpu"
     )
+
 
 if __name__ == "__main__":
 
@@ -262,9 +272,9 @@ if __name__ == "__main__":
 
     transforms = v2.Compose(
         [
-            TimeMasking(time_mask_param=25),
-            TimeMasking(time_mask_param=25),
             FrequencyMasking(freq_mask_param=8),
+            TimeMasking(time_mask_param=25),
+            TimeMasking(time_mask_param=25),
         ]
     )
 
