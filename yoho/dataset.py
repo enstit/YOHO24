@@ -3,8 +3,13 @@
 import os
 import csv
 
-from .utils import download_file, uncompress_file, get_files, write_data_to_csv
-from .utils import AudioFile
+from yoho.utils import (
+    download_file,
+    uncompress_file,
+    get_files,
+    write_data_to_csv,
+)
+from yoho.utils import AudioFile
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -75,9 +80,9 @@ if __name__ == "__main__":
             f_name = f.split(".")[0] + ".wav"
 
             if f_name in ["a128.wav", "a131.wav", "b007.wav", "b093.wav"]:
-                f_path = AUDIO_2_PATH + f_name
+                f_path = os.path.abspath(os.path.join(AUDIO_2_PATH + f_name))
             else:
-                f_path = AUDIO_1_PATH + f_name
+                f_path = os.path.abspath(os.path.join(AUDIO_1_PATH + f_name))
 
             tut_data_train[f_path] = []
 

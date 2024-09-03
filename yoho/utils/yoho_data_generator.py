@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-from . import AudioFile
+from yoho.utils import AudioFile
 
 
 class YOHODataset(Dataset):

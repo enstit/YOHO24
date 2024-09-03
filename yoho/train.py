@@ -5,13 +5,13 @@ from torchvision.transforms import v2
 from torchaudio.transforms import TimeMasking, FrequencyMasking
 import pandas as pd
 
-from . import YOHOLoss, YOHO
-from .utils import AudioFile, TUTDataset, YOHODataGenerator
+from yoho import YOHOLoss, YOHO
+from yoho.utils import AudioFile, TUTDataset, YOHODataGenerator
 
 # import sed_eval
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
-REPORTS_DIR = os.path.join(SCRIPT_DIRPATH, "..", "models")
+MODELS_DIR = os.path.abspath(os.path.join(SCRIPT_DIRPATH, "..", "models"))
 
 
 def get_loss_function():
@@ -39,7 +39,7 @@ def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
 
 
 def append_loss_dict(epoch, train_loss, val_loss, filename="losses.json"):
-    filepath = os.path.join(REPORTS_DIR, filename)
+    filepath = os.path.join(MODELS_DIR, filename)
 
     if os.path.exists(filepath):
         with open(filepath, "r") as f:
