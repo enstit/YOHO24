@@ -3,8 +3,8 @@
 import os
 import csv
 
-from utils import download_file, uncompress_file, get_files, write_data_to_csv
-from utils import AudioFile
+from .utils import download_file, uncompress_file, get_files, write_data_to_csv
+from .utils import AudioFile
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 
