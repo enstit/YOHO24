@@ -7,10 +7,7 @@ import pandas as pd
 from utils import AudioFile, TUTDataset, YOHODataGenerator
 from yoho import YOHO
 import json
-import sed_eval
-from sed_eval.sound_event import EventBasedMetrics
-from dcase_util.data import EventList, Event
-from dcase_util.containers import MetaDataContainer
+#import sed_eval
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 REPORTS_DIR = os.path.join(SCRIPT_DIRPATH, "..", "reports")
@@ -111,7 +108,7 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
     criterion = get_loss_function()
     optimizer = model.get_optimizer()
 
-    # Define event labels mapping
+    """# Define event labels mapping
     label_map = {
         0: "brakes squeaking",
         1: "car",
@@ -122,9 +119,9 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
     }
 
     # Set up sed_eval metrics
-    evaluator = EventBasedMetrics(
+    evaluator = sed_eval.sound_event.EventBasedMetrics(
         event_label_list=list(label_map.values())
-    )
+    )"""
 
     for epoch in range(start_epoch, num_epochs):
         # Set the model to training mode
@@ -155,8 +152,8 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
             model.eval()
             running_val_loss = 0.0
 
-            ground_truth_list = []
-            prediction_list = []
+            #ground_truth_list = []
+            #prediction_list = []
 
             with torch.no_grad():
                 for _, (inputs, labels) in enumerate(val_loader):
@@ -165,20 +162,20 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
                     loss = criterion(outputs, labels)
                     running_val_loss += loss.item()
 
-                    predictions = convert_to_sed_format(outputs)
+                    """predictions = convert_to_sed_format(outputs)
                     ground_truth = convert_to_sed_format(labels)
 
                     ground_truth_list.extend(ground_truth)
-                    prediction_list.extend(predictions)
+                    prediction_list.extend(predictions)"""
 
             avg_val_loss = running_val_loss / len(val_loader)
 
-            evaluator.evaluate(
+            """evaluator.evaluate(
                 reference_event_list=ground_truth_list,
                 estimated_event_list=prediction_list,
             )
 
-            evaluation_results = evaluator.results()
+            evaluation_results = evaluator.results()"""
 
         else:
             avg_val_loss = None
@@ -186,12 +183,12 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
         # Append the losses to the file
         append_loss_dict(epoch + 1, avg_loss, avg_val_loss)
 
-        print(
+        """print(
             f"Epoch [{epoch + 1}/{num_epochs}], "
             f"Loss: {avg_loss}, Val Loss: {avg_val_loss}, "
             f"F1: {evaluation_results['overall']['f_measure']['f_measure']:.4f}, "
             f"ER: {evaluation_results['overall']['error_rate']['error_rate']:.4f}"
-        )
+        )"""
 
         # Save the model checkpoint after each epoch
         save_checkpoint(
@@ -221,18 +218,18 @@ def convert_to_sed_format(tensor, filename="audio_file"):
 
     return event_list
 
-
-if __name__ == "__main__":
-
-    # Get cpu, gpu or mps device for training.
-    device = (
+def get_device():
+    return (
         "cuda"
         if torch.cuda.is_available()
         else "mps"
         if torch.backends.mps.is_available()
         else "cpu"
     )
-    print(f"Using device: {device}")
+
+if __name__ == "__main__":
+
+    device = get_device()
 
     # Set the seed for reproducibility
     torch.manual_seed(0)
@@ -287,7 +284,6 @@ if __name__ == "__main__":
     )
 
     model = YOHO(input_shape=(1, 40, 257), n_classes=6)
-    print(model.output_channels)
 
     # Move the model to the device
     model = model.to(device)
