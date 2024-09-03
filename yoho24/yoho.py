@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import torch
 import torch.nn as nn
 import torch.optim as optim
 
@@ -238,6 +239,18 @@ class YOHO(MobileNetBackbone):
         # Apply the final Conv1D layer
         x = self.final_conv1d(x)
         return x
+    
+    def load(self, checkpoint_path: str, device: torch.device):
+        """
+        Load the model from a checkpoint.
+
+        Args:
+            checkpoint_path (str): Path to the checkpoint file.
+            device (torch.device): Device to load the model on.
+        """
+        checkpoint = torch.load(checkpoint_path, map_location=device)
+        self.load_state_dict(checkpoint["state_dict"])
+    
 
     def get_optimizer(self, lr=0.001, weight_decay=0.01):
         """
