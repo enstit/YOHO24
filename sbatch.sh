@@ -9,7 +9,7 @@
 #SBATCH --job-name=yoho24
 
 # Activate the virtual environment
-source /u/dssc/dcapone/scratch/torchenv/bin/activate
+source /u/dssc/$(whoami)/scratch/torchenv/bin/activate
 
 # Run the train.py script
-python3.11 /u/dssc/dcapone/scratch/YOHO24/yoho24/train.py
+python3.11 /u/dssc/$(whoami)/scratch/YOHO24/yoho24/train.py
