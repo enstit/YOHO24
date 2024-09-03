@@ -11,5 +11,7 @@
 # Activate the virtual environment
 source /u/dssc/$(whoami)/scratch/torchenv/bin/activate
 
+cd /u/dssc/$(whoami)/scratch/YOHO24/
+
 # Run the train.py script
-python3.11 /u/dssc/$(whoami)/scratch/YOHO24/yoho24/train.py
+python3 -m yoho.train
