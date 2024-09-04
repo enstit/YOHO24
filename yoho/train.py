@@ -161,6 +161,11 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
         # Append the losses to the file
         append_loss_dict(epoch + 1, avg_loss, avg_val_loss)
 
+        logging.info(
+            f"Epoch [{epoch + 1}/{num_epochs}], "
+            f"train loss: {avg_loss}, val Loss: {avg_val_loss}"
+        )
+
         """print(
             f"Epoch [{epoch + 1}/{num_epochs}], "
             f"Loss: {avg_loss}, Val Loss: {avg_val_loss}, "
