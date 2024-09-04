@@ -76,15 +76,15 @@ class YOHODataset(Dataset):
 
         duration = self.audios[idx].duration
 
-        output_size = (int(duration // STEP_SIZE), 3 * len(self.labels))
+        output_size = (3 * len(self.labels), int(duration // STEP_SIZE))
 
         output = np.random.random(output_size)
 
         # Initialize class columns to 0
-        output[:, 0::3] = 0
+        output[0::3, :] = 0
 
         timeadvancement_no = 0
-        while timeadvancement_no < output.shape[0]:
+        while timeadvancement_no < output.shape[1]:
             window_start = timeadvancement_no * STEP_SIZE
             window_end = (timeadvancement_no + 1) * STEP_SIZE
 
@@ -103,17 +103,17 @@ class YOHODataset(Dataset):
                     )
 
                     label_index = self.labels.index(audio_label[0])
-                    output[timeadvancement_no, label_index * 3] = 1
-                    output[timeadvancement_no, label_index * 3 + 1] = (
+                    output[label_index * 3, timeadvancement_no] = 1
+                    output[label_index * 3 + 1, timeadvancement_no] = (
                         normalized_start
                     )
-                    output[timeadvancement_no, label_index * 3 + 2] = (
+                    output[label_index * 3 + 2, timeadvancement_no] = (
                         normalized_end
                     )
 
             timeadvancement_no += 1
 
-        return output.T
+        return output
 
 
 class TUTDataset(YOHODataset):
