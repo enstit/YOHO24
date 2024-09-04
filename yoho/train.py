@@ -9,12 +9,14 @@ from yoho import YOHOLoss, YOHO
 from yoho.utils import AudioFile, TUTDataset, YOHODataGenerator
 
 from timeit import default_timer as timer
+import logging
 
 # import sed_eval
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 MODELS_DIR = os.path.abspath(os.path.join(SCRIPT_DIRPATH, "..", "models"))
 
+logging.basicConfig(level=logging.INFO)
 
 def get_loss_function():
     return YOHOLoss()
@@ -208,10 +210,12 @@ def get_device():
 if __name__ == "__main__":
 
     device = get_device()
+    logging.info(f"Start training using device: {device}")
 
     # Set the seed for reproducibility
     torch.manual_seed(0)
 
+    logging.info("Loading the training audioclips")
     training_audioclips = [
         audioclip
         for _, file in pd.read_csv(
@@ -225,6 +229,7 @@ if __name__ == "__main__":
         ).subdivide(win_len=2.56, hop_len=1.96)
     ]
 
+    logging.info("Loading the evaluation audioclips")
     evaluation_audioclips = [
         audioclip
         for _, file in pd.read_csv(
@@ -246,6 +251,7 @@ if __name__ == "__main__":
         ]
     )
 
+    logging.info("Creating the data generators")
     train_dataloader = YOHODataGenerator(
         dataset=TUTDataset(
             audios=training_audioclips,
@@ -261,10 +267,7 @@ if __name__ == "__main__":
         shuffle=False,
     )
 
-    model = YOHO(input_shape=(1, 40, 257), n_classes=6)
-
-    # Move the model to the device
-    model = model.to(device)
+    model = YOHO(input_shape=(1, 40, 257), n_classes=6).to(device)
 
     # Get optimizer
     optimizer = model.get_optimizer()
@@ -275,6 +278,7 @@ if __name__ == "__main__":
     # Set the number of epochs
     EPOCHS = 60
 
+    logging.info("Start training the model")
     start_training = timer()
     # Train the model
     train_model(
@@ -286,4 +290,4 @@ if __name__ == "__main__":
     )
     end_training = timer()
     seconds_elapsed = end_training - start_training
-    print(f"Training took {seconds_elapsed:.2f} seconds")
+    logging.info(f"Training took {seconds_elapsed:.2f} seconds")
