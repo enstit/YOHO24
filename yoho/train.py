@@ -8,6 +8,8 @@ import pandas as pd
 from yoho import YOHOLoss, YOHO
 from yoho.utils import AudioFile, TUTDataset, YOHODataGenerator
 
+from timeit import default_timer as timer
+
 # import sed_eval
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
@@ -198,7 +200,8 @@ def get_device():
     return (
         "cuda"
         if torch.cuda.is_available()
-        else "mps" if torch.backends.mps.is_available() else "cpu"
+        #else "mps" if torch.backends.mps.is_available() 
+        else "cpu"
     )
 
 
@@ -272,6 +275,8 @@ if __name__ == "__main__":
     # Set the number of epochs
     EPOCHS = 60
 
+    start_training = timer()
+    # Train the model
     train_model(
         model=model,
         train_loader=train_dataloader,
@@ -279,3 +284,6 @@ if __name__ == "__main__":
         num_epochs=EPOCHS,
         start_epoch=start_epoch,
     )
+    end_training = timer()
+    seconds_elapsed = end_training - start_training
+    print(f"Training took {seconds_elapsed:.2f} seconds")
