@@ -11,29 +11,30 @@ class YOHOLoss(nn.Module):
 
         Args:
             predictions (torch.Tensor): The predicted values from the model
-                                        (batch_size, num_classes, 3).
+                                        (batch_size, height, width).
             targets (torch.Tensor): The ground truth values
-                                    (batch_size, num_classes, 3).
+                                    (batch_size, height, width).
 
         Returns:
-            torch.Tensor: The computed loss.
+            torch.Tensor: The computed loss per batch.
         """
-        y_pred_class = predictions[:, 0::3]
-        y_pred_start = predictions[:, 1::3]
-        y_pred_end = predictions[:, 2::3]
 
-        y_true_class = targets[:, 0::3]
-        y_true_start = targets[:, 1::3]
-        y_true_end = targets[:, 2::3]
+        output_class = predictions[:, 0::3, :]
+        output_start = predictions[:, 1::3, :]
+        output_end = predictions[:, 2::3, :]
 
-        # Compute the classification loss
-        classification_loss = (y_pred_class - y_true_class).pow(2)
-        # Compute the regression loss
-        regression_loss = (
-            (y_pred_start - y_true_start).pow(2)
-            + (y_pred_end - y_true_end).pow(2)
-        ) * y_true_class
-        # The total loss is the sum of the classification and regression loss
-        total_loss = classification_loss + regression_loss
+        target_class = targets[:, 0::3, :]
+        target_start = targets[:, 1::3, :]
+        target_end = targets[:, 2::3, :]
 
-        return total_loss.mean()
+        # Determine the presence of the class
+        class_present = (target_class > 0).float()
+
+        # Compute squared differences for the class, start, and end points
+        error = (
+            (output_class - target_class).pow(2)
+            + (output_start - target_start).pow(2) * class_present
+            + (output_end - target_end).pow(2) * class_present
+        ).sum(dim=[1, 2])
+
+        return error
