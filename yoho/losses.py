@@ -37,4 +37,4 @@ class YOHOLoss(nn.Module):
             + (output_end - target_end).pow(2) * class_present
         ).sum(dim=[1, 2])
 
-        return error
+        return error.sum()
