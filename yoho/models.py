@@ -165,6 +165,7 @@ class YOHO(MobileNetBackbone):
 
     def __init__(
         self,
+        name: str,
         input_shape: tuple[int, int, int],
         n_classes: int,
         dropout_rate: float = 0.1,
@@ -181,7 +182,7 @@ class YOHO(MobileNetBackbone):
         super(YOHO, self).__init__(
             input_channels=input_shape[-3], dropout_rate=dropout_rate
         )
-
+        self.name = name
         self.n_classes = n_classes
 
         ADDITIONAL_LAYER_DEFS = [

@@ -18,6 +18,7 @@ MODELS_DIR = os.path.abspath(os.path.join(SCRIPT_DIRPATH, "..", "models"))
 
 logging.basicConfig(level=logging.INFO)
 
+
 def get_loss_function():
     return YOHOLoss()
 
@@ -180,7 +181,8 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
                 "state_dict": model.state_dict(),
                 "optimizer": optimizer.state_dict(),
                 "loss": avg_loss,
-            }
+            },
+            model.name + "_checkpoint.pth.tar",
         )
 
 
@@ -207,7 +209,7 @@ def get_device():
     return (
         "cuda"
         if torch.cuda.is_available()
-        #else "mps" if torch.backends.mps.is_available() 
+        # else "mps" if torch.backends.mps.is_available()
         else "cpu"
     )
 
