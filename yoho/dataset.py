@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import shutil
 import csv
 
 from yoho.utils import (
@@ -26,18 +27,17 @@ if __name__ == "__main__":
     )
 
     # Download the zip file
-    #download_file(urbansed_url, urbansed_zip_path)"""
+    download_file(urbansed_url, urbansed_zip_path)
 
 
-    #uncompress_file(urbansed_zip_path, os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED"))
+    uncompress_file(urbansed_zip_path, os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED"))
 
     urban_sed_subfolder = os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED")
 
-    #uncompress_file(urbansed_zip_path, urban_sed_subfolder)
+    uncompress_file(urbansed_zip_path, urban_sed_subfolder)
     uncompress_file(os.path.join(urban_sed_subfolder, "URBAN-SED_v2.0.0.tar.gz"), urban_sed_subfolder)
 
-
-
+    #TODO: Need to move the files to the parent folder (urban_sed_subfolder)
 
 
     """# TUT Sound Events 2017 Dataset
