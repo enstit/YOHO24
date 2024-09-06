@@ -26,7 +26,21 @@ if __name__ == "__main__":
         SCRIPT_DIRPATH, "../data/raw/URBAN-SED.zip"
     )
 
-    download_file(urbansed_url, urbansed_zip_path)
+    # Download the zip file
+    #download_file(urbansed_url, urbansed_zip_path)"""
+
+    # extract the zip file to the raw data directory
+    urbansed_extract_to_subfolder = os.path.join(
+        SCRIPT_DIRPATH, "../data/raw/URBAN-SED"
+    )
+
+    # Uncompress the zip file inside the URBAN-SED folder
+    uncompress_file(
+        os.path.join(urbansed_extract_to_subfolder, "URBAN-SED_v2.0.0.tar.gz"), 
+        urbansed_extract_to_subfolder
+    )
+
+
 
 
     """# TUT Sound Events 2017 Dataset
