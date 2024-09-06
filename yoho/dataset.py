@@ -3,6 +3,7 @@
 import os
 import shutil
 import csv
+import jams
 
 from yoho.utils import (
     AudioFile,
@@ -13,6 +14,30 @@ from yoho.utils import (
 )
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
+
+
+def parse_jams_file(jams_file):
+    """
+    Parse a JAMS file and extract the annotations.
+
+    Parameters:
+    - jams_file (str): The path to the JAMS file.
+
+    Returns:
+    - events (list): A list of tuples containing the event type, start time, and end time.
+    """
+    jam = jams.load(jams_file)
+    events = []
+    for annotation in jam.annotations:
+
+        for obs in annotation.data:
+
+            start_time = obs.value['event_time']
+            end_time = obs.value['event_time'] + obs.value['event_duration']
+            label = obs.value['label']
+            events.append((label, start_time, end_time))
+
+        return events
 
 if __name__ == "__main__":
 
@@ -27,18 +52,95 @@ if __name__ == "__main__":
     )
 
     # Download the zip file
-    download_file(urbansed_url, urbansed_zip_path)
+    #download_file(urbansed_url, urbansed_zip_path)
 
 
-    uncompress_file(urbansed_zip_path, os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED"))
+    #uncompress_file(urbansed_zip_path, os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED"))
+
+    #urban_sed_subfolder = os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED")
+
+    #uncompress_file(os.path.join(urban_sed_subfolder, "URBAN-SED_v2.0.0.tar.gz"), urban_sed_subfolder)
+
+    
+    #TODO: Need to move the files to the parent folder (urban_sed_subfolder)
 
     urban_sed_subfolder = os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED")
 
-    uncompress_file(urbansed_zip_path, urban_sed_subfolder)
-    uncompress_file(os.path.join(urban_sed_subfolder, "URBAN-SED_v2.0.0.tar.gz"), urban_sed_subfolder)
+    if not os.path.exists(os.path.join(SCRIPT_DIRPATH, "../data/processed/URBAN-SED")):
+        os.makedirs(os.path.join(SCRIPT_DIRPATH, "../data/processed/URBAN-SED"))
 
-    #TODO: Need to move the files to the parent folder (urban_sed_subfolder)
+    ANNOTATIONS_TRAIN_PATH = os.path.join(
+        urban_sed_subfolder, "annotations/train/"
+    )
 
+    ANNOTATIONS_VALIDATE_PATH = os.path.join(
+        urban_sed_subfolder, "annotations/validate/"
+    )
+
+    ANNOTATIONS_TEST_PATH = os.path.join(
+        urban_sed_subfolder, "annotations/test/"
+    )
+
+    AUDIO_TRAIN_PATH = os.path.join(
+        urban_sed_subfolder, "audio/train/"
+    )
+
+    AUDIO_TEST_PATH = os.path.join(
+        urban_sed_subfolder, "audio/test/"
+    )
+
+    AUDIO_VAL_PATH = os.path.join(
+        urban_sed_subfolder, "audio/validate/"
+    )
+
+    train_files = get_files(ANNOTATIONS_TRAIN_PATH, extensions=".jams")
+    validate_files = get_files(ANNOTATIONS_VALIDATE_PATH, extensions=".jams")
+    test_files = get_files(ANNOTATIONS_TEST_PATH, extensions=".jams")
+
+    # Process the training data
+    urbansed_data = {}
+    for f in train_files:
+        f_path = ANNOTATIONS_TRAIN_PATH + f
+        f = f.split('.')[0] + '.wav'
+        urbansed_data[AUDIO_TRAIN_PATH+f] = parse_jams_file(f_path)
+
+    write_data_to_csv(
+        urbansed_data,
+        os.path.join(
+            SCRIPT_DIRPATH,
+            "../data/processed/URBAN-SED/URBAN-SED_train.csv",
+        ),
+    )
+
+    # Process the validation data
+    urbansed_data = {}
+    for f in validate_files:
+        f_path = ANNOTATIONS_VALIDATE_PATH + f
+        f = f.split('.')[0] + '.wav'
+        urbansed_data[AUDIO_VAL_PATH+f] = parse_jams_file(f_path)
+
+    write_data_to_csv(
+        urbansed_data,
+        os.path.join(
+            SCRIPT_DIRPATH,
+            "../data/processed/URBAN-SED/URBAN-SED_validate.csv",
+        ),
+    )
+
+    # Process the test data
+    urbansed_data = {}
+    for f in test_files:
+        f_path = ANNOTATIONS_TEST_PATH + f
+        f = f.split('.')[0] + '.wav'
+        urbansed_data[AUDIO_TEST_PATH+f] = parse_jams_file(f_path)
+
+    write_data_to_csv(
+        urbansed_data,
+        os.path.join(
+            SCRIPT_DIRPATH,
+            "../data/processed/URBAN-SED/URBAN-SED_test.csv",
+        ),
+    )
 
     """# TUT Sound Events 2017 Dataset
     tut_urls = [
