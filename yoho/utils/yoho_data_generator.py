@@ -116,6 +116,41 @@ class YOHODataset(Dataset):
         return output
 
 
+class UrbanSEDDataset(YOHODataset):
+
+    def __init__(
+        self,
+        audios: list[AudioFile],
+        transform=None,
+        target_transform=None,
+    ):
+        # The UrbanSEDDataset class is a subclass of the YOHODataset class
+        # where the number of Mel bins is set to 40, the hop length is set to 441,
+        # and the window length is set to 1764 as specified in the original
+        # YOHO paper. The labels are the ones from the URBAN-SED challenge.
+        super().__init__(
+            audios=audios,
+            labels=[
+                "noise",
+                "air_conditioner",
+                "car_horn",
+                "children_playing",
+                "dog_bark",
+                "drilling",
+                "engine_idling",
+                "gun_shot",
+                "jackhammer",
+                "siren",
+                "street_music",
+            ],
+            transform=transform,
+            target_transform=target_transform,
+            n_mels=40,  # As defined in the YOHO paper for the URBAN-SED dataset
+            hop_len=0.01,  # As defined in the YOHO paper for the URBAN-SED dataset
+            win_len=0.04,  # As defined in the YOHO paper for the URBAN-SED dataset
+        )
+
+
 class TUTDataset(YOHODataset):
 
     def __init__(
@@ -124,7 +159,7 @@ class TUTDataset(YOHODataset):
         transform=None,
         target_transform=None,
     ):
-        # The TUTYOHODataset class is a subclass of the YOHODataset class
+        # The TUTDataset class is a subclass of the YOHODataset class
         # where the number of Mel bins is set to 40, the hop length is set to 441,
         # and the window length is set to 1764 as specified in the original
         # YOHO paper. The labels are the ones from the TUT challenge.
@@ -156,3 +191,6 @@ class YOHODataGenerator(DataLoader):
         super().__init__(
             dataset=dataset, batch_size=batch_size, shuffle=shuffle
         )
+        self.n_classes = len(
+            dataset.labels
+        )  # Number of classes in the dataset

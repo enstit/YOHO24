@@ -4,12 +4,12 @@ import os
 import csv
 
 from yoho.utils import (
+    AudioFile,
     download_file,
     uncompress_file,
     get_files,
     write_data_to_csv,
 )
-from yoho.utils import AudioFile
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 

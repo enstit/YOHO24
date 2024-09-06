@@ -9,6 +9,7 @@ from yoho.utils.audio_file import AudioClip, AudioFile
 from yoho.utils.yoho_data_generator import (
     YOHODataset,
     TUTDataset,
+    UrbanSEDDataset,
     YOHODataGenerator,
 )
 
@@ -21,5 +22,6 @@ __all__ = [
     "AudioFile",
     "YOHODataset",
     "TUTDataset",
+    "UrbanSEDDataset",
     "YOHODataGenerator",
 ]
