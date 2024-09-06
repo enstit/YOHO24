@@ -14,7 +14,7 @@ source /u/dssc/$(whoami)/scratch/torchenv/bin/activate
 cd /u/dssc/$(whoami)/scratch/YOHO24/
 
 # Install the needed packages
-pip install .r requirements.txt
+pip install -r requirements.txt
 
 # Run the train.py script
 python3 -m yoho.train
