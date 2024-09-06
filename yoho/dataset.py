@@ -16,7 +16,6 @@ SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 if __name__ == "__main__":
 
     if not os.path.exists(os.path.join(SCRIPT_DIRPATH, "../data/raw")):
-        # Create the raw data directory if it not exists
         os.makedirs(os.path.join(SCRIPT_DIRPATH, "../data/raw"))
 
     # UrbanSED Dataset
@@ -29,16 +28,14 @@ if __name__ == "__main__":
     # Download the zip file
     #download_file(urbansed_url, urbansed_zip_path)"""
 
-    # extract the zip file to the raw data directory
-    urbansed_extract_to_subfolder = os.path.join(
-        SCRIPT_DIRPATH, "../data/raw/URBAN-SED"
-    )
 
-    # Uncompress the zip file inside the URBAN-SED folder
-    uncompress_file(
-        os.path.join(urbansed_extract_to_subfolder, "URBAN-SED_v2.0.0.tar.gz"), 
-        urbansed_extract_to_subfolder
-    )
+    #uncompress_file(urbansed_zip_path, os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED"))
+
+    urban_sed_subfolder = os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED")
+
+    #uncompress_file(urbansed_zip_path, urban_sed_subfolder)
+    uncompress_file(os.path.join(urban_sed_subfolder, "URBAN-SED_v2.0.0.tar.gz"), urban_sed_subfolder)
+
 
 
 
