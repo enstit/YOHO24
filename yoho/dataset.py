@@ -16,9 +16,20 @@ SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 if __name__ == "__main__":
 
     if not os.path.exists(os.path.join(SCRIPT_DIRPATH, "../data/raw")):
+        # Create the raw data directory if it not exists
         os.makedirs(os.path.join(SCRIPT_DIRPATH, "../data/raw"))
 
-    # TUT Sound Events 2017 Dataset
+    # UrbanSED Dataset
+    urbansed_url = "https://zenodo.org/api/records/1324404/files-archive"
+
+    urbansed_zip_path = os.path.join(
+        SCRIPT_DIRPATH, "../data/raw/URBAN-SED.zip"
+    )
+
+    download_file(urbansed_url, urbansed_zip_path)
+
+
+    """# TUT Sound Events 2017 Dataset
     tut_urls = [
         (
             "TUT-sound-events-2017-development",
@@ -173,4 +184,4 @@ if __name__ == "__main__":
             SCRIPT_DIRPATH,
             "../data/processed/TUT/TUT-sound-events-2017-evaluation.csv",
         ),
-    )
+    )"""
