@@ -302,7 +302,7 @@ if __name__ == "__main__":
     optimizer = model.get_optimizer()
 
     # Load the model checkpoint if it exists
-    model, optimizer, start_epoch, _ = load_checkpoint(model, optimizer)
+    model, optimizer, start_epoch, _ = load_checkpoint(model, optimizer, "UrbanSEDYOHO_checkpoint.pth.tar")
 
     # Set the number of epochs
     EPOCHS = 60
