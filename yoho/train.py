@@ -6,7 +6,7 @@ from torchaudio.transforms import TimeMasking, FrequencyMasking
 import pandas as pd
 
 from yoho import YOHOLoss, YOHO
-from yoho.utils import AudioFile, TUTDataset, YOHODataGenerator
+from yoho.utils import AudioFile, UrbanSEDDataset, YOHODataGenerator
 
 from timeit import default_timer as timer
 import logging
@@ -222,59 +222,81 @@ if __name__ == "__main__":
     # Set the seed for reproducibility
     torch.manual_seed(0)
 
-    logging.info("Loading the training audioclips")
-    training_audioclips = [
+    # Load the UrbanSED train dataset
+    logging.info("Loading the UrbanSED dataset")
+    urbansed_train = UrbanSEDDataset(
+    audios=[
         audioclip
-        for _, file in pd.read_csv(
-            os.path.join(
-                SCRIPT_DIRPATH,
-                "../data/processed/TUT/TUT-sound-events-2017-development.csv",
-            )
-        ).iterrows()
-        for audioclip in AudioFile(
-            filepath=file.filepath, labels=eval(file.events)
-        ).subdivide(win_len=2.56, hop_len=1.96)
+        for _, audio in enumerate(
+            AudioFile(filepath=file.filepath, labels=eval(file.events))
+            for _, file in pd.read_csv(
+                os.path.join(
+                        SCRIPT_DIRPATH,
+                        "./data/raw/URBAN-SED/train.csv"
+                    )
+            ).iterrows()
+        )
+        for audioclip in audio.subdivide(win_len=2.56, hop_len=1.96)
     ]
+    )
 
-    logging.info("Loading the evaluation audioclips")
-    evaluation_audioclips = [
-        audioclip
-        for _, file in pd.read_csv(
-            os.path.join(
-                SCRIPT_DIRPATH,
-                "../data/processed/TUT/TUT-sound-events-2017-evaluation.csv",
+    # Load the UrbanSED validation dataset
+    urbansed_val = UrbanSEDDataset(
+        audios=[
+            audioclip
+            for _, audio in enumerate(
+                AudioFile(filepath=file.filepath, labels=eval(file.events))
+                for _, file in pd.read_csv(
+                    os.path.join(
+                        SCRIPT_DIRPATH,
+                        "./data/raw/URBAN-SED/validate.csv"
+                    )
+                ).iterrows()
             )
-        ).iterrows()
-        for audioclip in AudioFile(
-            filepath=file.filepath, labels=eval(file.events)
-        ).subdivide(win_len=2.56, hop_len=1.96)
-    ]
-
-    transforms = v2.Compose(
-        [
-            FrequencyMasking(freq_mask_param=8),
-            TimeMasking(time_mask_param=25),
-            TimeMasking(time_mask_param=25),
+            for audioclip in audio.subdivide(win_len=2.56, hop_len=1.96)
         ]
     )
 
+    # Load the UrbanSED test dataset
+    urbansed_test = UrbanSEDDataset(
+        audios=[
+            audioclip
+            for _, audio in enumerate(
+                AudioFile(filepath=file.filepath, labels=eval(file.events))
+                for _, file in pd.read_csv(
+                    os.path.join(
+                        SCRIPT_DIRPATH,
+                        "./data/raw/URBAN-SED/test.csv"
+                    )
+                ).iterrows()
+            )
+            for audioclip in audio.subdivide(win_len=2.56, hop_len=1.96)
+        ]
+    )
+
+    #transforms = v2.Compose(
+    #    [
+    #        FrequencyMasking(freq_mask_param=8),
+    #        TimeMasking(time_mask_param=25),
+    #        TimeMasking(time_mask_param=25),
+    #    ]
+    #)
+
     logging.info("Creating the data generators")
     train_dataloader = YOHODataGenerator(
-        dataset=TUTDataset(
-            audios=training_audioclips,
-            transform=transforms,
-        ),
-        batch_size=32,
-        shuffle=True,
+        urbansed_train, batch_size=32, shuffle=True
     )
 
-    eval_dataloader = YOHODataGenerator(
-        dataset=TUTDataset(audios=evaluation_audioclips),
-        batch_size=32,
-        shuffle=False,
+    val_dataloader = YOHODataGenerator(
+        urbansed_val, batch_size=32, shuffle=False
     )
 
-    model = YOHO(input_shape=(1, 40, 257), n_classes=6).to(device)
+    # Create the model
+    model = YOHO(
+        name="UrbanSEDYOHO",
+        input_shape=(1, 40, 257), 
+        n_classes=len(urbansed_train.labels)
+    ).to(device)
 
     # Get optimizer
     optimizer = model.get_optimizer()
