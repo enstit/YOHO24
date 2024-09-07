@@ -232,7 +232,7 @@ if __name__ == "__main__":
             for _, file in pd.read_csv(
                 os.path.join(
                         SCRIPT_DIRPATH,
-                        "./data/raw/URBAN-SED/train.csv"
+                        "../data/raw/URBAN-SED/train.csv"
                     )
             ).iterrows()
         )
@@ -249,7 +249,7 @@ if __name__ == "__main__":
                 for _, file in pd.read_csv(
                     os.path.join(
                         SCRIPT_DIRPATH,
-                        "./data/raw/URBAN-SED/validate.csv"
+                        "../data/raw/URBAN-SED/validate.csv"
                     )
                 ).iterrows()
             )
@@ -266,7 +266,7 @@ if __name__ == "__main__":
                 for _, file in pd.read_csv(
                     os.path.join(
                         SCRIPT_DIRPATH,
-                        "./data/raw/URBAN-SED/test.csv"
+                        "../data/raw/URBAN-SED/test.csv"
                     )
                 ).iterrows()
             )
