@@ -17,6 +17,6 @@ cd /u/dssc/$(whoami)/scratch/YOHO24/
 python3 -m yoho.train
 
 # Commit the changes to the repository
-git add .
-git commit -m "feat: Update YOHO24 trainig results"
-git push
+#git add .
+#git commit -m "feat: Update YOHO24 trainig results"
+#git push
