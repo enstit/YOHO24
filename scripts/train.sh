@@ -9,7 +9,7 @@
 #SBATCH --job-name=yoho24
 
 # Activate the virtual environment
-source /u/dssc/$(whoami)/scratch/torchenv3.11/bin/activate
+source /u/dssc/$(whoami)/scratch/torchenv/bin/activate
 
 cd /u/dssc/$(whoami)/scratch/YOHO24/
 
