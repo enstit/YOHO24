@@ -72,21 +72,21 @@ class YOHODataset(Dataset):
 
     def _get_output(self, idx: int) -> np.array:
 
-        STEP_SIZE = 0.284
+        STEPS_NO = 9  # Number of steps in the output
 
-        duration = self.audios[idx].duration
+        step_duration = self.audios[idx].duration / STEPS_NO
 
-        output_size = (3 * len(self.labels), int(duration // STEP_SIZE))
+        output_size = (3 * len(self.labels), STEPS_NO)
 
-        output = np.random.random(output_size)
+        output = np.zeros(output_size)
 
         # Initialize class columns to 0
         output[0::3, :] = 0
 
         timeadvancement_no = 0
         while timeadvancement_no < output.shape[1]:
-            window_start = timeadvancement_no * STEP_SIZE
-            window_end = (timeadvancement_no + 1) * STEP_SIZE
+            window_start = timeadvancement_no * step_duration
+            window_end = (timeadvancement_no + 1) * step_duration
 
             for audio_label in (
                 self.audios[idx].labels if self.audios[idx].labels else []
@@ -95,11 +95,11 @@ class YOHODataset(Dataset):
                     audio_label[1] <= window_end <= audio_label[2]
                 ):
                     normalized_start = (
-                        max(0, audio_label[1] - window_start) / STEP_SIZE
+                        max(0, audio_label[1] - window_start) / step_duration
                     )
                     normalized_end = (
-                        min(STEP_SIZE, audio_label[2] - window_start)
-                        / STEP_SIZE
+                        min(step_duration, audio_label[2] - window_start)
+                        / step_duration
                     )
 
                     label_index = self.labels.index(audio_label[0])

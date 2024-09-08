@@ -31,7 +31,5 @@ cd /u/dssc/$(whoami)/scratch/YOHO24/
 # Upgrade Pip to the latest version
 pip install --upgrade pip
 
-pip install -r /tmp/requirements.txt
-
 # Install the needed packages
 pip install -r requirements.txt

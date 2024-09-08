@@ -88,9 +88,10 @@ class AudioFile:
 
         audioclips = []
 
-        for i in range(
-            win_points, int(self.duration * self.sr) + 1, hop_points
+        for win_end in range(
+            win_points, int(self.duration * self.sr + hop_points), hop_points
         ):
+            win_start = win_end - win_points
 
             labels = []
             for label in self.labels if self.labels else []:
@@ -98,16 +99,16 @@ class AudioFile:
                 # If so, add it to the labels list by changing the start and stop times
                 # to be relative to the current window.
                 if (
-                    label[1] < i / self.sr
-                    and label[2] > (i - win_points) / self.sr
+                    label[1] * self.sr < win_end
+                    and label[2] * self.sr > win_start
                 ):
                     labels.append(
                         (
                             label[0],
-                            max(0, label[1] - (i - win_points) / self.sr),
+                            max(0, label[1] - win_start / self.sr),
                             min(
                                 win_points / self.sr,
-                                label[2] - (i - win_points) / self.sr,
+                                label[2] - win_start / self.sr,
                             ),
                         )
                     )
@@ -116,7 +117,7 @@ class AudioFile:
                 AudioClip(
                     filepath=self.filepath,
                     labels=labels,
-                    offset=(i - win_points) / self.sr,
+                    offset=win_start / self.sr,
                     duration=win_points / self.sr,
                 )
             )
