@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/orfeo/cephfs/scratch/dssc/estefanel/YOHO24/yoho/train.py", line 9, in <module>
+    from yoho.utils import AudioFile, UrbanSEDDataset, YOHODataGenerator
+  File "/orfeo/cephfs/scratch/dssc/estefanel/YOHO24/yoho/utils/__init__.py", line 8, in <module>
+    from yoho.utils.audio_file import AudioClip, AudioFile
+  File "/orfeo/cephfs/scratch/dssc/estefanel/YOHO24/yoho/utils/audio_file.py", line 4, in <module>
+    from IPython.display import Audio
+  File "/orfeo/cephfs/scratch/dssc/estefanel/torchenv3.11/lib/python3.11/site-packages/IPython/__init__.py", line 55, in <module>
+    from .terminal.embed import embed
+  File "/orfeo/cephfs/scratch/dssc/estefanel/torchenv3.11/lib/python3.11/site-packages/IPython/terminal/embed.py", line 15, in <module>
+    from IPython.core.interactiveshell import DummyMod, InteractiveShell
+  File "/orfeo/cephfs/scratch/dssc/estefanel/torchenv3.11/lib/python3.11/site-packages/IPython/core/interactiveshell.py", line 110, in <module>
+    from IPython.core.history import HistoryManager
+  File "/orfeo/cephfs/scratch/dssc/estefanel/torchenv3.11/lib/python3.11/site-packages/IPython/core/history.py", line 10, in <module>
+    import sqlite3
+  File "/orfeo/cephfs/scratch/dssc/estefanel/Python-3.11.0/Lib/sqlite3/__init__.py", line 57, in <module>
+    from sqlite3.dbapi2 import *
+  File "/orfeo/cephfs/scratch/dssc/estefanel/Python-3.11.0/Lib/sqlite3/dbapi2.py", line 27, in <module>
+    from _sqlite3 import *
+ModuleNotFoundError: No module named '_sqlite3'
