@@ -13,6 +13,9 @@ source /u/dssc/$(whoami)/scratch/torchenv/bin/activate
 
 cd /u/dssc/$(whoami)/scratch/YOHO24/
 
+# Upgrade Pip to the latest version
+pip install --upgrade pip
+
 # Install the needed packages
 pip install -r requirements.txt
 
