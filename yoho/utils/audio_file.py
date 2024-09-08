@@ -118,7 +118,7 @@ class AudioFile:
                     filepath=self.filepath,
                     labels=labels,
                     offset=win_start / self.sr,
-                    duration=win_points / self.sr,
+                    duration=win_len,
                 )
             )
 
