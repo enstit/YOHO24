@@ -225,19 +225,18 @@ if __name__ == "__main__":
     # Load the UrbanSED train dataset
     logging.info("Loading the UrbanSED dataset")
     urbansed_train = UrbanSEDDataset(
-    audios=[
-        audioclip
-        for _, audio in enumerate(
-            AudioFile(filepath=file.filepath, labels=eval(file.events))
-            for _, file in pd.read_csv(
-                os.path.join(
-                        SCRIPT_DIRPATH,
-                        "../data/raw/URBAN-SED/train.csv"
+        audios=[
+            audioclip
+            for _, audio in enumerate(
+                AudioFile(filepath=file.filepath, labels=eval(file.events))
+                for _, file in pd.read_csv(
+                    os.path.join(
+                        SCRIPT_DIRPATH, "../data/raw/URBAN-SED/train.csv"
                     )
-            ).iterrows()
-        )
-        for audioclip in audio.subdivide(win_len=2.56, hop_len=1.96)
-    ]
+                ).iterrows()
+            )
+            for audioclip in audio.subdivide(win_len=2.56, hop_len=1.00)
+        ]
     )
 
     # Load the UrbanSED validation dataset
@@ -248,12 +247,11 @@ if __name__ == "__main__":
                 AudioFile(filepath=file.filepath, labels=eval(file.events))
                 for _, file in pd.read_csv(
                     os.path.join(
-                        SCRIPT_DIRPATH,
-                        "../data/raw/URBAN-SED/validate.csv"
+                        SCRIPT_DIRPATH, "../data/raw/URBAN-SED/validate.csv"
                     )
                 ).iterrows()
             )
-            for audioclip in audio.subdivide(win_len=2.56, hop_len=1.96)
+            for audioclip in audio.subdivide(win_len=2.56, hop_len=1.00)
         ]
     )
 
@@ -265,22 +263,13 @@ if __name__ == "__main__":
                 AudioFile(filepath=file.filepath, labels=eval(file.events))
                 for _, file in pd.read_csv(
                     os.path.join(
-                        SCRIPT_DIRPATH,
-                        "../data/raw/URBAN-SED/test.csv"
+                        SCRIPT_DIRPATH, "../data/raw/URBAN-SED/test.csv"
                     )
                 ).iterrows()
             )
-            for audioclip in audio.subdivide(win_len=2.56, hop_len=1.96)
+            for audioclip in audio.subdivide(win_len=2.56, hop_len=1.00)
         ]
     )
-
-    #transforms = v2.Compose(
-    #    [
-    #        FrequencyMasking(freq_mask_param=8),
-    #        TimeMasking(time_mask_param=25),
-    #        TimeMasking(time_mask_param=25),
-    #    ]
-    #)
 
     logging.info("Creating the data generators")
     train_dataloader = YOHODataGenerator(
@@ -294,15 +283,17 @@ if __name__ == "__main__":
     # Create the model
     model = YOHO(
         name="UrbanSEDYOHO",
-        input_shape=(1, 40, 257), 
-        n_classes=len(urbansed_train.labels)
+        input_shape=(1, 40, 257),
+        n_classes=len(urbansed_train.labels),
     ).to(device)
 
     # Get optimizer
     optimizer = model.get_optimizer()
 
     # Load the model checkpoint if it exists
-    model, optimizer, start_epoch, _ = load_checkpoint(model, optimizer, "UrbanSEDYOHO_checkpoint.pth.tar")
+    model, optimizer, start_epoch, _ = load_checkpoint(
+        model, optimizer, "UrbanSEDYOHO_checkpoint.pth.tar"
+    )
 
     # Set the number of epochs
     EPOCHS = 60
