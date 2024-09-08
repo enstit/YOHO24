@@ -296,7 +296,7 @@ if __name__ == "__main__":
     )
 
     # Set the number of epochs
-    EPOCHS = 60
+    EPOCHS = 200
 
     logging.info("Start training the model")
     start_training = timer()
