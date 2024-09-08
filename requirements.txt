@@ -6,8 +6,6 @@ torchaudio==2.4.0
 torchvision==0.19.0
 librosa==0.10.2.post1
 jams==0.3.4
-zipfile==3.12.4
-tarfile==3.12.4
 tqdm==4.66.4
 httpx[http2]==0.27.0
-soundfile==0.11.0
+soundfile==0.12.1
