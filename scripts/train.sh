@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH -p GPU
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-# #SBATCH --cpu-per-task=12
-##SBATCH --gres=gpu:2
 #SBATCH --gpus=1
+#SBATCH --exclusive
+#SBATCH --ntasks-per-node=1
+#SBATCH --mem=50GB
 #SBATCH --time=02:00:00
 #SBATCH --output=_%j.out
 #SBATCH --job-name=yoho24
