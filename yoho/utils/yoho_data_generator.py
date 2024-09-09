@@ -2,10 +2,13 @@
 
 import numpy as np
 import torch
+import pickle
+import os
 from torch.utils.data import Dataset, DataLoader
 
 from yoho.utils import AudioFile
 
+SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 
 class YOHODataset(Dataset):
     """
@@ -115,6 +118,19 @@ class YOHODataset(Dataset):
 
         return output
 
+    def save(self, filename: str):
+        filepath = os.path.join(SCRIPT_DIRPATH, filename)
+        with open(filepath, "wb") as f:
+            pickle.dump(self, f)
+
+    def load(filename: str):
+        filepath = os.path.join(SCRIPT_DIRPATH, filename)
+
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"No file found at {filepath}")
+
+        with open(filepath, "rb") as f:
+            return pickle.load(f)
 
 class UrbanSEDDataset(YOHODataset):
 
