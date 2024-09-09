@@ -123,7 +123,6 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
             optimizer.step()
             # Accumulate the loss
             running_loss += loss.item()
-
         # Compute the average loss for this epoch
         avg_loss = running_loss / len(train_loader)
 
@@ -223,7 +222,7 @@ if __name__ == "__main__":
     torch.manual_seed(0)
 
     # Load the UrbanSED train dataset
-    logging.info("Loading the UrbanSED dataset")
+    logging.info("Loading the train UrbanSED dataset")
     urbansed_train = UrbanSEDDataset(
         audios=[
             audioclip
@@ -240,6 +239,7 @@ if __name__ == "__main__":
     )
 
     # Load the UrbanSED validation dataset
+    logging.info("Loading the validation UrbanSED dataset")
     urbansed_val = UrbanSEDDataset(
         audios=[
             audioclip
@@ -255,6 +255,7 @@ if __name__ == "__main__":
         ]
     )
 
+    """
     # Load the UrbanSED test dataset
     urbansed_test = UrbanSEDDataset(
         audios=[
@@ -270,12 +271,14 @@ if __name__ == "__main__":
             for audioclip in audio.subdivide(win_len=2.56, hop_len=1.00)
         ]
     )
+    """
 
-    logging.info("Creating the data generators")
+    logging.info("Creating the train data loader")
     train_dataloader = YOHODataGenerator(
         urbansed_train, batch_size=32, shuffle=True
     )
 
+    logging.info("Creating the validation data loader")
     val_dataloader = YOHODataGenerator(
         urbansed_val, batch_size=32, shuffle=False
     )
@@ -300,6 +303,7 @@ if __name__ == "__main__":
 
     logging.info("Start training the model")
     start_training = timer()
+
     # Train the model
     train_model(
         model=model,
@@ -308,6 +312,7 @@ if __name__ == "__main__":
         num_epochs=EPOCHS,
         start_epoch=start_epoch,
     )
+
     end_training = timer()
     seconds_elapsed = end_training - start_training
     logging.info(f"Training took {seconds_elapsed:.2f} seconds")
