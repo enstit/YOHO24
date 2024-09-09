@@ -23,16 +23,22 @@ def get_loss_function():
     return YOHOLoss()
 
 
-def save_checkpoint(state, filename="checkpoint.pth.tar"):
-    torch.save(state, filename)
+def save_checkpoint(state: dict, filename: str="checkpoint.pth.tar") -> None:
+    """Save the model checkpoint to a file."""
+    torch.save(
+        state = state, 
+        filename = os.path.join(MODELS_DIR, filename)
+    )
 
 
 def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
-    if not os.path.isfile(filename):
-        # If no checkpoint exists
+    filepath = os.path.join(MODELS_DIR, filename)
+
+    if not os.path.exists(filepath):
+        logging.info("No checkpoint found, starting training from scratch")
         return model, optimizer, 0, None
 
-    # Read the checkpoint file
+    logging.info(f"Found checkpoint file in {MODELS_DIR}, loading checkpoint")
     checkpoint = torch.load(filename)
 
     model.load_state_dict(checkpoint["state_dict"])
