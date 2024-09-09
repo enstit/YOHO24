@@ -22,5 +22,5 @@ jupyter nbconvert --to notebook --execute notebooks/02_urbansed.ipynb
 # Commit the changes to the repository
 git add models/losses.json
 git add models/UrbanSEDYOHO_checkpoint.pth.tar
-git commit -m "feat: Update YOHO24 trainig results"
+git commit -m "feat: Update YOHO24 training results"
 git push
