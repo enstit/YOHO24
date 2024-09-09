@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import numpy as np
 import torch
 import pickle
@@ -9,6 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 from yoho.utils import AudioFile
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
+
 
 class YOHODataset(Dataset):
     """
@@ -132,6 +131,7 @@ class YOHODataset(Dataset):
         with open(filepath, "rb") as f:
             return pickle.load(f)
 
+
 class UrbanSEDDataset(YOHODataset):
 
     def __init__(
@@ -141,9 +141,10 @@ class UrbanSEDDataset(YOHODataset):
         target_transform=None,
     ):
         # The UrbanSEDDataset class is a subclass of the YOHODataset class
-        # where the number of Mel bins is set to 40, the hop length is set to 441,
-        # and the window length is set to 1764 as specified in the original
-        # YOHO paper. The labels are the ones from the URBAN-SED challenge.
+        # where the number of Mel bins is set to 40, the hop length is set to
+        # 10 ms, and the window length is set to 40 ms as specified in the
+        # original YOHO paper. The labels are the ones from the URBAN-SED
+        # challenge.
         super().__init__(
             audios=audios,
             labels=[
@@ -176,9 +177,9 @@ class TUTDataset(YOHODataset):
         target_transform=None,
     ):
         # The TUTDataset class is a subclass of the YOHODataset class
-        # where the number of Mel bins is set to 40, the hop length is set to 441,
-        # and the window length is set to 1764 as specified in the original
-        # YOHO paper. The labels are the ones from the TUT challenge.
+        # where the number of Mel bins is set to 40, the hop length is set to
+        # 10 ms, and the window length is set to 40 ms as specified in the
+        # original YOHO paper. The labels are the ones from the TUT challenge.
         super().__init__(
             audios=audios,
             labels=[

@@ -23,12 +23,9 @@ def get_loss_function():
     return YOHOLoss()
 
 
-def save_checkpoint(state: dict, filename: str="checkpoint.pth.tar") -> None:
+def save_checkpoint(state: dict, filename: str = "checkpoint.pth.tar") -> None:
     """Save the model checkpoint to a file."""
-    torch.save(
-        state, 
-        os.path.join(MODELS_DIR, filename)
-    )
+    torch.save(state, os.path.join(MODELS_DIR, filename))
 
 
 def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
@@ -219,50 +216,60 @@ def get_device():
     )
 
 
-def load_dataset(partition:str):
+def load_dataset(partition: str):
 
     match partition:
         case "train":
 
             if os.path.exists("urbansed_train.pkl"):
                 return UrbanSEDDataset.load("urbansed_train.pkl")
-            
+
             urbansed_train = UrbanSEDDataset(
                 audios=[
                     audioclip
                     for _, audio in enumerate(
-                        AudioFile(filepath=file.filepath, labels=eval(file.events))
+                        AudioFile(
+                            filepath=file.filepath, labels=eval(file.events)
+                        )
                         for _, file in pd.read_csv(
                             os.path.join(
-                                SCRIPT_DIRPATH, "../data/raw/URBAN-SED/train.csv"
+                                SCRIPT_DIRPATH,
+                                "../data/raw/URBAN-SED/train.csv",
                             )
                         ).iterrows()
                     )
-                    for audioclip in audio.subdivide(win_len=2.56, hop_len=1.00)
+                    for audioclip in audio.subdivide(
+                        win_len=2.56, hop_len=1.00
+                    )
                 ]
             )
 
             # Save the dataset
             urbansed_train.save("urbansed_train.pkl")
             return urbansed_train
-        
+
         case "validate":
 
             if os.path.exists("urbansed_validate.pkl"):
                 return UrbanSEDDataset.load("urbansed_validate.pkl")
-            
+
             urbansed_val = UrbanSEDDataset(
                 audios=[
                     audioclip
                     for _, audio in enumerate(
-                        AudioFile(filepath=file.filepath, labels=eval(file.events))
+                        AudioFile(
+                            filepath=file.filepath, labels=eval(file.events)
+                        )
                         for _, file in pd.read_csv(
                             os.path.join(
-                                SCRIPT_DIRPATH, "../data/raw/URBAN-SED/validate.csv"
+                                SCRIPT_DIRPATH,
+                                "../data/raw/URBAN-SED/validate.csv",
                             )
                         ).iterrows()
                     )
-                    for audioclip in audio.subdivide(win_len=2.56, hop_len=1.00)
+                    for audioclip in audio.subdivide(
+                        win_len=2.56, hop_len=1.00
+                    )
                 ]
             )
 
@@ -279,30 +286,11 @@ if __name__ == "__main__":
     # Set the seed for reproducibility
     torch.manual_seed(0)
 
-
     logging.info("Loading the train dataset")
     urbansed_train = load_dataset(partition="train")
 
     logging.info("Loading the validation dataset")
     urbansed_val = load_dataset(partition="validate")
-
-    """
-    # Load the UrbanSED test dataset
-    urbansed_test = UrbanSEDDataset(
-        audios=[
-            audioclip
-            for _, audio in enumerate(
-                AudioFile(filepath=file.filepath, labels=eval(file.events))
-                for _, file in pd.read_csv(
-                    os.path.join(
-                        SCRIPT_DIRPATH, "../data/raw/URBAN-SED/test.csv"
-                    )
-                ).iterrows()
-            )
-            for audioclip in audio.subdivide(win_len=2.56, hop_len=1.00)
-        ]
-    )
-    """
 
     logging.info("Creating the train data loader")
     train_dataloader = YOHODataGenerator(
@@ -334,7 +322,7 @@ if __name__ == "__main__":
 
     logging.info("Start training the model")
     start_training = timer()
-    """
+
     # Train the model
     train_model(
         model=model,
@@ -343,7 +331,7 @@ if __name__ == "__main__":
         num_epochs=EPOCHS,
         start_epoch=start_epoch,
     )
-    """
+
     end_training = timer()
     seconds_elapsed = end_training - start_training
     logging.info(f"Training took {seconds_elapsed:.2f} seconds")

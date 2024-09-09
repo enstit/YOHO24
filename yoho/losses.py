@@ -31,10 +31,11 @@ class YOHOLoss(nn.Module):
         class_present = (target_class > 0).float()
 
         # Compute squared differences for the class, start, and end points
+        # for each batch
         error = (
             (output_class - target_class).pow(2)
             + (output_start - target_start).pow(2) * class_present
             + (output_end - target_end).pow(2) * class_present
         ).sum(dim=[1, 2])
 
-        return error.sum()
+        return error.sum()  # Return the sum of the errors for all batches

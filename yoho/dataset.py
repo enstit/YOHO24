@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 
 import os
-import shutil
-import csv
-import jams
 
 from yoho.utils import (
-    AudioFile,
     download_file,
     uncompress_file,
     get_files,
@@ -15,9 +11,9 @@ from yoho.utils import (
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 
-
+"""
 def parse_jams_file(jams_file):
-    """
+    \"""
     Parse a JAMS file and extract the annotations.
 
     Parameters:
@@ -25,7 +21,7 @@ def parse_jams_file(jams_file):
 
     Returns:
     - events (list): A list of tuples containing the event type, start time, and end time.
-    """
+    \"""
     jam = jams.load(jams_file)
     events = []
     for annotation in jam.annotations:
@@ -38,7 +34,7 @@ def parse_jams_file(jams_file):
             events.append((label, start_time, end_time))
 
         return events
-
+"""
 
 if __name__ == "__main__":
 
@@ -69,6 +65,7 @@ if __name__ == "__main__":
 
     # TODO: Need to move the files to the parent folder (urban_sed_subfolder)
 
+    """
     urban_sed_subfolder = os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED")
 
     if not os.path.exists(
@@ -144,6 +141,7 @@ if __name__ == "__main__":
             "../data/processed/URBAN-SED/URBAN-SED_test.csv",
         ),
     )
+    """
 
     """# TUT Sound Events 2017 Dataset
     tut_urls = [
