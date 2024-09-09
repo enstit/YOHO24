@@ -21,10 +21,10 @@ make -j 24
 
 cd /u/dssc/$(whoami)/scratch
 
-python3 -m virtualenv --python="Python-3.11.9/python" torchenv3.11
+python3 -m virtualenv --python="Python-3.11.9/python" torchenv
 
 # Activate the virtual environment
-source /u/dssc/$(whoami)/scratch/torchenv3.11/bin/activate
+source /u/dssc/$(whoami)/scratch/torchenv/bin/activate
 
 cd /u/dssc/$(whoami)/scratch/YOHO24/
 
