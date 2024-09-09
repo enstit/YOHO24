@@ -32,12 +32,13 @@ def parse_jams_file(jams_file):
 
         for obs in annotation.data:
 
-            start_time = obs.value['event_time']
-            end_time = obs.value['event_time'] + obs.value['event_duration']
-            label = obs.value['label']
+            start_time = obs.value["event_time"]
+            end_time = obs.value["event_time"] + obs.value["event_duration"]
+            label = obs.value["label"]
             events.append((label, start_time, end_time))
 
         return events
+
 
 if __name__ == "__main__":
 
@@ -52,22 +53,30 @@ if __name__ == "__main__":
     )
 
     # Download the zip file
-    #download_file(urbansed_url, urbansed_zip_path)
+    download_file(urbansed_url, urbansed_zip_path)
 
-
-    #uncompress_file(urbansed_zip_path, os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED"))
-
-    #urban_sed_subfolder = os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED")
-
-    #uncompress_file(os.path.join(urban_sed_subfolder, "URBAN-SED_v2.0.0.tar.gz"), urban_sed_subfolder)
-
-    
-    #TODO: Need to move the files to the parent folder (urban_sed_subfolder)
+    uncompress_file(
+        urbansed_zip_path,
+        os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED"),
+    )
 
     urban_sed_subfolder = os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED")
 
-    if not os.path.exists(os.path.join(SCRIPT_DIRPATH, "../data/processed/URBAN-SED")):
-        os.makedirs(os.path.join(SCRIPT_DIRPATH, "../data/processed/URBAN-SED"))
+    uncompress_file(
+        os.path.join(urban_sed_subfolder, "URBAN-SED_v2.0.0.tar.gz"),
+        urban_sed_subfolder,
+    )
+
+    # TODO: Need to move the files to the parent folder (urban_sed_subfolder)
+
+    urban_sed_subfolder = os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED")
+
+    if not os.path.exists(
+        os.path.join(SCRIPT_DIRPATH, "../data/processed/URBAN-SED")
+    ):
+        os.makedirs(
+            os.path.join(SCRIPT_DIRPATH, "../data/processed/URBAN-SED")
+        )
 
     ANNOTATIONS_TRAIN_PATH = os.path.join(
         urban_sed_subfolder, "annotations/train/"
@@ -81,17 +90,11 @@ if __name__ == "__main__":
         urban_sed_subfolder, "annotations/test/"
     )
 
-    AUDIO_TRAIN_PATH = os.path.join(
-        urban_sed_subfolder, "audio/train/"
-    )
+    AUDIO_TRAIN_PATH = os.path.join(urban_sed_subfolder, "audio/train/")
 
-    AUDIO_TEST_PATH = os.path.join(
-        urban_sed_subfolder, "audio/test/"
-    )
+    AUDIO_TEST_PATH = os.path.join(urban_sed_subfolder, "audio/test/")
 
-    AUDIO_VAL_PATH = os.path.join(
-        urban_sed_subfolder, "audio/validate/"
-    )
+    AUDIO_VAL_PATH = os.path.join(urban_sed_subfolder, "audio/validate/")
 
     train_files = get_files(ANNOTATIONS_TRAIN_PATH, extensions=".jams")
     validate_files = get_files(ANNOTATIONS_VALIDATE_PATH, extensions=".jams")
@@ -101,8 +104,8 @@ if __name__ == "__main__":
     urbansed_data = {}
     for f in train_files:
         f_path = ANNOTATIONS_TRAIN_PATH + f
-        f = f.split('.')[0] + '.wav'
-        urbansed_data[AUDIO_TRAIN_PATH+f] = parse_jams_file(f_path)
+        f = f.split(".")[0] + ".wav"
+        urbansed_data[AUDIO_TRAIN_PATH + f] = parse_jams_file(f_path)
 
     write_data_to_csv(
         urbansed_data,
@@ -116,8 +119,8 @@ if __name__ == "__main__":
     urbansed_data = {}
     for f in validate_files:
         f_path = ANNOTATIONS_VALIDATE_PATH + f
-        f = f.split('.')[0] + '.wav'
-        urbansed_data[AUDIO_VAL_PATH+f] = parse_jams_file(f_path)
+        f = f.split(".")[0] + ".wav"
+        urbansed_data[AUDIO_VAL_PATH + f] = parse_jams_file(f_path)
 
     write_data_to_csv(
         urbansed_data,
@@ -131,8 +134,8 @@ if __name__ == "__main__":
     urbansed_data = {}
     for f in test_files:
         f_path = ANNOTATIONS_TEST_PATH + f
-        f = f.split('.')[0] + '.wav'
-        urbansed_data[AUDIO_TEST_PATH+f] = parse_jams_file(f_path)
+        f = f.split(".")[0] + ".wav"
+        urbansed_data[AUDIO_TEST_PATH + f] = parse_jams_file(f_path)
 
     write_data_to_csv(
         urbansed_data,
