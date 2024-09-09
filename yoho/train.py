@@ -39,7 +39,7 @@ def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
         return model, optimizer, 0, None
 
     logging.info(f"Found checkpoint file in {MODELS_DIR}, loading checkpoint")
-    checkpoint = torch.load(filename)
+    checkpoint = torch.load(filepath)
 
     model.load_state_dict(checkpoint["state_dict"])
     optimizer.load_state_dict(checkpoint["optimizer"])
