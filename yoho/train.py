@@ -255,7 +255,7 @@ def load_dataset(partition: str):
 
         case "validate":
 
-            filepath = os.path.join(root_dir, "urbansed_train.pkl")
+            filepath = os.path.join(root_dir, "urbansed_validate.pkl")
 
             if os.path.exists(filepath):
                 logging.info("Loading the validation dataset from the pickle file")
