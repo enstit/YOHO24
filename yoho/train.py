@@ -218,12 +218,15 @@ def get_device():
 
 def load_dataset(partition: str):
 
+    root_dir = os.path.join(SCRIPT_DIRPATH, "..")
+
     match partition:
         case "train":
+            filepath = os.path.join(root_dir, "urbansed_train.pkl")
 
-            if os.path.exists("urbansed_train.pkl"):
+            if os.path.exists(filepath):
                 logging.info("Loading the train dataset from the pickle file")
-                return UrbanSEDDataset.load("urbansed_train.pkl")
+                return UrbanSEDDataset.load(filepath)
             
             logging.info("Creating the train dataset")
             urbansed_train = UrbanSEDDataset(
@@ -247,14 +250,16 @@ def load_dataset(partition: str):
             )
 
             # Save the dataset
-            urbansed_train.save("urbansed_train.pkl")
+            urbansed_train.save(filepath)
             return urbansed_train
 
         case "validate":
 
-            if os.path.exists("urbansed_validate.pkl"):
+            filepath = os.path.join(root_dir, "urbansed_train.pkl")
+
+            if os.path.exists(filepath):
                 logging.info("Loading the validation dataset from the pickle file")
-                return UrbanSEDDataset.load("urbansed_validate.pkl")
+                return UrbanSEDDataset.load(filepath)
 
             logging.info("Creating the validation dataset")
             urbansed_val = UrbanSEDDataset(
@@ -278,7 +283,7 @@ def load_dataset(partition: str):
             )
 
             # Save the dataset
-            urbansed_val.save("urbansed_validate.pkl")
+            urbansed_val.save(filepath)
             return urbansed_val
 
 
@@ -294,7 +299,7 @@ if __name__ == "__main__":
     urbansed_val = load_dataset(partition="validate")
 
     logging.info("Creating the train data loader")
-    
+
     train_dataloader = YOHODataGenerator(
         urbansed_train, batch_size=32, shuffle=True, pin_memory=True
     )

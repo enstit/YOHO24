@@ -117,14 +117,11 @@ class YOHODataset(Dataset):
 
         return output
 
-    def save(self, filename: str):
-        filepath = os.path.join(SCRIPT_DIRPATH, filename)
+    def save(self, filepath: str):
         with open(filepath, "wb") as f:
             pickle.dump(self, f)
 
-    def load(filename: str):
-        filepath = os.path.join(SCRIPT_DIRPATH, filename)
-
+    def load(filepath: str):
         if not os.path.exists(filepath):
             raise FileNotFoundError(f"No file found at {filepath}")
 
