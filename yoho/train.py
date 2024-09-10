@@ -294,12 +294,12 @@ if __name__ == "__main__":
 
     logging.info("Creating the train data loader")
     train_dataloader = YOHODataGenerator(
-        urbansed_train, batch_size=32, shuffle=True
+        urbansed_train, batch_size=32, shuffle=True, pin_memory=True
     )
 
     logging.info("Creating the validation data loader")
     val_dataloader = YOHODataGenerator(
-        urbansed_val, batch_size=32, shuffle=False
+        urbansed_val, batch_size=32, shuffle=False, pin_memory=True
     )
 
     # Create the model
@@ -308,7 +308,7 @@ if __name__ == "__main__":
         input_shape=(1, 40, 257),
         n_classes=len(urbansed_train.labels),
     ).to(device)
-
+    
     # Get optimizer
     optimizer = model.get_optimizer()
 
