@@ -222,8 +222,10 @@ def load_dataset(partition: str):
         case "train":
 
             if os.path.exists("urbansed_train.pkl"):
+                logging.info("Loading the train dataset from the pickle file")
                 return UrbanSEDDataset.load("urbansed_train.pkl")
-
+            
+            logging.info("Creating the train dataset")
             urbansed_train = UrbanSEDDataset(
                 audios=[
                     audioclip
@@ -251,8 +253,10 @@ def load_dataset(partition: str):
         case "validate":
 
             if os.path.exists("urbansed_validate.pkl"):
+                logging.info("Loading the validation dataset from the pickle file")
                 return UrbanSEDDataset.load("urbansed_validate.pkl")
 
+            logging.info("Creating the validation dataset")
             urbansed_val = UrbanSEDDataset(
                 audios=[
                     audioclip
@@ -286,13 +290,11 @@ if __name__ == "__main__":
     # Set the seed for reproducibility
     torch.manual_seed(0)
 
-    logging.info("Loading the train dataset")
     urbansed_train = load_dataset(partition="train")
-
-    logging.info("Loading the validation dataset")
     urbansed_val = load_dataset(partition="validate")
 
     logging.info("Creating the train data loader")
+    
     train_dataloader = YOHODataGenerator(
         urbansed_train, batch_size=32, shuffle=True, pin_memory=True
     )
