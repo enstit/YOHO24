@@ -222,7 +222,9 @@ def load_dataset(partition: str):
 
     match partition:
         case "train":
-            filepath = os.path.join(root_dir, "urbansed_train.pkl")
+            filepath = os.path.join(
+                root_dir, "data/processed/URBAN-SED/train.pkl"
+            )
 
             if os.path.exists(filepath):
                 logging.info("Loading the train dataset from the pickle file")
@@ -255,7 +257,9 @@ def load_dataset(partition: str):
 
         case "validate":
 
-            filepath = os.path.join(root_dir, "urbansed_validate.pkl")
+            filepath = os.path.join(
+                root_dir, "data/processed/URBAN-SED/validate.pkl"
+            )
 
             if os.path.exists(filepath):
                 logging.info(
