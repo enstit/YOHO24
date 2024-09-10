@@ -227,7 +227,7 @@ def load_dataset(partition: str):
             if os.path.exists(filepath):
                 logging.info("Loading the train dataset from the pickle file")
                 return UrbanSEDDataset.load(filepath)
-            
+
             logging.info("Creating the train dataset")
             urbansed_train = UrbanSEDDataset(
                 audios=[
@@ -258,7 +258,9 @@ def load_dataset(partition: str):
             filepath = os.path.join(root_dir, "urbansed_validate.pkl")
 
             if os.path.exists(filepath):
-                logging.info("Loading the validation dataset from the pickle file")
+                logging.info(
+                    "Loading the validation dataset from the pickle file"
+                )
                 return UrbanSEDDataset.load(filepath)
 
             logging.info("Creating the validation dataset")
@@ -315,13 +317,13 @@ if __name__ == "__main__":
         input_shape=(1, 40, 257),
         n_classes=len(urbansed_train.labels),
     ).to(device)
-    
+
     # Get optimizer
     optimizer = model.get_optimizer()
 
     # Load the model checkpoint if it exists
     model, optimizer, start_epoch, _ = load_checkpoint(
-        model, optimizer, "UrbanSEDYOHO_checkpoint.pth.tar"
+        model, optimizer, model.name + "_checkpoint.pth.tar"
     )
 
     # Set the number of epochs
