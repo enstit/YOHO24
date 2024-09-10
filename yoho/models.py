@@ -239,7 +239,12 @@ class YOHO(MobileNetBackbone):
         x = self.final_conv1d(x)
         return x
 
-    def load(self, checkpoint_path: str, device: torch.device):
+    def load(
+        self,
+        checkpoint_path: str,
+        device: torch.device,
+        weights_only: bool = True,
+    ):
         """
         Load the model from a checkpoint.
 
@@ -247,7 +252,9 @@ class YOHO(MobileNetBackbone):
             checkpoint_path (str): Path to the checkpoint file.
             device (torch.device): Device to load the model on.
         """
-        checkpoint = torch.load(checkpoint_path, map_location=device)
+        checkpoint = torch.load(
+            checkpoint_path, map_location=device, weights_only=weights_only
+        )
         self.load_state_dict(checkpoint["state_dict"])
 
     def get_optimizer(self, lr=0.001, weight_decay=0.01):
@@ -263,6 +270,25 @@ class YOHO(MobileNetBackbone):
             torch.optim.Adam: The Adam optimizer
         """
 
+        param_groups = []
+        for layer in self.initial_conv:
+            param_groups.append(
+                {
+                    "params": layer.parameters(),
+                    "weight_decay": 10 * weight_decay,
+                }
+            )
+        for layer in self.additional_layers:
+            param_groups.append(
+                {"params": layer.parameters(), "weight_decay": weight_decay}
+            )
+        for layer in self.final_reshape:
+            param_groups.append(
+                {"params": layer.parameters(), "weight_decay": 0}
+            )
+
+        optimizer = optim.Adam(param_groups, lr=lr)
+        """
         params_to_optimize = [
             # L2 on the first Conv2D layer
             {"params": self.initial_conv.parameters(), "weight_decay": 0.001},
@@ -279,4 +305,6 @@ class YOHO(MobileNetBackbone):
             {"params": self.final_conv1d.parameters(), "weight_decay": 0},
         ]
         optimizer = optim.Adam(params_to_optimize, lr=lr)
+        """
+
         return optimizer
