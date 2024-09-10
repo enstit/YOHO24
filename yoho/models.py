@@ -282,10 +282,12 @@ class YOHO(MobileNetBackbone):
             param_groups.append(
                 {"params": layer.parameters(), "weight_decay": weight_decay}
             )
-        for layer in self.final_reshape:
-            param_groups.append(
-                {"params": layer.parameters(), "weight_decay": 0}
-            )
+        param_groups.append(
+            {"params": self.final_reshape.parameters(), "weight_decay": 0}
+        )
+        param_groups.append(
+            {"params": self.final_conv1d.parameters(), "weight_decay": 0}
+        )
 
         optimizer = optim.Adam(param_groups, lr=lr)
         """
