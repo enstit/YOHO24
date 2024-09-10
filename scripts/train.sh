@@ -2,7 +2,6 @@
 #SBATCH -p GPU
 #SBATCH --nodes=1
 #SBATCH --gpus=1
-#SBATCH --exclusive
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem=50GB
 #SBATCH --time=02:00:00
