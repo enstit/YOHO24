@@ -270,6 +270,7 @@ class YOHO(MobileNetBackbone):
             torch.optim.Adam: The Adam optimizer
         """
 
+        """
         param_groups = []
         for layer in self.initial_conv:
             param_groups.append(
@@ -307,6 +308,5 @@ class YOHO(MobileNetBackbone):
             {"params": self.final_conv1d.parameters(), "weight_decay": 0},
         ]
         optimizer = optim.Adam(params_to_optimize, lr=lr)
-        """
 
         return optimizer
