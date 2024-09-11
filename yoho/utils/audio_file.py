@@ -56,8 +56,8 @@ class AudioFile:
             y=self.waveform,
             sr=self.sr,
             n_mels=n_mels,
-            win_length=int(win_len * self.sr),
             hop_length=int(hop_len * self.sr),
+            win_length=int(win_len * self.sr),
         )
 
         # Convert the Mel spectrogram to a log scale (dB)

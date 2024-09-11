@@ -201,10 +201,13 @@ class YOHODataGenerator(DataLoader):
         dataset: YOHODataset,
         batch_size: int = 32,
         shuffle: bool = True,
-        pin_memory: bool = False
+        pin_memory: bool = False,
     ):
         super().__init__(
-            dataset=dataset, batch_size=batch_size, shuffle=shuffle, pin_memory=pin_memory
+            dataset=dataset,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            pin_memory=pin_memory,
         )
         self.n_classes = len(
             dataset.labels
