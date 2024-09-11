@@ -10,6 +10,7 @@ from yoho.utils import AudioFile, UrbanSEDDataset, YOHODataGenerator
 
 from timeit import default_timer as timer
 import logging
+import argparse
 
 # import sed_eval
 
@@ -295,6 +296,20 @@ def load_dataset(partition: str):
 
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=200,
+        help="The number of epochs to train the model",
+    )
+
+    args = parser.parse_args()
+
+    if args.epochs:
+        EPOCHS = args.epochs
+
     device = get_device()
     logging.info(f"Start training using device: {device}")
 
@@ -329,9 +344,6 @@ if __name__ == "__main__":
     model, optimizer, start_epoch, _ = load_checkpoint(
         model, optimizer, model.name + "_checkpoint.pth.tar"
     )
-
-    # Set the number of epochs
-    EPOCHS = 200
 
     logging.info("Start training the model")
     start_training = timer()
