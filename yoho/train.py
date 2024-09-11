@@ -308,6 +308,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.epochs:
+        logging.info(f"Training the model for {args.epochs} epochs")
         EPOCHS = args.epochs
 
     device = get_device()
