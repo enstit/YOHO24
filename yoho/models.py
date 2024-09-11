@@ -51,7 +51,7 @@ class DepthwiseSeparableConv(nn.Module):
         self.bn_depthwise = nn.BatchNorm2d(in_channels, eps=1e-4)
         self.bn_pointwise = nn.BatchNorm2d(out_channels, eps=1e-4)
         self.relu = nn.ReLU(inplace=True)
-        self.dropout = nn.Dropout(p=dropout_rate)
+        self.spatial_dropout = nn.Dropout2d(p=dropout_rate)
 
     def forward(self, x):
         """
@@ -69,7 +69,7 @@ class DepthwiseSeparableConv(nn.Module):
         x = self.pointwise(x)
         x = self.bn_pointwise(x)
         x = self.relu(x)
-        x = self.dropout(x)
+        x = self.spatial_dropout(x)
         return x
 
 
@@ -216,6 +216,9 @@ class YOHO(MobileNetBackbone):
         # Adjust according to the final Conv1D layer
         self.final_conv1d = nn.Conv1d(256, 3 * self.n_classes, kernel_size=1)
 
+        # Sigmoid activation function
+        self.sigmoid = nn.Sigmoid()
+
     def forward(self, x):
         """
         Forward pass through the YOHO model.
@@ -237,6 +240,10 @@ class YOHO(MobileNetBackbone):
 
         # Apply the final Conv1D layer
         x = self.final_conv1d(x)
+
+        # Apply the sigmoid activation function
+        x = self.sigmoid(x)
+        
         return x
 
     def load(

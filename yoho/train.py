@@ -86,7 +86,7 @@ def convert_to_sed_format(tensor, label_map, file_id="audio_file"):
     return event_list
 
 
-def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
+def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0, scheduler=None):
 
     criterion = get_loss_function()
     optimizer = model.get_optimizer()
@@ -164,6 +164,9 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0):
 
         # Append the losses to the file
         append_loss_dict(epoch + 1, avg_loss, avg_val_loss)
+
+        if scheduler is not None:
+            scheduler.step()
 
         logging.info(
             f"Epoch [{epoch + 1}/{num_epochs}], "
@@ -305,11 +308,18 @@ if __name__ == "__main__":
         help="The number of epochs to train the model",
     )
 
+    parser.add_argument(
+        "--cosine-annealing",
+        action="store_true",    # default=False
+        help="Use cosine annealing learning rate scheduler",
+    )
+
     args = parser.parse_args()
 
     if args.epochs:
         logging.info(f"Training the model for {args.epochs} epochs")
         EPOCHS = args.epochs
+
 
     device = get_device()
     logging.info(f"Start training using device: {device}")
@@ -341,6 +351,12 @@ if __name__ == "__main__":
     # Get optimizer
     optimizer = model.get_optimizer()
 
+    scheduler = None
+    if args.cosine_annealing:
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=EPOCHS
+        )
+
     # Load the model checkpoint if it exists
     model, optimizer, start_epoch, _ = load_checkpoint(
         model, optimizer, model.name + "_checkpoint.pth.tar"
@@ -356,6 +372,7 @@ if __name__ == "__main__":
         val_loader=val_dataloader,
         num_epochs=EPOCHS,
         start_epoch=start_epoch,
+        scheduler=scheduler
     )
 
     end_training = timer()
