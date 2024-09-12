@@ -328,6 +328,13 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=32,
+        help="The batch size for training the model",
+    )
+
+    parser.add_argument(
         "--cosine-annealing",
         action="store_true",  # default=False
         help="Use cosine annealing learning rate scheduler",
@@ -350,12 +357,20 @@ if __name__ == "__main__":
     logging.info("Creating the train data loader")
 
     train_dataloader = YOHODataGenerator(
-        urbansed_train, batch_size=32, shuffle=True, pin_memory=True, num_workers=4
+        urbansed_train, 
+        batch_size=args.batch_size, 
+        shuffle=True, 
+        pin_memory=True, 
+        num_workers=4
     )
 
     logging.info("Creating the validation data loader")
     val_dataloader = YOHODataGenerator(
-        urbansed_val, batch_size=32, shuffle=False, pin_memory=True, num_workers=4
+        urbansed_val, 
+        batch_size=args.batch_size, 
+        shuffle=False, 
+        pin_memory=True, 
+        num_workers=4
     )
 
     # Create the model
