@@ -11,10 +11,25 @@ In this project we - Davide Capone ([`@davidecapone`](https://github.com/davidec
 ## Abstract
 Following the introduction of You-Only-Look-Once (YOLO) model in 2015[^1], which quickly revolutionized the way the Object Detection problem was approached due to its extremely lightweight structure but that offered very good accuracy, many researchers focused their work on such models family. In the following years new versions of YOLO were presented[^2][^3][^5][^7][^8][^9], which further lightened the model and made it more reliable. Some other studies, instead, concentrated on applying YOLO concepts to data types other than visual ones: this is the case of the YOHO algorithm (You-Only-Hear-Once)[^6], which targets the Audio Segmentation and Sound Event Detection problems. In this project we propose to select the improvements applied to YOLO in the latest versions, and apply them to the YOHO structure to see if these bring significant improvements to the model, testing it on the same datasets as the YOHO paper and comparing the two.
 
-## Datasets
+## Usage
+
+### Datasets
 The datasets used in this project are (almost) the same ones used in [the original YOHO paper](https://doi.org/10.48550/arXiv.2109.00962) to evaluate its performances, with the exception of the *18h of audio from BBC Radio Devon* dataset.
-We could not update in this repository all the raw files, but the [`00_datasets.ipynb`](./notebooks/00_datasets.ipynb) file contains the code to automatically download them.
+
+The [`yoho/dataset.py`](./yoho/dataset.py) script automatically downloads raw data and process it. Simply run
+```python
+python3 -m yoho.dataset [urbansed,tut]
+```
+specifying wheter if you want to download `urbansed` dataset or `tut` dataset (default to both).
+
 Regarding the relevant licenses, please refer to the individual sources.
+
+### Train
+Model weight are available in the [`model`](./model) folder. If you want to train your personal version of `YOHO`, modify the [`yoho/train.py`](./yoho/train.py) script and start the training with
+```python
+python3 -m yoho.train [--name YourCustomModelName] [--epochs 50] [--batch-size 32] [--cosine-annealing]
+```
+It is also possible to pass the `[--spec-augment]` parameter if you want to augment your training dataset with SpecAugment augmentations[^4].
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.

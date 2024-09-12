@@ -1,9 +1,9 @@
 import os
 import json
 import torch
+import pandas as pd
 from torchvision.transforms import v2
 from torchaudio.transforms import TimeMasking, FrequencyMasking
-import pandas as pd
 
 from yoho import YOHOLoss, YOHO
 from yoho.utils import AudioFile, UrbanSEDDataset, YOHODataGenerator
@@ -113,7 +113,7 @@ def train_model(
         model.train()
         # Initialize running loss
         running_train_loss = 0.0
-        
+
         start_epoch = timer()
 
         for _, (inputs, labels) in enumerate(train_loader):
@@ -133,7 +133,7 @@ def train_model(
             running_train_loss += loss.detach()
 
         # Compute the average train loss for this epoch
-        avg_train_loss = (running_train_loss / len(train_loader))
+        avg_train_loss = running_train_loss / len(train_loader)
 
         end_epoch = timer()
 
@@ -157,7 +157,7 @@ def train_model(
                     ground_truth_list.extend(ground_truth)
                     prediction_list.extend(predictions)"""
 
-            avg_val_loss = (running_val_loss / len(val_loader))
+            avg_val_loss = running_val_loss / len(val_loader)
 
             """evaluator.evaluate(
                 reference_event_list=ground_truth_list,
@@ -169,17 +169,18 @@ def train_model(
         else:
             avg_val_loss = None
 
-
         if scheduler is not None:
             scheduler.step()
 
         avg_train_loss = avg_train_loss.item()
-        avg_val_loss = avg_val_loss.item() if avg_val_loss is not None else None
+        avg_val_loss = (
+            avg_val_loss.item() if avg_val_loss is not None else None
+        )
 
         logging.info(
             f"Epoch [{epoch + 1}/{num_epochs}], "
-            f"Train Loss: {avg_train_loss}, Val Loss: {avg_val_loss}"
-            f"Time taken: {end_epoch - start_epoch:.2f} seconds"
+            f"Train Loss: {avg_train_loss:.2f}, Val Loss: {avg_val_loss:.2f}, "
+            f"Time taken: {(end_epoch - start_epoch)/60:.2f} mins"
         )
 
         # Append the losses to the file
@@ -237,7 +238,7 @@ def get_device():
     )
 
 
-def load_dataset(partition: str):
+def load_dataset(partition: str, augment: bool = False):
 
     root_dir = os.path.join(SCRIPT_DIRPATH, "..")
 
@@ -250,6 +251,16 @@ def load_dataset(partition: str):
             if os.path.exists(filepath):
                 logging.info("Loading the train dataset from the pickle file")
                 return UrbanSEDDataset.load(filepath)
+
+            transform = None
+            if augment:
+                transform = v2.Compose(
+                    [
+                        FrequencyMasking(freq_mask_param=8),
+                        TimeMasking(time_mask_param=25),
+                        TimeMasking(time_mask_param=25),
+                    ]
+                )
 
             logging.info("Creating the train dataset")
             urbansed_train = UrbanSEDDataset(
@@ -269,7 +280,8 @@ def load_dataset(partition: str):
                     for audioclip in audio.subdivide(
                         win_len=2.56, hop_len=1.00
                     )
-                ]
+                ],
+                transform=transform,
             )
 
             # Save the dataset
@@ -345,6 +357,12 @@ if __name__ == "__main__":
         help="Use cosine annealing learning rate scheduler",
     )
 
+    parser.add_argument(
+        "--spec-augment",
+        action="store_true",  # default=False
+        help="Augment the training data using SpecAugment",
+    )
+
     args = parser.parse_args()
 
     if args.epochs:
@@ -356,26 +374,26 @@ if __name__ == "__main__":
     # Set the seed for reproducibility
     torch.manual_seed(0)
 
-    urbansed_train = load_dataset(partition="train")
+    urbansed_train = load_dataset(partition="train", augment=args.spec_augment)
     urbansed_val = load_dataset(partition="validate")
 
     logging.info("Creating the train data loader")
 
     train_dataloader = YOHODataGenerator(
-        urbansed_train, 
-        batch_size=args.batch_size, 
-        shuffle=True, 
-        pin_memory=True, 
-        num_workers=4
+        urbansed_train,
+        batch_size=args.batch_size,
+        shuffle=True,
+        pin_memory=True,
+        num_workers=4,
     )
 
     logging.info("Creating the validation data loader")
     val_dataloader = YOHODataGenerator(
-        urbansed_val, 
-        batch_size=args.batch_size, 
-        shuffle=False, 
-        pin_memory=True, 
-        num_workers=4
+        urbansed_val,
+        batch_size=args.batch_size,
+        shuffle=False,
+        pin_memory=True,
+        num_workers=4,
     )
 
     # Create the model
