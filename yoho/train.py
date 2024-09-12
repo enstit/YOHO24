@@ -118,7 +118,7 @@ def train_model(
             # Move the inputs and labels to the device
             inputs, labels = inputs.to(device), labels.to(device)
             # Zero the parameter gradients
-            optimizer.zero_grad()
+            optimizer.zero_grad(set_to_none=True)
             # Forward pass
             outputs = model(inputs)
             # Compute the loss
