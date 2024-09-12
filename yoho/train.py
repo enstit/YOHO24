@@ -153,7 +153,7 @@ def train_model(
                     ground_truth_list.extend(ground_truth)
                     prediction_list.extend(predictions)"""
 
-            avg_val_loss = running_val_loss / len(val_loader)
+            avg_val_loss = (running_val_loss / len(val_loader))
 
             """evaluator.evaluate(
                 reference_event_list=ground_truth_list,
@@ -167,7 +167,7 @@ def train_model(
 
         # Convert the avg_train_loss and avg_val_loss to float to store in JSON and for printing
         avg_train_loss = avg_train_loss.item()
-        avg_val_loss = avg_val_loss.item() if avg_val_loss is not None else None
+        avg_val_loss = avg_val_loss if avg_val_loss is not None else None
 
         # Append the losses to the file
         append_loss_dict(
