@@ -86,7 +86,9 @@ def convert_to_sed_format(tensor, label_map, file_id="audio_file"):
     return event_list
 
 
-def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0, scheduler=None):
+def train_model(
+    model, train_loader, val_loader, num_epochs, start_epoch=0, scheduler=None
+):
 
     criterion = get_loss_function()
     optimizer = model.get_optimizer()
@@ -163,7 +165,12 @@ def train_model(model, train_loader, val_loader, num_epochs, start_epoch=0, sche
             avg_val_loss = None
 
         # Append the losses to the file
-        append_loss_dict(epoch + 1, avg_loss, avg_val_loss)
+        append_loss_dict(
+            epoch + 1,
+            avg_loss,
+            avg_val_loss,
+            filename=model.name + "_losses.json",
+        )
 
         if scheduler is not None:
             scheduler.step()
@@ -302,15 +309,22 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
+        "--name",
+        type=str,
+        default="UrbanSEDYOHO",
+        help="The name of the model",
+    )
+
+    parser.add_argument(
         "--epochs",
         type=int,
-        default=200,
+        default=50,
         help="The number of epochs to train the model",
     )
 
     parser.add_argument(
         "--cosine-annealing",
-        action="store_true",    # default=False
+        action="store_true",  # default=False
         help="Use cosine annealing learning rate scheduler",
     )
 
@@ -318,8 +332,6 @@ if __name__ == "__main__":
 
     if args.epochs:
         logging.info(f"Training the model for {args.epochs} epochs")
-        EPOCHS = args.epochs
-
 
     device = get_device()
     logging.info(f"Start training using device: {device}")
@@ -343,7 +355,7 @@ if __name__ == "__main__":
 
     # Create the model
     model = YOHO(
-        name="UrbanSEDYOHO",
+        name=args.name,
         input_shape=(1, 40, 257),
         n_classes=len(urbansed_train.labels),
     ).to(device)
@@ -354,7 +366,7 @@ if __name__ == "__main__":
     scheduler = None
     if args.cosine_annealing:
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, T_max=EPOCHS
+            optimizer, T_max=args.epochs
         )
 
     # Load the model checkpoint if it exists
@@ -370,9 +382,9 @@ if __name__ == "__main__":
         model=model,
         train_loader=train_dataloader,
         val_loader=val_dataloader,
-        num_epochs=EPOCHS,
+        num_epochs=args.epochs,
         start_epoch=start_epoch,
-        scheduler=scheduler
+        scheduler=scheduler,
     )
 
     end_training = timer()
