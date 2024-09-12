@@ -112,7 +112,7 @@ def train_model(
         # Set the model to training mode
         model.train()
         # Initialize running loss
-        running_loss = 0.0
+        running_train_loss = 0.0
 
         for _, (inputs, labels) in enumerate(train_loader):
             # Move the inputs and labels to the device
@@ -128,9 +128,10 @@ def train_model(
             # Optimize the model
             optimizer.step()
             # Accumulate the loss
-            running_loss += loss.item()
-        # Compute the average loss for this epoch
-        avg_loss = running_loss / len(train_loader)
+            running_train_loss += loss.detach()
+
+        # Compute the average train loss for this epoch
+        avg_train_loss = (running_train_loss / len(train_loader))
 
         if val_loader is not None:
             model.eval()
@@ -164,10 +165,14 @@ def train_model(
         else:
             avg_val_loss = None
 
+        # Convert the avg_train_loss and avg_val_loss to float to store in JSON and for printing
+        avg_train_loss = avg_train_loss.item()
+        avg_val_loss = avg_val_loss.item() if avg_val_loss is not None else None
+
         # Append the losses to the file
         append_loss_dict(
             epoch + 1,
-            avg_loss,
+            avg_train_loss,
             avg_val_loss,
             filename=model.name + "_losses.json",
         )
@@ -177,7 +182,7 @@ def train_model(
 
         logging.info(
             f"Epoch [{epoch + 1}/{num_epochs}], "
-            f"train loss: {avg_loss}, val Loss: {avg_val_loss}"
+            f"train loss: {avg_train_loss}, val Loss: {avg_val_loss}"
         )
 
         """print(
@@ -193,7 +198,7 @@ def train_model(
                 "epoch": epoch + 1,
                 "state_dict": model.state_dict(),
                 "optimizer": optimizer.state_dict(),
-                "loss": avg_loss,
+                "loss": avg_train_loss,
             },
             model.name + "_checkpoint.pth.tar",
         )
