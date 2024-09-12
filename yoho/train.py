@@ -145,7 +145,7 @@ def train_model(
                     inputs, labels = inputs.to(device), labels.to(device)
                     outputs = model(inputs)
                     loss = criterion(outputs, labels)
-                    running_val_loss += loss.item()
+                    running_val_loss += loss.detach()
 
                     """predictions = convert_to_sed_format(outputs)
                     ground_truth = convert_to_sed_format(labels)
