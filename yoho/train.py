@@ -166,7 +166,7 @@ def train_model(
             avg_val_loss = None
 
 
-        if scheluder is not None:
+        if scheduler is not None:
             scheduler.step()
 
         avg_train_loss = avg_train_loss.item()
