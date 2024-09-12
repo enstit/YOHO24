@@ -165,9 +165,17 @@ def train_model(
         else:
             avg_val_loss = None
 
-        # Convert the avg_train_loss and avg_val_loss to float to store in JSON and for printing
+
+        if scheluder is not None:
+            scheduler.step()
+
         avg_train_loss = avg_train_loss.item()
-        avg_val_loss = avg_val_loss if avg_val_loss is not None else None
+        avg_val_loss = avg_val_loss.item() if avg_val_loss is not None else None
+
+        logging.info(
+            f"Epoch [{epoch + 1}/{num_epochs}], "
+            f"train loss: {avg_train_loss}, val Loss: {avg_val_loss}"
+        )
 
         # Append the losses to the file
         append_loss_dict(
@@ -175,14 +183,6 @@ def train_model(
             avg_train_loss,
             avg_val_loss,
             filename=model.name + "_losses.json",
-        )
-
-        if scheduler is not None:
-            scheduler.step()
-
-        logging.info(
-            f"Epoch [{epoch + 1}/{num_epochs}], "
-            f"train loss: {avg_train_loss}, val Loss: {avg_val_loss}"
         )
 
         """print(
