@@ -202,12 +202,14 @@ class YOHODataGenerator(DataLoader):
         batch_size: int = 32,
         shuffle: bool = True,
         pin_memory: bool = False,
+        num_workers: int = 0
     ):
         super().__init__(
             dataset=dataset,
             batch_size=batch_size,
             shuffle=shuffle,
             pin_memory=pin_memory,
+            num_workers=num_workers
         )
         self.n_classes = len(
             dataset.labels
