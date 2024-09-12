@@ -113,6 +113,8 @@ def train_model(
         model.train()
         # Initialize running loss
         running_train_loss = 0.0
+        
+        start_epoch = timer()
 
         for _, (inputs, labels) in enumerate(train_loader):
             # Move the inputs and labels to the device
@@ -132,6 +134,8 @@ def train_model(
 
         # Compute the average train loss for this epoch
         avg_train_loss = (running_train_loss / len(train_loader))
+
+        end_epoch = timer()
 
         if val_loader is not None:
             model.eval()
@@ -174,7 +178,8 @@ def train_model(
 
         logging.info(
             f"Epoch [{epoch + 1}/{num_epochs}], "
-            f"train loss: {avg_train_loss}, val Loss: {avg_val_loss}"
+            f"Train Loss: {avg_train_loss}, Val Loss: {avg_val_loss}"
+            f"Time taken: {end_epoch - start_epoch:.2f} seconds"
         )
 
         # Append the losses to the file
