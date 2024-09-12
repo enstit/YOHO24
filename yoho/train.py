@@ -36,7 +36,7 @@ def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
         logging.info("No checkpoint found, starting training from scratch")
         return model, optimizer, 0, None
 
-    logging.info(f"Found checkpoint file in {MODELS_DIR}, loading checkpoint")
+    logging.info(f"Found checkpoint file at {filepath}, loading checkpoint")
     checkpoint = torch.load(filepath)
 
     model.load_state_dict(checkpoint["state_dict"])
@@ -376,7 +376,7 @@ if __name__ == "__main__":
 
     # Load the model checkpoint if it exists
     model, optimizer, start_epoch, _ = load_checkpoint(
-        model, optimizer, model.name + "_checkpoint.pth.tar"
+        model, optimizer, filename=f"{model.name}_checkpoint.pth.tar"
     )
 
     logging.info("Start training the model")
