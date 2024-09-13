@@ -14,7 +14,7 @@ Following the introduction of You-Only-Look-Once (YOLO) model in 2015[^1], which
 ## Usage
 
 ### Datasets
-The datasets used in this project are (almost) the same ones used in [the original YOHO paper](https://doi.org/10.48550/arXiv.2109.00962) to evaluate its performances, with the exception of the *18h of audio from BBC Radio Devon* dataset.
+The datasets used in this project are (almost) the same ones used in [the original YOHO paper](https://doi.org/10.48550/arXiv.2109.00962) to evaluate its performances, with the exception of the *18h of audio from BBC Radio Devon* dataset (namely, the TUTSoundEvent Detection dataset for the third task of the DCASE challenge 2017 and the Urban Sound Event Detection dataset).
 
 The [`yoho/dataset.py`](./yoho/dataset.py) script automatically downloads raw data and process it. Simply run
 ```python
@@ -25,7 +25,7 @@ specifying wheter if you want to download `urbansed` dataset or `tut` dataset (d
 Regarding the relevant licenses, please refer to the individual sources.
 
 ### Train
-Model weight are available in the [`model`](./model) folder. If you want to train your personal version of `YOHO`, modify the [`yoho/train.py`](./yoho/train.py) script and start the training with
+Model weight are available in the [`models`](./models) folder. If you want to train your personal version of `YOHO`, modify the [`yoho/train.py`](./yoho/train.py) script and start the training with
 ```python
 python3 -m yoho.train [--name YourCustomModelName] [--epochs 50] [--batch-size 32] [--cosine-annealing]
 ```
@@ -44,7 +44,7 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
     Redmon, J. and Farhadi, A., "YOLOv3: An Incremental Improvement", *arXiv e-prints*, 2018. [doi:10.48550/arXiv.1804.02767](https://doi.org/10.48550/arXiv.1804.02767).
 
 [^4]:
-    Daniel S.-P., William C., Yu Z., Chung-Cheng C., Barret Z., Ekin D.-C., Quoc V.-L., "SpecAugment: A Simple Data Augmentation Method for Automatic Speech Recognition", *arXiv e-prints*, 2019. [doi:10.48550/arXiv:1904.08779](https://doi.org/10.48550/arXiv:1904.08779).
+    Daniel S.-P., William C., Yu Z., Chung-Cheng C., Barret Z., Ekin D.-C., Quoc V.-L., "SpecAugment: A Simple Data Augmentation Method for Automatic Speech Recognition", *arXiv e-prints*, 2019. [doi:10.48550/arXiv:1904.08779](https://doi.org/10.48550/arXiv.1904.08779).
 
 [^5]:
     Bochkovskiy, A., Wang, C.-Y., and Liao, H.-Y. M., "YOLOv4: Optimal Speed and Accuracy of Object Detection", *arXiv e-prints*, 2020. [doi:10.48550/arXiv.2004.10934](https://doi.org/10.48550/arXiv.2004.10934).
