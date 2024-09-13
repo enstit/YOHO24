@@ -132,6 +132,7 @@ def train_model(
             # Accumulate the loss
             running_train_loss += loss.detach()
 
+        logging.info("Evaluating loss") 
         # Compute the average train loss for this epoch
         avg_train_loss = running_train_loss / len(train_loader)
 
@@ -144,6 +145,7 @@ def train_model(
             # ground_truth_list = []
             # prediction_list = []
 
+            logging.info("Evaluation started")
             with torch.no_grad():
                 for _, (inputs, labels) in enumerate(val_loader):
                     inputs, labels = inputs.to(device), labels.to(device)
@@ -157,7 +159,7 @@ def train_model(
                     ground_truth_list.extend(ground_truth)
                     prediction_list.extend(predictions)"""
 
-            avg_val_loss = running_val_loss / len(val_loader)
+                    avg_val_loss = running_val_loss / len(val_loader)
 
             """evaluator.evaluate(
                 reference_event_list=ground_truth_list,
@@ -168,6 +170,8 @@ def train_model(
 
         else:
             avg_val_loss = None
+        
+        logging.info("Validation completed")
 
         if scheduler is not None:
             scheduler.step()
@@ -379,12 +383,15 @@ if __name__ == "__main__":
 
     logging.info("Creating the train data loader")
 
+    # Detect CPU per task from slurm (default: 4)
+    num_workers = int(os.getenv('SLURM_CPUS_PER_TASK', 4))
+
     train_dataloader = YOHODataGenerator(
         urbansed_train,
         batch_size=args.batch_size,
         shuffle=True,
         pin_memory=True,
-        num_workers=4,
+        num_workers=num_workers,
     )
 
     logging.info("Creating the validation data loader")
@@ -393,7 +400,7 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         shuffle=False,
         pin_memory=True,
-        num_workers=4,
+        num_workers=num_workers,
     )
 
     # Create the model

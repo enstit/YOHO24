@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -p GPU
 #SBATCH --nodes=1
-#SBATCH --gpus=1
-#SBATCH --cpus-per-task=4
+#SBATCH --gpus=2
+#SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=8
 #SBATCH --mem=50GB
 #SBATCH --time=02:00:00
@@ -15,7 +15,7 @@ source /u/dssc/$(whoami)/scratch/torchenv/bin/activate
 cd /u/dssc/$(whoami)/scratch/YOHO24/
 
 # Run the train.py script
-python3 -m yoho.train "$@"
+python3 -m yoho.train "$@" --batch-size=128 
 
 #jupyter nbconvert --to notebook --execute notebooks/02_urbansed.ipynb
 
