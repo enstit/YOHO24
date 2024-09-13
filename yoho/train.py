@@ -29,12 +29,12 @@ def save_checkpoint(state: dict, filename: str = "checkpoint.pth.tar") -> None:
     torch.save(state, os.path.join(MODELS_DIR, filename))
 
 
-def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
+def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar") -> tuple:
     filepath = os.path.join(MODELS_DIR, filename)
 
     if not os.path.exists(filepath):
         logging.info("No checkpoint found, starting training from scratch")
-        return model, optimizer, 0, None
+        return model, optimizer, 0, None, None
 
     logging.info(f"Found checkpoint file at {filepath}, loading checkpoint")
     checkpoint = torch.load(filepath)
@@ -42,9 +42,12 @@ def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar"):
     model.load_state_dict(checkpoint["state_dict"])
     optimizer.load_state_dict(checkpoint["optimizer"])
 
+    if checkpoint["scheduler_state_dict"] is not None:
+        scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+        
     start_epoch = checkpoint["epoch"]
     loss = checkpoint["loss"]
-    return model, optimizer, start_epoch, loss
+    return model, optimizer, start_epoch, scheduler, loss
 
 
 def append_loss_dict(epoch, train_loss, val_loss, filename="losses.json"):
@@ -79,7 +82,7 @@ def train_model(
         # Initialize running loss
         running_train_loss = 0.0
 
-        start_epoch = timer()
+        start_training = timer()
 
         for _, (inputs, labels) in enumerate(train_loader):
             # Move the inputs and labels to the device
@@ -97,20 +100,15 @@ def train_model(
             # Accumulate the loss
             running_train_loss += loss.detach()
 
-        logging.info("Evaluating loss") 
         # Compute the average train loss for this epoch
         avg_train_loss = running_train_loss / len(train_loader)
 
-        end_epoch = timer()
+        end_training = timer()
 
         if val_loader is not None:
             model.eval()
             running_val_loss = 0.0
 
-            # ground_truth_list = []
-            # prediction_list = []
-
-            logging.info("Evaluation started")
             with torch.no_grad():
                 for _, (inputs, labels) in enumerate(val_loader):
                     inputs, labels = inputs.to(device), labels.to(device)
@@ -122,7 +120,6 @@ def train_model(
         else:
             avg_val_loss = None
         
-        logging.info("Validation completed")
 
         if scheduler is not None:
             scheduler.step()
@@ -135,7 +132,7 @@ def train_model(
         logging.info(
             f"Epoch [{epoch + 1}/{num_epochs}], "
             f"Train Loss: {avg_train_loss:.2f}, Val Loss: {avg_val_loss:.2f}, "
-            f"Time taken: {(end_epoch - start_epoch)/60:.2f} mins"
+            f"Time taken: {(end_training - start_training)/60:.2f} mins"
         )
 
         # Append the losses to the file
@@ -152,6 +149,7 @@ def train_model(
                 "epoch": epoch + 1,
                 "state_dict": model.state_dict(),
                 "optimizer": optimizer.state_dict(),
+                'scheduler_state_dict': scheduler.state_dict() if scheduler is not None else None,
                 "loss": avg_train_loss,
             },
             model.name + "_checkpoint.pth.tar",
@@ -345,7 +343,7 @@ if __name__ == "__main__":
         )
 
     # Load the model checkpoint if it exists
-    model, optimizer, start_epoch, _ = load_checkpoint(
+    model, optimizer, start_epoch, scheduler, _ = load_checkpoint(
         model, optimizer, filename=f"{model.name}_checkpoint.pth.tar"
     )
 
