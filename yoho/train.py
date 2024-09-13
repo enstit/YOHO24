@@ -75,7 +75,6 @@ def train_model(
     criterion = get_loss_function()
     optimizer = model.get_optimizer()
 
-
     for epoch in range(start_epoch, num_epochs):
         # Set the model to training mode
         model.train()
@@ -181,6 +180,7 @@ def load_dataset(partition: str, augment: bool = False):
 
             transform = None
             if augment:
+                logging.info("Augmenting the training data using SpecAugment")
                 transform = v2.Compose(
                     [
                         FrequencyMasking(freq_mask_param=8),
@@ -307,7 +307,7 @@ if __name__ == "__main__":
     logging.info("Creating the train data loader")
 
     # Get number of workers from slurm (default: 4)
-    num_workers = int(os.getenv('SLURM_CPUS_PER_TASK', 4))
+    num_workers = int(os.getenv("SLURM_CPUS_PER_TASK", 4))
 
     train_dataloader = YOHODataGenerator(
         urbansed_train,
@@ -337,7 +337,7 @@ if __name__ == "__main__":
     optimizer = model.get_optimizer()
 
     scheduler = None
-    if args.cosine_annealing: # Use cosine annealing learning rate scheduler
+    if args.cosine_annealing:  # Use cosine annealing learning rate scheduler
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer, T_max=args.epochs
         )

@@ -15,7 +15,7 @@ source /u/dssc/$(whoami)/scratch/torchenv/bin/activate
 cd /u/dssc/$(whoami)/scratch/YOHO24/
 
 # Run the train.py script
-python3 -m yoho.train "$@" --batch-size=128 
+python3 -m yoho.train "$@"
 
 #jupyter nbconvert --to notebook --execute notebooks/02_urbansed.ipynb
 
