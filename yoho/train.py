@@ -65,27 +65,6 @@ def append_loss_dict(epoch, train_loss, val_loss, filename="losses.json"):
         json.dump(loss_dict, f)
 
 
-def convert_to_sed_format(tensor, label_map, file_id="audio_file"):
-    event_list = []
-    for i in range(tensor.shape[0]):
-        for j in range(tensor.shape[1]):
-            onset = tensor[i, j, 1].item()
-            offset = tensor[i, j, 2].item()
-            event_label = tensor[i, j, 0].item()
-
-            if event_label in label_map:
-                event_label_str = label_map[event_label]
-                event_list.append(
-                    {
-                        "file": file_id,
-                        "onset": onset,
-                        "offset": offset,
-                        "event_label": event_label_str,
-                    }
-                )
-    return event_list
-
-
 def train_model(
     model, train_loader, val_loader, num_epochs, start_epoch=0, scheduler=None
 ):
@@ -93,20 +72,6 @@ def train_model(
     criterion = get_loss_function()
     optimizer = model.get_optimizer()
 
-    """# Define event labels mapping
-    label_map = {
-        0: "brakes squeaking",
-        1: "car",
-        2: "children",
-        3: "large vehicle",
-        4: "people speaking",
-        5: "people walking",
-    }
-
-    # Set up sed_eval metrics
-    evaluator = sed_eval.sound_event.EventBasedMetrics(
-        event_label_list=list(label_map.values())
-    )"""
 
     for epoch in range(start_epoch, num_epochs):
         # Set the model to training mode
@@ -150,21 +115,7 @@ def train_model(
                     outputs = model(inputs)
                     loss = criterion(outputs, labels)
                     running_val_loss += loss.detach()
-
-                    """predictions = convert_to_sed_format(outputs)
-                    ground_truth = convert_to_sed_format(labels)
-
-                    ground_truth_list.extend(ground_truth)
-                    prediction_list.extend(predictions)"""
-
-            avg_val_loss = running_val_loss / len(val_loader)
-
-            """evaluator.evaluate(
-                reference_event_list=ground_truth_list,
-                estimated_event_list=prediction_list,
-            )
-
-            evaluation_results = evaluator.results()"""
+                avg_val_loss = running_val_loss / len(val_loader)
 
         else:
             avg_val_loss = None
@@ -191,13 +142,6 @@ def train_model(
             filename=model.name + "_losses.json",
         )
 
-        """print(
-            f"Epoch [{epoch + 1}/{num_epochs}], "
-            f"Loss: {avg_loss}, Val Loss: {avg_val_loss}, "
-            f"F1: {evaluation_results['overall']['f_measure']['f_measure']:.4f}, "
-            f"ER: {evaluation_results['overall']['error_rate']['error_rate']:.4f}"
-        )"""
-
         # Save the model checkpoint after each epoch
         save_checkpoint(
             {
@@ -208,25 +152,6 @@ def train_model(
             },
             model.name + "_checkpoint.pth.tar",
         )
-
-
-def convert_to_sed_format(tensor, filename="audio_file"):
-    event_list = []
-    for i in range(tensor.shape[0]):
-        onset = tensor[i, :, 1].item()
-        offset = tensor[i, :, 2].item()
-        event_label = tensor[i, :, 0].item()
-
-        event_list.append(
-            {
-                "file": filename,
-                "event_label": event_label,
-                "onset": onset,
-                "offset": offset,
-            }
-        )
-
-    return event_list
 
 
 def get_device():
@@ -379,12 +304,15 @@ if __name__ == "__main__":
 
     logging.info("Creating the train data loader")
 
+    # Get number of workers from slurm (default: 4)
+    num_workers = int(os.getenv('SLURM_CPUS_PER_TASK', 4))
+
     train_dataloader = YOHODataGenerator(
         urbansed_train,
         batch_size=args.batch_size,
         shuffle=True,
         pin_memory=True,
-        num_workers=4,
+        num_workers=num_workers,
     )
 
     logging.info("Creating the validation data loader")
@@ -393,7 +321,7 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         shuffle=False,
         pin_memory=True,
-        num_workers=4,
+        num_workers=num_workers,
     )
 
     # Create the model
@@ -407,7 +335,7 @@ if __name__ == "__main__":
     optimizer = model.get_optimizer()
 
     scheduler = None
-    if args.cosine_annealing:
+    if args.cosine_annealing: # Use cosine annealing learning rate scheduler
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer, T_max=args.epochs
         )
@@ -432,4 +360,4 @@ if __name__ == "__main__":
 
     end_training = timer()
     seconds_elapsed = end_training - start_training
-    logging.info(f"Training took {seconds_elapsed:.2f} seconds")
+    logging.info(f"Training took {(seconds_elapsed)/60:.2f} mins")
