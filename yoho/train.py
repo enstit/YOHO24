@@ -117,25 +117,7 @@ def train_model(
                     outputs = model(inputs)
                     loss = criterion(outputs, labels)
                     running_val_loss += loss.detach()
-<<<<<<< HEAD
-
-                    """predictions = convert_to_sed_format(outputs)
-                    ground_truth = convert_to_sed_format(labels)
-
-                    ground_truth_list.extend(ground_truth)
-                    prediction_list.extend(predictions)"""
-
-                    avg_val_loss = running_val_loss / len(val_loader)
-
-            """evaluator.evaluate(
-                reference_event_list=ground_truth_list,
-                estimated_event_list=prediction_list,
-            )
-
-            evaluation_results = evaluator.results()"""
-=======
                 avg_val_loss = running_val_loss / len(val_loader)
->>>>>>> 3c9ec3ea3a39a4169344f73c240d3b3f443646c4
 
         else:
             avg_val_loss = None
@@ -326,11 +308,7 @@ if __name__ == "__main__":
 
     logging.info("Creating the train data loader")
 
-<<<<<<< HEAD
-    # Detect CPU per task from slurm (default: 4)
-=======
     # Get number of workers from slurm (default: 4)
->>>>>>> 3c9ec3ea3a39a4169344f73c240d3b3f443646c4
     num_workers = int(os.getenv('SLURM_CPUS_PER_TASK', 4))
 
     train_dataloader = YOHODataGenerator(
