@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import argparse
 
 from yoho.utils import (
     download_file,
@@ -36,13 +37,48 @@ def parse_jams_file(jams_file):
         return events
 """
 
+
+def download_urbansed():
+    DATASET_URL = "https://zenodo.org/api/records/1324404/files-archive"
+    urbansed_zip_path = os.path.join(
+        SCRIPT_DIRPATH, "../data/raw/URBAN-SED.zip"
+    )
+
+
 if __name__ == "__main__":
 
-    if not os.path.exists(os.path.join(SCRIPT_DIRPATH, "../data/raw")):
-        os.makedirs(os.path.join(SCRIPT_DIRPATH, "../data/raw"))
+    parser = argparse.ArgumentParser()
 
-    # UrbanSED Dataset
-    urbansed_url = "https://zenodo.org/api/records/1324404/files-archive"
+    parser.add_argument(
+        "--tut",
+        action="store_true",  # default=False
+        help="Download the TUT Sound Events 2017 dataset",
+    )
+
+    parser.add_argument(
+        "--urbansed",
+        action="store_true",  # default=False
+        help="Download the UrbanSED dataset",
+    )
+
+    args = parser.parse_args()
+
+    if not os.path.exists(
+        RAW_PATH := os.path.join(SCRIPT_DIRPATH, "../data/raw")
+    ):
+        os.makedirs(RAW_PATH)
+
+    if not os.path.exists(
+        PROCESSED_PATH := os.path.join(SCRIPT_DIRPATH, "../data/processed")
+    ):
+        os.makedirs(PROCESSED_PATH)
+
+    if args.tut:
+        pass
+
+    if args.urbansed:
+        urbansed_raw_path = os.path.join(RAW_PATH, "../data/raw/URBAN-SED")
+        download_urbansed()
 
     urbansed_zip_path = os.path.join(
         SCRIPT_DIRPATH, "../data/raw/URBAN-SED.zip"
