@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import logging
 import argparse
 
 from yoho.utils import (
@@ -10,7 +11,15 @@ from yoho.utils import (
     write_data_to_csv,
 )
 
+
+def join_paths(*paths):
+    return os.path.abspath(os.path.join(*paths))
+
+
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
+DATA_PATH = join_paths(SCRIPT_DIRPATH, "../data/")
+
+logging.basicConfig(level=logging.INFO)
 
 """
 def parse_jams_file(jams_file):
@@ -40,9 +49,35 @@ def parse_jams_file(jams_file):
 
 def download_urbansed():
     DATASET_URL = "https://zenodo.org/api/records/1324404/files-archive"
-    urbansed_zip_path = os.path.join(
-        SCRIPT_DIRPATH, "../data/raw/URBAN-SED.zip"
-    )
+    urbansed_raw_path = join_paths(RAW_PATH, "UrbanSED/")
+    urbansed_zip_file = join_paths(urbansed_raw_path, "UrbanSED.zip")
+
+    if not os.path.exists(urbansed_raw_path):
+        os.makedirs(urbansed_raw_path)
+
+        if not os.path.exists(urbansed_zip_file):
+            download_file(DATASET_URL, urbansed_zip_file)
+
+        uncompress_file(urbansed_zip_file, urbansed_raw_path)
+        uncompress_file(
+            join_paths(urbansed_raw_path, "URBAN-SED_v2.0.0.tar.gz"),
+            urbansed_raw_path,
+        )
+        # Move all the files to the parent folder
+        for item in os.listdir(
+            join_paths(urbansed_raw_path, "URBAN-SED_v2.0.0")
+        ):
+            item_path = join_paths(urbansed_raw_path, "URBAN-SED_v2.0.0", item)
+            os.rename(item_path, join_paths(urbansed_raw_path, item))
+        # Remove the empty folder
+        os.rmdir(join_paths(urbansed_raw_path, "URBAN-SED_v2.0.0"))
+
+
+def process_urbansed():
+    urbansed_processed_path = join_paths(PROCESSED_PATH, "UrbanSED/")
+
+    if not os.path.exists(urbansed_processed_path):
+        os.makedirs(urbansed_processed_path)
 
 
 if __name__ == "__main__":
@@ -63,53 +98,30 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if not os.path.exists(
-        RAW_PATH := os.path.join(SCRIPT_DIRPATH, "../data/raw")
-    ):
+    if not args.tut and not args.urbansed:
+        print("Please specify a dataset to download.")
+        exit()
+
+    RAW_PATH = join_paths(DATA_PATH, "raw/")
+    # Create directories in the data folder if they don't exist
+    if not os.path.exists(RAW_PATH):
+        logging.info(f"Creating directory: {RAW_PATH}")
         os.makedirs(RAW_PATH)
 
-    if not os.path.exists(
-        PROCESSED_PATH := os.path.join(SCRIPT_DIRPATH, "../data/processed")
-    ):
+    PROCESSED_PATH = join_paths(DATA_PATH, "processed/")
+    if not os.path.exists(PROCESSED_PATH):
+        logging.info(f"Creating directory: {PROCESSED_PATH}")
         os.makedirs(PROCESSED_PATH)
 
     if args.tut:
         pass
 
     if args.urbansed:
-        urbansed_raw_path = os.path.join(RAW_PATH, "../data/raw/URBAN-SED")
         download_urbansed()
-
-    urbansed_zip_path = os.path.join(
-        SCRIPT_DIRPATH, "../data/raw/URBAN-SED.zip"
-    )
-
-    # Download the zip file
-    download_file(urbansed_url, urbansed_zip_path)
-
-    uncompress_file(
-        urbansed_zip_path,
-        os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED"),
-    )
-
-    urban_sed_subfolder = os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED")
-
-    uncompress_file(
-        os.path.join(urban_sed_subfolder, "URBAN-SED_v2.0.0.tar.gz"),
-        urban_sed_subfolder,
-    )
-
-    # TODO: Need to move the files to the parent folder (urban_sed_subfolder)
+        process_urbansed()
 
     """
-    urban_sed_subfolder = os.path.join(SCRIPT_DIRPATH, "../data/raw/URBAN-SED")
 
-    if not os.path.exists(
-        os.path.join(SCRIPT_DIRPATH, "../data/processed/URBAN-SED")
-    ):
-        os.makedirs(
-            os.path.join(SCRIPT_DIRPATH, "../data/processed/URBAN-SED")
-        )
 
     ANNOTATIONS_TRAIN_PATH = os.path.join(
         urban_sed_subfolder, "annotations/train/"

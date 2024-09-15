@@ -18,9 +18,9 @@ The datasets used in this project are (almost) the same ones used in [the origin
 
 The [`yoho/dataset.py`](./yoho/dataset.py) script automatically downloads raw data and process it. Simply run
 ```python
-python3 -m yoho.dataset [urbansed,tut]
+python3 -m yoho.dataset [--urbansed] [--tut]
 ```
-specifying wheter if you want to download `urbansed` dataset or `tut` dataset (default to both).
+specifying wheter if you want to download `urbansed` dataset or `tut` dataset.
 
 Regarding the relevant licenses, please refer to the individual sources.
 

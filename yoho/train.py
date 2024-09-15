@@ -44,7 +44,7 @@ def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar") -> tuple:
 
     if checkpoint["scheduler_state_dict"] is not None:
         scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
-        
+
     start_epoch = checkpoint["epoch"]
     loss = checkpoint["loss"]
     return model, optimizer, start_epoch, scheduler, loss
@@ -118,7 +118,6 @@ def train_model(
 
         else:
             avg_val_loss = None
-        
 
         if scheduler is not None:
             scheduler.step()
@@ -148,7 +147,9 @@ def train_model(
                 "epoch": epoch + 1,
                 "state_dict": model.state_dict(),
                 "optimizer": optimizer.state_dict(),
-                'scheduler_state_dict': scheduler.state_dict() if scheduler is not None else None,
+                "scheduler_state_dict": (
+                    scheduler.state_dict() if scheduler is not None else None
+                ),
                 "loss": avg_train_loss,
             },
             model.name + "_checkpoint.pth.tar",
@@ -171,7 +172,7 @@ def load_dataset(partition: str, augment: bool = False):
     match partition:
         case "train":
             filepath = os.path.join(
-                root_dir, "data/processed/URBAN-SED/train.pkl"
+                root_dir, "data/processed/UrbanSED/train.pkl"
             )
 
             if os.path.exists(filepath):
@@ -200,7 +201,7 @@ def load_dataset(partition: str, augment: bool = False):
                         for _, file in pd.read_csv(
                             os.path.join(
                                 SCRIPT_DIRPATH,
-                                "../data/raw/URBAN-SED/train.csv",
+                                "../data/raw/UrbanSED/train.csv",
                             )
                         ).iterrows()
                     )
@@ -218,7 +219,7 @@ def load_dataset(partition: str, augment: bool = False):
         case "validate":
 
             filepath = os.path.join(
-                root_dir, "data/processed/URBAN-SED/validate.pkl"
+                root_dir, "data/processed/UrbanSED/validate.pkl"
             )
 
             if os.path.exists(filepath):
@@ -238,7 +239,7 @@ def load_dataset(partition: str, augment: bool = False):
                         for _, file in pd.read_csv(
                             os.path.join(
                                 SCRIPT_DIRPATH,
-                                "../data/raw/URBAN-SED/validate.csv",
+                                "../data/raw/UrbanSED/validate.csv",
                             )
                         ).iterrows()
                     )
