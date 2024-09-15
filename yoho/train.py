@@ -69,7 +69,7 @@ def append_loss_dict(epoch, train_loss, val_loss, filename="losses.json"):
 
 
 def train_model(
-    model, device, train_loader, val_loader, num_epochs, start_epoch=0, scheduler=None
+    model, device, train_loader, val_loader, num_epochs, start_epoch=0, scheduler=None, autocast=False
 ):
 
     criterion = get_loss_function()
@@ -92,21 +92,29 @@ def train_model(
             # Zero the parameter gradients
             optimizer.zero_grad(set_to_none=True)
 
-            with torch.autocast(device_type=device):
+            if autocast:
+                # Use autocast to reduce memory usage
+                with torch.autocast(device_type=device):
+                    # Forward pass
+                    outputs = model(inputs)
+                    # Compute the loss
+                    loss = criterion(outputs, labels).to(device)
+
+                # Scale the loss, call backward, and step
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
+
+            else:
                 # Forward pass
                 outputs = model(inputs)
                 # Compute the loss
                 loss = criterion(outputs, labels).to(device)
+                # Backward pass
+                loss.backward()
+                # Optimize the model
+                optimizer.step()
 
-            # Scale the loss, call backward, and step
-            scaler.scale(loss).backward()
-            scaler.step(optimizer)
-            scaler.update()
-
-            """# Backward pass
-            loss.backward()
-            # Optimize the model
-            optimizer.step()"""
             # Accumulate the loss
             running_train_loss += loss.detach()
 
@@ -297,6 +305,12 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--autocast",
+        action="store_true",  # default=False
+        help="Use autocast to reduce memory usage",
+    )
+
+    parser.add_argument(
         "--spec-augment",
         action="store_true",  # default=False
         help="Augment the training data using SpecAugment",
@@ -371,6 +385,7 @@ if __name__ == "__main__":
         num_epochs=args.epochs,
         start_epoch=start_epoch,
         scheduler=scheduler,
+        autocast=args.autocast,
     )
 
     end_training = timer()
