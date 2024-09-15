@@ -69,7 +69,7 @@ def append_loss_dict(epoch, train_loss, val_loss, filename="losses.json"):
 
 
 def train_model(
-    model, train_loader, val_loader, num_epochs, start_epoch=0, scheduler=None
+    model, device, train_loader, val_loader, num_epochs, start_epoch=0, scheduler=None
 ):
 
     criterion = get_loss_function()
@@ -91,7 +91,7 @@ def train_model(
             # Forward pass
             outputs = model(inputs)
             # Compute the loss
-            loss = criterion(outputs, labels)
+            loss = criterion(outputs, labels).to(device)
             # Backward pass
             loss.backward()
             # Optimize the model
@@ -354,6 +354,7 @@ if __name__ == "__main__":
     # Train the model
     train_model(
         model=model,
+        device=device,
         train_loader=train_dataloader,
         val_loader=val_dataloader,
         num_epochs=args.epochs,
