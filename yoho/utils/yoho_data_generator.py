@@ -140,7 +140,7 @@ class UrbanSEDDataset(YOHODataset):
         # The UrbanSEDDataset class is a subclass of the YOHODataset class
         # where the number of Mel bins is set to 40, the hop length is set to
         # 10 ms, and the window length is set to 40 ms as specified in the
-        # original YOHO paper. The labels are the ones from the URBAN-SED
+        # original YOHO paper. The labels are the ones from the UrbanSED
         # challenge.
         super().__init__(
             audios=audios,
@@ -159,9 +159,9 @@ class UrbanSEDDataset(YOHODataset):
             ],
             transform=transform,
             target_transform=target_transform,
-            n_mels=40,  # As defined in the YOHO paper for the URBAN-SED dataset
-            hop_len=0.01,  # As defined in the YOHO paper for the URBAN-SED dataset
-            win_len=0.04,  # As defined in the YOHO paper for the URBAN-SED dataset
+            n_mels=40,  # As defined in the YOHO paper for the UrbanSED dataset
+            hop_len=0.01,  # As defined in the YOHO paper for the UrbanSED dataset
+            win_len=0.04,  # As defined in the YOHO paper for the UrbanSED dataset
         )
 
 
