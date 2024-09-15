@@ -75,6 +75,9 @@ def train_model(
     criterion = get_loss_function()
     optimizer = model.get_optimizer()
 
+    # Initialize a GradScaler
+    scaler = torch.cuda.amp.GradScaler()
+
     for epoch in range(start_epoch, num_epochs):
         # Set the model to training mode
         model.train()
@@ -88,14 +91,22 @@ def train_model(
             inputs, labels = inputs.to(device), labels.to(device)
             # Zero the parameter gradients
             optimizer.zero_grad(set_to_none=True)
-            # Forward pass
-            outputs = model(inputs)
-            # Compute the loss
-            loss = criterion(outputs, labels).to(device)
-            # Backward pass
+
+            with torch.autocast(device_type=device):
+                # Forward pass
+                outputs = model(inputs)
+                # Compute the loss
+                loss = criterion(outputs, labels).to(device)
+
+            # Scale the loss, call backward, and step
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+
+            """# Backward pass
             loss.backward()
             # Optimize the model
-            optimizer.step()
+            optimizer.step()"""
             # Accumulate the loss
             running_train_loss += loss.detach()
 
