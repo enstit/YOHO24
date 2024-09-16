@@ -52,7 +52,9 @@ def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar") -> tuple:
     return model, optimizer, start_epoch, scheduler, loss
 
 
-def append_loss_dict(epoch, train_loss, val_loss, error_rate, f1_score, filename="losses.json"):
+def append_loss_dict(
+    epoch, train_loss, val_loss, error_rate, f1_score, filename="losses.json"
+):
     filepath = os.path.join(MODELS_DIR, filename)
 
     if os.path.exists(filepath):
@@ -72,20 +74,9 @@ def append_loss_dict(epoch, train_loss, val_loss, error_rate, f1_score, filename
         json.dump(loss_dict, f)
 
 
-def process_output(output: np.array) -> list[tuple[str, float, float]]:
-
-    labels_ = [
-        "air_conditioner",
-        "car_horn",
-        "children_playing",
-        "dog_bark",
-        "drilling",
-        "engine_idling",
-        "gun_shot",
-        "jackhammer",
-        "siren",
-        "street_music",
-    ]
+def process_output(
+    output: np.array, classes: list[str]
+) -> list[tuple[str, float, float]]:
 
     STEPS_NO = 9
     step_duration = 2.56 / STEPS_NO
@@ -101,12 +92,14 @@ def process_output(output: np.array) -> list[tuple[str, float, float]]:
 
             for j in range(0, output.shape[1], 3):
                 if output[k, j, i] >= 0.5:
-                    label = labels_[j // 3]
+                    label = classes[j // 3]
                     start = (
-                        i * step_duration + output[k, j + 1, i].item() * step_duration
+                        i * step_duration
+                        + output[k, j + 1, i].item() * step_duration
                     )
                     end = (
-                        i * step_duration + output[k, j + 2, i].item() * step_duration
+                        i * step_duration
+                        + output[k, j + 2, i].item() * step_duration
                     )
                     labels.append((label, round(start, 2), round(end, 2)))
 
@@ -120,7 +113,10 @@ def process_output(output: np.array) -> list[tuple[str, float, float]]:
                 merged_labels.append((label, start, end))
             else:
                 prev_label, prev_start, prev_end = merged_labels[-1]
-                if prev_label == label and start - prev_end < MIN_SILENCE_DURATION:
+                if (
+                    prev_label == label
+                    and start - prev_end < MIN_SILENCE_DURATION
+                ):
                     merged_labels[-1] = (label, prev_start, end)
                 else:
                     merged_labels.append((label, start, end))
@@ -135,25 +131,28 @@ def process_output(output: np.array) -> list[tuple[str, float, float]]:
         # Order the labels by start time
         # If two events start at the same time, order by class index
         merged_labels = sorted(
-            merged_labels, key=lambda x: (x[1], labels_.index(x[0]))
+            merged_labels, key=lambda x: (x[1], classes.index(x[0]))
         )
 
         processed_output.append(merged_labels)
 
     return processed_output
 
+
 def compute_metrics(predictions, targets, classes, filepaths):
-    
+
     # Process the outputs
-    processed_predictions = process_output(predictions.cpu().numpy())
-    processed_targets = process_output(targets.cpu().numpy())
+    processed_predictions = process_output(predictions.cpu().numpy(), classes)
+    processed_targets = process_output(targets.cpu().numpy(), classes)
 
     # Initialize the metrics
     error_rate = 0.0
     f1_score = 0.0
 
     # Compute the metrics for each prediction
-    for pred, target, filepath in zip(processed_predictions, processed_targets, filepaths):
+    for pred, target, filepath in zip(
+        processed_predictions, processed_targets, filepaths
+    ):
 
         # Create the event list
         pred_event_list = dcase_util.containers.MetaDataContainer(
@@ -186,7 +185,7 @@ def compute_metrics(predictions, targets, classes, filepaths):
             time_resolution=1.0,
         )
 
-        # Evaluate 
+        # Evaluate
         segment_based_metrics.evaluate(
             reference_event_list=target_event_list,
             estimated_event_list=pred_event_list,
@@ -195,8 +194,8 @@ def compute_metrics(predictions, targets, classes, filepaths):
         overall_metrics = segment_based_metrics.results_overall_metrics()
 
         # Compute the error rate and f1 score
-        error_rate += overall_metrics["error_rate"]['error_rate']
-        f1_score += overall_metrics["f_measure"]['f_measure']
+        error_rate += overall_metrics["error_rate"]["error_rate"]
+        f1_score += overall_metrics["f_measure"]["f_measure"]
 
     error_rate /= len(processed_predictions)
     f1_score /= len(processed_predictions)
@@ -204,10 +203,15 @@ def compute_metrics(predictions, targets, classes, filepaths):
 
 
 def train_model(
-    model, device, train_loader, val_loader, num_epochs, start_epoch=0, scheduler=None, autocast=False
+    model,
+    device,
+    train_loader,
+    val_loader,
+    num_epochs,
+    start_epoch=0,
+    scheduler=None,
+    autocast=False,
 ):
-
-    labels_ = train_loader.dataset.labels
 
     criterion = get_loss_function()
     optimizer = model.get_optimizer()
@@ -275,17 +279,26 @@ def train_model(
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
 
-                filepaths = [audio.filepath for audio in val_loader.dataset.audios[_ * val_loader.batch_size:(_ + 1) * val_loader.batch_size]]
+                filepaths = [
+                    audio.filepath
+                    for audio in val_loader.dataset.audios[
+                        _
+                        * val_loader.batch_size : (_ + 1)
+                        * val_loader.batch_size
+                    ]
+                ]
 
                 # Compute the error rate and f1 score
                 running_error_rate, running_f1_score = compute_metrics(
-                    predictions=outputs, targets=labels, classes=labels_, filepaths=filepaths
+                    predictions=outputs,
+                    targets=labels,
+                    classes=train_loader.dataset.labels,
+                    filepaths=filepaths,
                 )
 
                 running_val_loss += loss.detach()
                 error_rate += running_error_rate
                 f1_score += running_f1_score
-
 
             avg_val_loss = running_val_loss / len(val_loader)
             error_rate /= len(val_loader)
@@ -503,7 +516,7 @@ if __name__ == "__main__":
     logging.info("Creating the validation data loader")
     val_dataloader = YOHODataGenerator(
         urbansed_val,
-        batch_size=32, #args.batch_size,
+        batch_size=32,  # args.batch_size,
         shuffle=False,
         pin_memory=True,
         num_workers=num_workers,
