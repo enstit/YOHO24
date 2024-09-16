@@ -93,6 +93,10 @@ class YOHODataset(Dataset):
             for audio_label in (
                 self.audios[idx].labels if self.audios[idx].labels else []
             ):
+                if not audio_label[0] in self.labels:
+                    # Only handle dataset classes
+                    continue
+                
                 if (audio_label[1] <= window_start <= audio_label[2]) or (
                     audio_label[1] <= window_end <= audio_label[2]
                 ):
@@ -145,7 +149,6 @@ class UrbanSEDDataset(YOHODataset):
         super().__init__(
             audios=audios,
             labels=[
-                "noise",
                 "air_conditioner",
                 "car_horn",
                 "children_playing",
