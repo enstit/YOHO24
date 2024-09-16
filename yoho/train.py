@@ -142,7 +142,7 @@ def process_output(output: np.array) -> list[tuple[str, float, float]]:
 
     return processed_output
 
-def compute_metrics(predictions, targets, classes):
+def compute_metrics(predictions, targets, classes, filepaths):
     
     # Process the outputs
     processed_predictions = process_output(predictions.cpu().numpy())
@@ -153,12 +153,13 @@ def compute_metrics(predictions, targets, classes):
     f1_score = 0.0
 
     # Compute the metrics for each prediction
-    for pred, target in zip(processed_predictions, processed_targets):
+    for pred, target, filepath in zip(processed_predictions, processed_targets, filepaths):
 
         # Create the event list
         pred_event_list = dcase_util.containers.MetaDataContainer(
             [
                 {
+                    "file": filepath,
                     "event_label": event[0],
                     "onset": event[1],
                     "offset": event[2],
@@ -171,6 +172,7 @@ def compute_metrics(predictions, targets, classes):
         target_event_list = dcase_util.containers.MetaDataContainer(
             [
                 {
+                    "file": filepath,
                     "event_label": event[0],
                     "onset": event[1],
                     "offset": event[2],
@@ -273,9 +275,11 @@ def train_model(
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
 
+                filepaths = [audio.filepath for audio in val_loader.dataset.audios[_ * val_loader.batch_size:(_ + 1) * val_loader.batch_size]]
+
                 # Compute the error rate and f1 score
                 running_error_rate, running_f1_score = compute_metrics(
-                    predictions=outputs, targets=labels, classes=labels_
+                    predictions=outputs, targets=labels, classes=labels_, filepaths=filepaths
                 )
 
                 running_val_loss += loss.detach()
