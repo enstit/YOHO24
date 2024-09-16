@@ -73,7 +73,6 @@ def append_loss_dict(epoch, train_loss, val_loss, filename="losses.json"):
 def process_output(output: np.array) -> list[tuple[str, float, float]]:
 
     labels_ = [
-        "noise",
         "air_conditioner",
         "car_horn",
         "children_playing",
@@ -204,19 +203,7 @@ def train_model(
     model, device, train_loader, val_loader, num_epochs, start_epoch=0, scheduler=None, autocast=False
 ):
 
-    labels_ = [
-        "noise",
-        "air_conditioner",
-        "car_horn",
-        "children_playing",
-        "dog_bark",
-        "drilling",
-        "engine_idling",
-        "gun_shot",
-        "jackhammer",
-        "siren",
-        "street_music",
-    ]
+    labels_ = train_loader.dataset.labels
 
     criterion = get_loss_function()
     optimizer = model.get_optimizer()
