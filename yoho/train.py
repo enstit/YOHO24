@@ -2,6 +2,7 @@ import os
 import json
 import torch
 import pandas as pd
+import numpy as np
 from torchvision.transforms import v2
 from torchaudio.transforms import TimeMasking, FrequencyMasking
 
@@ -12,7 +13,8 @@ from timeit import default_timer as timer
 import logging
 import argparse
 
-# import sed_eval
+import sed_eval
+import dcase_util
 
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 MODELS_DIR = os.path.abspath(os.path.join(SCRIPT_DIRPATH, "..", "models"))
@@ -66,6 +68,136 @@ def append_loss_dict(epoch, train_loss, val_loss, filename="losses.json"):
 
     with open(filepath, "w") as f:
         json.dump(loss_dict, f)
+
+
+def process_output(output: np.array) -> list[tuple[str, float, float]]:
+
+    labels_ = [
+        "noise",
+        "air_conditioner",
+        "car_horn",
+        "children_playing",
+        "dog_bark",
+        "drilling",
+        "engine_idling",
+        "gun_shot",
+        "jackhammer",
+        "siren",
+        "street_music",
+    ]
+
+    STEPS_NO = 9
+    step_duration = 2.56 / STEPS_NO
+    MIN_EVENT_DURATION = 0
+    MIN_SILENCE_DURATION = 1.0
+
+    processed_output = []
+
+    for k in range(output.shape[0]):
+
+        labels = []
+        for i in range(output.shape[2]):
+
+            for j in range(0, output.shape[1], 3):
+                if output[k, j, i] >= 0.5:
+                    label = labels_[j // 3]
+                    start = (
+                        i * step_duration + output[k, j + 1, i].item() * step_duration
+                    )
+                    end = (
+                        i * step_duration + output[k, j + 2, i].item() * step_duration
+                    )
+                    labels.append((label, round(start, 2), round(end, 2)))
+
+        # Order the labels by class
+        labels = sorted(labels, key=lambda x: x[0])
+
+        # Merge events of the same class that are close to each other
+        merged_labels = []
+        for label, start, end in labels:
+            if not merged_labels:
+                merged_labels.append((label, start, end))
+            else:
+                prev_label, prev_start, prev_end = merged_labels[-1]
+                if prev_label == label and start - prev_end < MIN_SILENCE_DURATION:
+                    merged_labels[-1] = (label, prev_start, end)
+                else:
+                    merged_labels.append((label, start, end))
+
+        # Remove events that are too short
+        merged_labels = [
+            (label, start, end)
+            for label, start, end in merged_labels
+            if end - start >= MIN_EVENT_DURATION
+        ]
+
+        # Order the labels by start time
+        # If two events start at the same time, order by class index
+        merged_labels = sorted(
+            merged_labels, key=lambda x: (x[1], labels_.index(x[0]))
+        )
+
+        processed_output.append(merged_labels)
+
+    return processed_output
+
+def compute_metrics(predictions, targets, classes):
+    
+    # Process the outputs
+    processed_predictions = process_output(predictions.cpu().numpy())
+    processed_targets = process_output(targets.cpu().numpy())
+
+    # Initialize the metrics
+    error_rate = 0.0
+    f1_score = 0.0
+
+    # Compute the metrics for each prediction
+    for pred, target in zip(processed_predictions, processed_targets):
+
+        # Create the event list
+        pred_event_list = dcase_util.containers.MetaDataContainer(
+            [
+                {
+                    "event_label": event[0],
+                    "onset": event[1],
+                    "offset": event[2],
+                }
+                for event in pred
+            ]
+        )
+
+        # Create the target event list
+        target_event_list = dcase_util.containers.MetaDataContainer(
+            [
+                {
+                    "event_label": event[0],
+                    "onset": event[1],
+                    "offset": event[2],
+                }
+                for event in target
+            ]
+        )
+
+        segment_based_metrics = sed_eval.sound_event.SegmentBasedMetrics(
+            event_label_list=classes,
+            time_resolution=1.0,
+        )
+
+        # Evaluate 
+        segment_based_metrics.evaluate(
+            reference_event_list=target_event_list,
+            estimated_event_list=pred_event_list,
+        )
+
+        overall_metrics = segment_based_metrics.results_overall_metrics()
+
+        # Compute the error rate and f1 score
+        error_rate += overall_metrics["error_rate"]['error_rate']
+        f1_score += overall_metrics["f_measure"]['f_measure']
+
+    error_rate /= len(processed_predictions)
+    f1_score /= len(processed_predictions)
+    return error_rate, f1_score
 
 
 def train_model(
@@ -132,6 +264,11 @@ def train_model(
                     inputs, labels = inputs.to(device), labels.to(device)
                     outputs = model(inputs)
                     loss = criterion(outputs, labels)
+
+                    error_rate, f1_score = compute_metrics(
+                        predictions=outputs, targets=labels, classes=classes
+                    )
+
                     running_val_loss += loss.detach()
                 avg_val_loss = running_val_loss / len(val_loader)
 
@@ -346,7 +483,7 @@ if __name__ == "__main__":
     logging.info("Creating the validation data loader")
     val_dataloader = YOHODataGenerator(
         urbansed_val,
-        batch_size=args.batch_size,
+        batch_size=32 #args.batch_size,
         shuffle=False,
         pin_memory=True,
         num_workers=num_workers,
