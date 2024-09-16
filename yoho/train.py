@@ -269,26 +269,32 @@ def train_model(
 
         end_training = timer()
 
-        if val_loader is not None:
-            model.eval()
-            running_val_loss = 0.0
+        # Set the model to evaluation mode
+        model.eval()
+        running_val_loss = 0.0
+        error_rate = 0.0
+        f1_score = 0.0
 
-            with torch.no_grad():
-                for _, (inputs, labels) in enumerate(val_loader):
-                    inputs, labels = inputs.to(device), labels.to(device)
-                    outputs = model(inputs)
-                    loss = criterion(outputs, labels)
+        with torch.no_grad():
+            for _, (inputs, labels) in enumerate(val_loader):
+                inputs, labels = inputs.to(device), labels.to(device)
+                outputs = model(inputs)
+                loss = criterion(outputs, labels)
 
-                    error_rate, f1_score = compute_metrics(
-                        predictions=outputs, targets=labels, classes=labels_
-                    )
+                # Compute the error rate and f1 score
+                running_error_rate, running_f1_score = compute_metrics(
+                    predictions=outputs, targets=labels, classes=labels_
+                )
 
-                    running_val_loss += loss.detach()
-                avg_val_loss = running_val_loss / len(val_loader)
+                running_val_loss += loss.detach()
+                error_rate += running_error_rate
+                f1_score += running_f1_score
 
-        else:
-            avg_val_loss = None
+            avg_val_loss = running_val_loss / len(val_loader)
+            error_rate /= len(val_loader)
+            f1_score /= len(val_loader)
 
+        # Step the scheduler (cosine annealing)
         if scheduler is not None:
             scheduler.step()
 
@@ -300,6 +306,7 @@ def train_model(
         logging.info(
             f"Epoch [{epoch + 1}/{num_epochs}], "
             f"Train Loss: {avg_train_loss:.2f}, Val Loss: {avg_val_loss:.2f}, "
+            f"Error Rate: {error_rate:.2f}, F1 Score: {f1_score:.2f}, "
             f"Time taken: {(end_training - start_training)/60:.2f} mins"
         )
 
