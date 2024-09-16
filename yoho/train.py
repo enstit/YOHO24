@@ -52,7 +52,7 @@ def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar") -> tuple:
     return model, optimizer, start_epoch, scheduler, loss
 
 
-def append_loss_dict(epoch, train_loss, val_loss, filename="losses.json"):
+def append_loss_dict(epoch, train_loss, val_loss, error_rate, f1_score, filename="losses.json"):
     filepath = os.path.join(MODELS_DIR, filename)
 
     if os.path.exists(filepath):
@@ -64,6 +64,8 @@ def append_loss_dict(epoch, train_loss, val_loss, filename="losses.json"):
     loss_dict[epoch] = {
         "train_loss": train_loss,
         "val_loss": val_loss,
+        "error_rate": error_rate,
+        "f1_score": f1_score,
     }
 
     with open(filepath, "w") as f:
@@ -306,6 +308,8 @@ def train_model(
             epoch + 1,
             avg_train_loss,
             avg_val_loss,
+            error_rate,
+            f1_score,
             filename=model.name + "_losses.json",
         )
 
