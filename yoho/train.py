@@ -239,6 +239,7 @@ def train_model(
             optimizer.zero_grad(set_to_none=True)
 
             if autocast:
+                logging.debug("Using autocast to reduce memory usage")
                 # Use autocast to reduce memory usage
                 with torch.autocast(device_type=device):
                     # Forward pass
@@ -275,7 +276,9 @@ def train_model(
         error_rate = 0.0
         f1_score = 0.0
 
+        # Disable gradient computation
         with torch.no_grad():
+
             for _, (inputs, labels) in enumerate(val_loader):
                 inputs, labels = inputs.to(device), labels.to(device)
                 outputs = model(inputs)
@@ -289,6 +292,7 @@ def train_model(
                 running_val_loss += loss.detach()
                 error_rate += running_error_rate
                 f1_score += running_f1_score
+
 
             avg_val_loss = running_val_loss / len(val_loader)
             error_rate /= len(val_loader)
