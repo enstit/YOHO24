@@ -211,7 +211,7 @@ def train_model(
     optimizer = model.get_optimizer()
 
     # Initialize a GradScaler
-    scaler = torch.cuda.amp.GradScaler()
+    scaler = torch.GradScaler(device=device) if autocast else None
 
     for epoch in range(start_epoch, num_epochs):
         # Set the model to training mode
