@@ -483,7 +483,7 @@ if __name__ == "__main__":
     logging.info("Creating the validation data loader")
     val_dataloader = YOHODataGenerator(
         urbansed_val,
-        batch_size=32 #args.batch_size,
+        batch_size=32, #args.batch_size,
         shuffle=False,
         pin_memory=True,
         num_workers=num_workers,
