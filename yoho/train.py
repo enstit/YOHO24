@@ -204,6 +204,20 @@ def train_model(
     model, device, train_loader, val_loader, num_epochs, start_epoch=0, scheduler=None, autocast=False
 ):
 
+    labels_ = [
+        "noise",
+        "air_conditioner",
+        "car_horn",
+        "children_playing",
+        "dog_bark",
+        "drilling",
+        "engine_idling",
+        "gun_shot",
+        "jackhammer",
+        "siren",
+        "street_music",
+    ]
+
     criterion = get_loss_function()
     optimizer = model.get_optimizer()
 
@@ -266,7 +280,7 @@ def train_model(
                     loss = criterion(outputs, labels)
 
                     error_rate, f1_score = compute_metrics(
-                        predictions=outputs, targets=labels, classes=classes
+                        predictions=outputs, targets=labels, classes=labels_
                     )
 
                     running_val_loss += loss.detach()
