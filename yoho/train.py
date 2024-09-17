@@ -140,14 +140,17 @@ def process_output(
 
 
 def compute_metrics(predictions, targets, classes, filepaths):
+    """
+    Computes the error rate and F1 score for the given predictions and targets.
+    """
 
     # Process the outputs
     processed_predictions = process_output(predictions.cpu().numpy(), classes)
     processed_targets = process_output(targets.cpu().numpy(), classes)
 
     # Initialize the metrics
-    error_rate = 0.0
-    f1_score = 0.0
+    total_error_rate = 0.0
+    total_f1_score = 0.0
 
     # Compute the metrics for each prediction
     for pred, target, filepath in zip(
@@ -186,20 +189,37 @@ def compute_metrics(predictions, targets, classes, filepaths):
         )
 
         # Evaluate
-        segment_based_metrics.evaluate(
-            reference_event_list=target_event_list,
-            estimated_event_list=pred_event_list,
-        )
+        N_ref = len(target_event_list)
 
-        overall_metrics = segment_based_metrics.results_overall_metrics()
+        if len(pred_event_list) > 0 and N_ref > 0:  # Ensure there are predictions and references
+            segment_based_metrics.evaluate(
+                reference_event_list=target_event_list,
+                estimated_event_list=pred_event_list,
+            )
 
-        # Compute the error rate and f1 score
-        error_rate += overall_metrics["error_rate"]["error_rate"]
-        f1_score += overall_metrics["f_measure"]["f_measure"]
+            overall_metrics = segment_based_metrics.results_overall_metrics()
 
-    error_rate /= len(processed_predictions)
-    f1_score /= len(processed_predictions)
-    return error_rate, f1_score
+            # Compute the error rate and f1 score
+            total_error_rate += overall_metrics["error_rate"]["error_rate"]
+            total_f1_score += overall_metrics["f_measure"]["f_measure"]
+
+
+        else:
+            # If there are no predictions or no ground truth events
+            if N_ref == 0:
+                # No reference events means no error, and F1 remains unchanged
+                total_error_rate += 0
+            else:
+                # No predictions but reference events: set error rate to 1, F1 score to 0
+                total_error_rate += 1 
+                total_f1_score += 0.0  # No predictions, F1 should be zero
+
+
+    # Compute the average error rate and F1 score for this batch
+    total_error_rate /= len(processed_predictions)
+    total_f1_score /= len(processed_predictions)
+
+    return total_error_rate, total_f1_score
 
 
 def train_model(
@@ -300,12 +320,13 @@ def train_model(
                 error_rate += running_error_rate
                 f1_score += running_f1_score
 
-            avg_val_loss = running_val_loss / len(val_loader)
             error_rate /= len(val_loader)
             f1_score /= len(val_loader)
 
-        # Step the scheduler (cosine annealing)
+            avg_val_loss = running_val_loss / len(val_loader)
+
         if scheduler is not None:
+            # Step the scheduler (cosine annealing)
             scheduler.step()
 
         avg_train_loss = avg_train_loss.item()
@@ -316,7 +337,7 @@ def train_model(
         logging.info(
             f"Epoch [{epoch + 1}/{num_epochs}], "
             f"Train Loss: {avg_train_loss:.2f}, Val Loss: {avg_val_loss:.2f}, "
-            f"Error Rate: {error_rate:.2f}, F1 Score: {f1_score:.2f}, "
+            f"Error Rate: {round(error_rate, 2)}, F1 Score: {round(f1_score, 2)}, "
             f"Time taken: {(end_training - start_training)/60:.2f} mins"
         )
 
