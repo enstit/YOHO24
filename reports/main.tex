@@ -1,0 +1,59 @@
+%!TEX TS-program = pdflatex
+%!TEX encoding = UTF-8 Unicode
+
+\documentclass[12pt,english,aspectratio=169]{beamer}
+
+\usetheme{units}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage{pgfpages}
+\setbeamertemplate{note page}[plain]
+%\setbeameroption{show notes on second screen=right}
+\setbeameroption{hide notes}
+
+\usepackage[yyyymmdd]{datetime}
+\renewcommand{\dateseparator}{--}
+
+\usepackage{tikz}
+
+\usepackage[lined,linesnumbered,ruled,boxed]{algorithm2e}
+
+\usepackage[backend=bibtex,style=numeric,sorting=ynt,maxbibnames=99,urldate=iso]{biblatex}
+\addbibresource{reference.bib}
+\setbeamertemplate{bibliography item}[text]
+
+\usepackage{hyperref}
+
+
+\title[YOHO24]{YOHO model\\for Audio Segmentation\\and Sound Event Detection}
+\author[Capone and Stefanel]{Davide Capone [SM3500601] \and Enrico Stefanel [SM3500554]\\\small{\texttt{\{davide.capone, enrico.stefanel\}@studenti.units.it}}}
+\institute[DDSC M.Sc., DMG Dept., UniTS]{Data Science and Scientific Computing Master's Course\\Department of Mathematics and Geosciences\\University of Trieste}
+\date{A.Y.\ 2023--2024}
+
+\begin{document}
+%% This declares a command \Comment
+%% The argument will be surrounded by /* ... */
+\SetKwComment{Comment}{/* }{ */}
+	
+	\begin{frame}
+		\titlepage
+		
+		\note{
+			\dots
+		}
+	\end{frame}
+
+	\input{contents/introduction}
+
+	\input{contents/body}
+
+	\input{contents/conclusions}
+	
+	%\section[Bibliography]{Bibliography}
+		\begin{frame}{References}
+			\printbibliography
+		\end{frame}
+
+\end{document}

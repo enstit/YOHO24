@@ -1,0 +1,110 @@
+%% beamerouterthemeunits.sty
+%% Copyright (c) 2023 Enrico Stefanel <me@enst.it>
+%
+\useoutertheme[subsection=false]{miniframes}
+\setbeamertemplate{mini frames}{}
+
+% remove navigation symbols from slides
+\setbeamertemplate{navigation symbols}{}
+
+% footline command
+%\newcommand{\Ffootline}{
+%    % footline
+%    \insertsection
+%    \hfill
+%    % footline
+%    \textit{University of Trieste}
+%    \hfill
+%    % footline
+%    \insertframenumber/\inserttotalframenumber
+%}
+
+
+% cover page
+\setbeamertemplate{title page}[default]
+
+
+% frametitle
+\setbeamertemplate{frametitle}{
+    \vspace*{4mm}
+    \hspace*{-2mm}
+    \insertframetitle
+}
+
+
+% use default headline
+\defbeamertemplate*{headline}{units}{
+
+    \ifnum \theframenumber=1
+    % do not draw the headline on the first page (title page)
+
+    \else
+
+        % original miniframes theme headline
+        {%
+        \begin{beamercolorbox}[colsep=1.5pt]{upper separation line head}
+        \end{beamercolorbox}
+        \begin{beamercolorbox}{section in head/foot}
+            \vskip2pt\insertnavigation{\paperwidth}\vskip-15pt
+        \end{beamercolorbox}%
+        %\ifbeamer@theme@subsection%
+        %    \begin{beamercolorbox}[colsep=1.5pt]{middle separation line head}
+        %    \end{beamercolorbox}
+        %    \begin{beamercolorbox}[ht=2.5ex,dp=1.125ex,%
+        %    leftskip=.3cm,rightskip=.3cm plus1fil]{subsection in head/foot}
+        %    \usebeamerfont{subsection in head/foot}\insertsubsectionhead
+        %    \end{beamercolorbox}%
+        %\fi%
+        \begin{beamercolorbox}[colsep=1.5pt]{lower separation line head}
+        \end{beamercolorbox}
+        }
+
+    \fi
+
+}
+
+
+% footline
+\defbeamertemplate*{footline}{units}{
+
+    \ifnum \theframenumber=1
+    % do not draw the footer on the first page (title page)
+
+    \else
+
+        \begin{beamercolorbox}{upper separation line foot}
+        \end{beamercolorbox}
+
+        \begin{beamercolorbox}[ht=2.5ex, dp=1.125ex, leftskip=.3cm, rightskip=.3cm plus1fil]{author in head/foot}
+            \leavevmode{\insertshorttitle}
+            \hfill
+            \leavevmode{\insertshortauthor\ --- \insertshortinstitute}
+            \hfill
+            \leavevmode{Page \insertframenumber\ of \inserttotalframenumber}
+        \end{beamercolorbox}
+
+    \fi
+}
+
+
+% background
+\usepackage{tikz}
+%\usepackage{svg}
+\usepackage{graphicx}
+\usebackgroundtemplate{%
+
+\ifnum \theframenumber=1
+    \tikz[overlay,remember picture] \node[opacity=.05, at=(current page.center)] {
+    %   \includesvg[height=.55\paperheight]{figure/logo.svg}};
+        \includegraphics[height=.85\paperheight]{images/logo.pdf}};
+
+\else
+
+    \tikz[overlay,remember picture] \node[opacity=.025, at=(current page.center)] {
+    %   \includesvg[height=.55\paperheight]{figure/logo.svg}};
+        \includegraphics[height=.85\paperheight]{images/logo.pdf}};
+
+
+\fi
+
+}
