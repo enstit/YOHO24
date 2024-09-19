@@ -188,10 +188,8 @@ def compute_metrics(predictions, targets, classes, filepaths):
             time_resolution=1.0,
         )
 
-        # Evaluate
-        N_ref = len(target_event_list)
 
-        if len(pred_event_list) > 0 and N_ref > 0:  # Ensure there are predictions and references
+        if pred_event_list and target_event_list:  # Ensure there are predictions and references
             segment_based_metrics.evaluate(
                 reference_event_list=target_event_list,
                 estimated_event_list=pred_event_list,
@@ -204,16 +202,11 @@ def compute_metrics(predictions, targets, classes, filepaths):
             total_f1_score += overall_metrics["f_measure"]["f_measure"]
 
 
-        else:
-            # If there are no predictions or no ground truth events
-            if N_ref == 0:
-                # No reference events means no error, and F1 remains unchanged
-                total_error_rate += 0
-            else:
-                # No predictions but reference events: set error rate to 1, F1 score to 0
-                total_error_rate += 1 
-                total_f1_score += 0.0  # No predictions, F1 should be zero
-
+    if not processed_predictions and processed_targets:
+        return 1.0, 0.0
+    
+    if not processed_predictions and not processed_targets:
+        return 0.0, 1.0
 
     # Compute the average error rate and F1 score for this batch
     total_error_rate /= len(processed_predictions)
@@ -320,8 +313,9 @@ def train_model(
                 error_rate += running_error_rate
                 f1_score += running_f1_score
 
-            error_rate /= len(val_loader)
-            f1_score /= len(val_loader)
+            if val_loader:
+                error_rate /= len(val_loader)
+                f1_score /= len(val_loader)
 
             avg_val_loss = running_val_loss / len(val_loader)
 
