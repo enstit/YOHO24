@@ -188,8 +188,9 @@ def compute_metrics(predictions, targets, classes, filepaths):
             time_resolution=1.0,
         )
 
-
-        if pred_event_list and target_event_list:  # Ensure there are predictions and references
+        if (
+            pred_event_list and target_event_list
+        ):  # Ensure there are predictions and references
             segment_based_metrics.evaluate(
                 reference_event_list=target_event_list,
                 estimated_event_list=pred_event_list,
@@ -201,10 +202,9 @@ def compute_metrics(predictions, targets, classes, filepaths):
             total_error_rate += overall_metrics["error_rate"]["error_rate"]
             total_f1_score += overall_metrics["f_measure"]["f_measure"]
 
-
     if not processed_predictions and processed_targets:
         return 1.0, 0.0
-    
+
     if not processed_predictions and not processed_targets:
         return 0.0, 1.0
 
@@ -331,7 +331,7 @@ def train_model(
         logging.info(
             f"Epoch [{epoch + 1}/{num_epochs}], "
             f"Train Loss: {avg_train_loss:.2f}, Val Loss: {avg_val_loss:.2f}, "
-            f"Error Rate: {round(error_rate, 2)}, F1 Score: {round(f1_score, 2)}, "
+            f"Error Rate: {error_rate:.2f}, F1 Score: {f1_score:.2f}, "
             f"Time taken: {(end_training - start_training)/60:.2f} mins"
         )
 
