@@ -19,39 +19,39 @@
 	
 	\begin{figure}
 			\centering
-			\begin{tikzpicture}
+			\begin{tikzpicture}[scale=.8]
 			
 				\draw [->,black] (1,6) -- node[midway,above]{\small Audio classes} (8.5,6);
 				\draw [->,black] (0,5) -- node[midway,left,below=5pt,sloped]{\small Time steps} (0,1.25);
 				
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (1,5) {Speech\\(Y/N)};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (2.5,5) {Speech\\start};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (4,5) {Speech\\stop};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (1,5) {Class $1$\\(Y/N)};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (2.5,5) {Class $1$\\start};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (4,5) {Class $1$\\stop};
 
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (5.5,5) {Music\\(Y/N)};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (7,5) {Music\\start};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (8.5,5) {Music\\stop};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (5.5,5) {Class $2$\\(Y/N)};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (7,5) {Class $2$\\start};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (8.5,5) {Class $2$\\stop};
 
 
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (1,3.5) {Speech\\(Y/N)};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (2.5,3.5) {Speech\\start};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (4,3.5) {Speech\\stop};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (1,3.5) {Class $1$\\(Y/N)};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (2.5,3.5) {Class $1$\\start};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (4,3.5) {Class $1$\\stop};
 
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (5.5,3.5) {Music\\(Y/N)};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (7,3.5) {Music\\start};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (8.5,3.5) {Music\\stop};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (5.5,3.5) {Class $2$\\(Y/N)};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (7,3.5) {Class $2$\\start};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (8.5,3.5) {Class $2$\\stop};
 
 				\node[align=center] at (1.75,2.5) {$\vdots$};
 				\node[align=center] at (4.75,2.5) {$\vdots$};
 				\node[align=center] at (7.75,2.5) {$\vdots$};
 
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (1,1.25) {Speech\\(Y/N)};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (2.5,1.25) {Speech\\start};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (4,1.25) {Speech\\stop};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (1,1.25) {Class $1$\\(Y/N)};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (2.5,1.25) {Class $1$\\start};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (4,1.25) {Class $1$\\stop};
 
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (5.5,1.25) {Music\\(Y/N)};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (7,1.25) {Music\\start};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (8.5,1.25) {Music\\stop};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (5.5,1.25) {Class $2$\\(Y/N)};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (7,1.25) {Class $2$\\start};
+				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (8.5,1.25) {Class $2$\\stop};
 
 			\end{tikzpicture}
 			\caption{The YOHO output shape.}
@@ -60,7 +60,6 @@
 		
 	\end{frame}
 
-	\subsection[Network Architecture]{Network Architecture}
 	\begin{frame}{Network Architecture}
 		\dots
 		
@@ -69,7 +68,6 @@
 		}
 	\end{frame}
 
-	\subsection[Loss Function]{Loss Function}
 	\begin{frame}{Loss Function}
 		\begin{equation*}
 			\mathcal{L}_{c}(\hat{y},y) = \begin{cases}
@@ -85,7 +83,6 @@
 		}
 	\end{frame}
 	
-	\subsection[Other Details]{Other Details}
 	\begin{frame}{Other Details}
 		\dots
 		
