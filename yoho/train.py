@@ -156,6 +156,7 @@ def compute_metrics(predictions, targets, classes, filepaths):
 
     N_events = 0
 
+
     segment_based_metrics = sed_eval.sound_event.SegmentBasedMetrics(
         event_label_list=classes,
         time_resolution=1.0,
@@ -222,17 +223,15 @@ def compute_metrics(predictions, targets, classes, filepaths):
     overall_metrics = segment_based_metrics.results_overall_metrics()
 
     temp_error = temp_error / N_events
+    temp_f1 = temp_f1 / N_events
 
     if np.isnan(overall_metrics["f_measure"]["f_measure"]):
         total_f1_score = temp_f1
-        total_error_rate = temp_error
     else:
-        total_f1_score = overall_metrics["f_measure"]["f_measure"]
+        total_f1_score = overall_metrics["f_measure"]["f_measure"] + temp_f1
 
     total_error_rate = overall_metrics["error_rate"]["error_rate"] + temp_error
-    
 
-    #total_f1_score = total_f1_score / len(filepaths)
     return total_error_rate, total_f1_score
 
 
