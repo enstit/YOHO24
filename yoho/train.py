@@ -232,7 +232,7 @@ def compute_metrics(predictions, targets, classes, filepaths):
     total_error_rate = overall_metrics["error_rate"]["error_rate"] + temp_error
     
 
-    total_f1_score = total_f1_score / len(filepaths)
+    #total_f1_score = total_f1_score / len(filepaths)
     return total_error_rate, total_f1_score
 
 
