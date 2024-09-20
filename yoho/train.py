@@ -19,7 +19,7 @@ import dcase_util
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 MODELS_DIR = os.path.abspath(os.path.join(SCRIPT_DIRPATH, "..", "models"))
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 def get_loss_function():
