@@ -19,7 +19,7 @@ import dcase_util
 SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
 MODELS_DIR = os.path.abspath(os.path.join(SCRIPT_DIRPATH, "..", "models"))
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def get_loss_function():
@@ -148,6 +148,14 @@ def compute_metrics(predictions, targets, classes, filepaths):
     processed_predictions = process_output(predictions.cpu().numpy(), classes)
     processed_targets = process_output(targets.cpu().numpy(), classes)
 
+    if not processed_predictions and processed_targets:
+        return 1.0, 0.0
+
+    if not processed_predictions and not processed_targets:
+        return 0.0, 1.0
+
+    assert processed_predictions and processed_targets
+    
     # Initialize the metrics
     total_error_rate = 0.0
     total_f1_score = 0.0
@@ -201,12 +209,6 @@ def compute_metrics(predictions, targets, classes, filepaths):
             # Compute the error rate and f1 score
             total_error_rate += overall_metrics["error_rate"]["error_rate"]
             total_f1_score += overall_metrics["f_measure"]["f_measure"]
-
-    if not processed_predictions and processed_targets:
-        return 1.0, 0.0
-
-    if not processed_predictions and not processed_targets:
-        return 0.0, 1.0
 
     # Compute the average error rate and F1 score for this batch
     total_error_rate /= len(processed_predictions)
@@ -288,6 +290,9 @@ def train_model(
         with torch.no_grad():
 
             for _, (inputs, labels) in enumerate(val_loader):
+
+                logging.debug(f"Computating metrics for observations [{_*val_loader.batch_size}:{(_ + 1)*val_loader.batch_size}] in validation dataset.")
+                
                 inputs, labels = inputs.to(device), labels.to(device)
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
@@ -313,9 +318,13 @@ def train_model(
                 error_rate += running_error_rate
                 f1_score += running_f1_score
 
+                logging.debug(f"Batch metrics - Error rate: {running_error_rate:.2f}, F1-score: {running_f1_score:.2f}")
+
             if val_loader:
                 error_rate /= len(val_loader)
                 f1_score /= len(val_loader)
+
+            logging.debug(f"Overall metrics - Error rate: {error_rate:.2f}, F1-score: {f1_score:.2f}")
 
             avg_val_loss = running_val_loss / len(val_loader)
 
