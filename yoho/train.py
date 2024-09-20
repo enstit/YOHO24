@@ -148,72 +148,92 @@ def compute_metrics(predictions, targets, classes, filepaths):
     processed_predictions = process_output(predictions.cpu().numpy(), classes)
     processed_targets = process_output(targets.cpu().numpy(), classes)
 
-    if not processed_predictions and processed_targets:
-        return 1.0, 0.0
+    temp_f1 = 0
+    temp_error = 0
 
-    if not processed_predictions and not processed_targets:
-        return 0.0, 1.0
+    total_f1_score = 0
+    total_error_rate = 0
 
-    assert processed_predictions and processed_targets
-    
-    # Initialize the metrics
-    total_error_rate = 0.0
-    total_f1_score = 0.0
+    N_events = 0
 
-    # Compute the metrics for each prediction
+    segment_based_metrics = sed_eval.sound_event.SegmentBasedMetrics(
+        event_label_list=classes,
+        time_resolution=1.0,
+    )
+
     for pred, target, filepath in zip(
         processed_predictions, processed_targets, filepaths
     ):
+        
+        if not pred and not target:
+            temp_f1 += 1
+            temp_error += 0
+            continue
 
-        # Create the event list
-        pred_event_list = dcase_util.containers.MetaDataContainer(
-            [
-                {
-                    "file": filepath,
-                    "event_label": event[0],
-                    "onset": event[1],
-                    "offset": event[2],
-                }
-                for event in pred
-            ]
-        )
+        if pred and not target:
+            temp_f1 += 0
+            temp_error += 1
+            continue
+        
+        if not pred and target:
+            temp_f1 += 0
+            temp_error += 1
+            N_events += len(target)
+            continue
 
-        # Create the target event list
-        target_event_list = dcase_util.containers.MetaDataContainer(
-            [
-                {
-                    "file": filepath,
-                    "event_label": event[0],
-                    "onset": event[1],
-                    "offset": event[2],
-                }
-                for event in target
-            ]
-        )
 
-        segment_based_metrics = sed_eval.sound_event.SegmentBasedMetrics(
-            event_label_list=classes,
-            time_resolution=1.0,
-        )
+        if pred and target:
+            N_events += len(target)
 
-        if (
-            pred_event_list and target_event_list
-        ):  # Ensure there are predictions and references
+            
+            # Create the event list
+            pred_event_list = dcase_util.containers.MetaDataContainer(
+                [
+                    {
+                        "file": filepath,
+                        "event_label": event[0],
+                        "onset": event[1],
+                        "offset": event[2],
+                    }
+                    for event in pred
+                ]
+            )
+
+            # Create the target event list
+            target_event_list = dcase_util.containers.MetaDataContainer(
+                [
+                    {
+                        "file": filepath,
+                        "event_label": event[0],
+                        "onset": event[1],
+                        "offset": event[2],
+                    }
+                    for event in target
+                ]
+            )
+
             segment_based_metrics.evaluate(
                 reference_event_list=target_event_list,
                 estimated_event_list=pred_event_list,
             )
 
-            overall_metrics = segment_based_metrics.results_overall_metrics()
+        
 
-            # Compute the error rate and f1 score
-            total_error_rate += overall_metrics["error_rate"]["error_rate"]
-            total_f1_score += overall_metrics["f_measure"]["f_measure"]
+    overall_metrics = segment_based_metrics.results_overall_metrics()
 
-    # Compute the average error rate and F1 score for this batch
-    total_error_rate /= len(processed_predictions)
-    total_f1_score /= len(processed_predictions)
+    temp_error = temp_error / N_events
 
+    if np.isnan(overall_metrics["f_measure"]["f_measure"]):
+        total_f1_score = temp_f1
+        total_error_rate = temp_error
+    else:
+        total_f1_score = overall_metrics["f_measure"]["f_measure"]
+        total_error_rate = overall_metrics["error_rate"]["error_rate"] + temp_error
+
+    total_error_rate = overall_metrics["error_rate"]["error_rate"] + temp_error
+    
+
+    total_f1_score = total_f1_score / len(filepaths)
     return total_error_rate, total_f1_score
 
 
