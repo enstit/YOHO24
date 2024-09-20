@@ -228,7 +228,6 @@ def compute_metrics(predictions, targets, classes, filepaths):
         total_error_rate = temp_error
     else:
         total_f1_score = overall_metrics["f_measure"]["f_measure"]
-        total_error_rate = overall_metrics["error_rate"]["error_rate"] + temp_error
 
     total_error_rate = overall_metrics["error_rate"]["error_rate"] + temp_error
     
