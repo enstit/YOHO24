@@ -17,6 +17,8 @@
 \renewcommand{\dateseparator}{--}
 
 \usepackage{tikz}
+\usepackage{siunitx}
+\usepackage{multicol}
 
 \usepackage[lined,linesnumbered,ruled,boxed]{algorithm2e}
 
@@ -51,9 +53,8 @@
 
 	\input{contents/conclusions}
 	
-	%\section[Bibliography]{Bibliography}
-		\begin{frame}{References}
-			\printbibliography
-		\end{frame}
+	\begin{frame}{References}
+		\printbibliography[heading=none]
+	\end{frame}
 
 \end{document}

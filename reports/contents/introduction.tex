@@ -15,7 +15,6 @@
 		
 	\end{frame}
 	
-	\subsection[Audio Segmentation and Sound Event Detection]{Audio Segmentation and Sound Event Detection}
 	\begin{frame}{Audio Segmentation and Sound Event Detection}
 		\dots		
 		
@@ -25,7 +24,17 @@
 	\end{frame}
 	
 	\begin{frame}{Datasets}
-		\dots		
+	
+		Common datasets for Audio Segmentation and Sound Event Detection problems are:
+		
+		\begin{itemize}
+			\item \textbf{TUT Sound Event Detection}: focuses on environmental sound detection. It primarily consists of street recordings with traffic and other activity, with audio examples of \SI{2.56}{\second}. It has six unique audio classes—Brakes Squeaking, Car, Children, Large Vehicle, People Speaking, and People Walking. The total size of the dataset is approximately \SI{1.5}{\hour};
+			\item \textbf{Urban-SED}: purely synthetic dataset, with audio example of \SI{10}{\second}. It has ten unique audio classes -- Air Conditioner, Car Horn, Children Playing, Dog Bark, Drilling, Engine Idling, Gun Shot, Jackhammer, Siren, and Street Music. The total size of the dataset is about \SI{30}{\hour}.
+		\end{itemize}
+		
+		An example of Urban-SED label is:\\
+		\centerline{\texttt{[('gun\_shot', 0.3, 1.11), ('car\_horn', 0.31, 1.41)]}}
+		meaning that an occurrence of gun shot is present from the \SI{0.3}{\second} to \SI{1.11}{\second}, and a car horn from \SI{0.31}{\second} to \SI{1.41}{\second}.
 		
 		\note{
 			\dots
@@ -33,7 +42,19 @@
 	\end{frame}
 	
 	\begin{frame}{Metrics}
-		\dots		
+	
+		\begin{multicols}{2}
+  			\begin{equation*}
+    			\text{Precision} = \frac{\text{TP}}{\text{TP} + \text{FP}}
+  			\end{equation*}\break
+  			\begin{equation*}
+    			\text{Recall} = \frac{\text{TP}}{\text{TP} + \text{FN}}
+  			\end{equation*}
+		\end{multicols}
+
+		$$
+			\text{F$_{1}$ score} = 2 * \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}
+		$$
 		
 		\note{
 			\dots
