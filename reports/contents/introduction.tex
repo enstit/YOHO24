@@ -16,11 +16,32 @@
 	\end{frame}
 	
 	\begin{frame}{Audio Segmentation and Sound Event Detection}
-		\dots		
+	
+		The goal of automatic sound event detection (SED) methods is to recognize what is happening in an audio signal and when it is happening\footcite{Mesaros2021SoundED}.
+		In practice, the goal is to recognize at what temporal instances different sounds are active within an audio signal.
+		An example of sound event detection is presented below.
+	
+		\begin{figure}
+			\centering
+			\begin{tikzpicture}[samples=200, domain=0:5*360]
+			
+				\draw[draw=red,fill=red,fill opacity=0.2] (1,0) rectangle ++(4,2.25);
+				\draw[draw=blue,fill=blue,fill opacity=0.2] (4,0) rectangle ++(2,2.25);
+				\draw[draw=green,fill=green,fill opacity=0.2] (6.2,0) rectangle ++(1.5,2.25);
+
+        		\begin{axis}[
+            		width=10cm, height=4cm,
+            		enlarge x limits=false,
+            		hide x axis,
+            		hide y axis
+        		]
+        			\addplot [no markers, smooth] {sin(x)+rand*2};
+        		\end{axis}
+    		\end{tikzpicture}
+			\caption{Event Detection in an audio track.}
+			\label{fig:sounddetection}
+		\end{figure}
 		
-		\note{
-			\dots
-		}
 	\end{frame}
 	
 	\begin{frame}{Datasets}
@@ -32,13 +53,7 @@
 			\item \textbf{Urban-SED}: purely synthetic dataset, with audio example of \SI{10}{\second} and a total size of about \SI{30}{\hour}. It has ten unique audio classes -- Air Conditioner, Car Horn, Children Playing, Dog Bark, Drilling, Engine Idling, Gun Shot, Jackhammer, Siren, and Street Music.
 		\end{itemize}
 		
-		An example of Urban-SED label is:\\
-		\centerline{\texttt{[(gun\_shot, 0.3, 1.11), (car\_horn, 0.31, 1.41)]}}
-		meaning that an occurrence of gun shot is present from the \SI{0.3}{\second} to \SI{1.11}{\second}, and a car horn from \SI{0.31}{\second} to \SI{1.41}{\second}.
-		
-		\note{
-			\dots
-		}
+		The first dataset is too small to train a Neural Network model and requires use of augmentation techniques (we used \textbf{SpecAugment}\footcite{park19e_interspeech}).
 	\end{frame}
 	
 	\begin{frame}{Metrics}
@@ -55,10 +70,6 @@
 		\end{multicols}
 
 		$$
-			\text{F$_{1}$ score} = 2 * \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}
+			\text{F$_{1}$-score} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}
 		$$
-		
-		\note{
-			\dots
-		}
 	\end{frame}
