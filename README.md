@@ -4,7 +4,7 @@
 </div>
 
 > [!NOTE]
-> This repository is part of the final exam for the *Deep Learning* course held by professor Alessio Ansuini and Emanuele Ballarin ([`@emaballarin`](https://github.com/emaballarin)) at [University of Trieste](https://www.units.it/en) in the 2023-2024 academic year.
+> This repository is part of the final exam for the *Deep Learning* course held by professor Alessio Ansuini ([`@ansuini`](https://github.com/ansuini)) and Emanuele Ballarin ([`@emaballarin`](https://github.com/emaballarin)) at [University of Trieste](https://www.units.it/en) in the 2023-2024 academic year.
 
 In this project we - Davide Capone ([`@davidecapone`](https://github.com/davidecapone)) and Enrico Stefanel ([`@enstit`](https://github.com/enstit)), Master's student at [University of Trieste](https://www.units.it/en) - try to improve the performance of **YOHO** algorithm for Audio Segmentation and Sound Event Detection by applying features introduced in more recent YOLO models.
 
