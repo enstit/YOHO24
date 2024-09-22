@@ -20,7 +20,7 @@
 		The goal of automatic sound event detection (SED) methods is to recognize what is happening in an audio signal and when it is happening\footcite{Mesaros2021SoundED}.
 		In practice, the goal is to recognize at what temporal instances different sounds are active within an audio signal.
 		An example of sound event detection is presented below.
-	
+		
 		\begin{figure}
 			\centering
 			\begin{tikzpicture}[samples=200, domain=0:5*360]
@@ -54,12 +54,12 @@
 		\end{itemize}
 		
 		The first dataset is too small to train a Neural Network model and requires use of augmentation techniques (we used \textbf{SpecAugment}\footcite{park19e_interspeech}).
+
 	\end{frame}
 	
 	\begin{frame}{Metrics}
 	
-		A popular toolbox for Polyphonic Sound Event Detection models evaluation is \textbf{SED Eval}\footcite{app6060162}.
-	
+		A popular toolbox for Sound Event Detection models evaluation is \textbf{SED Eval}\footcite{app6060162}.\vspace{-3em}
 		\begin{multicols}{2}
   			\begin{equation*}
     			\text{Precision} = \frac{\text{TP}}{\text{TP} + \text{FP}}
@@ -68,8 +68,16 @@
     			\text{Recall} = \frac{\text{TP}}{\text{TP} + \text{FN}}
   			\end{equation*}
 		\end{multicols}
-
-		$$
+		\vspace{-1em}
+		\begin{equation*}
 			\text{F$_{1}$-score} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}
-		$$
+		\end{equation*}
+		
+		where TP, FP and FN are respectively (for each audio segment):
+		\begin{itemize}
+			\item the ground truth and system output both indicate an event to be active;
+			\item the ground truth indicates an event to be inactive, but the system as active;
+			\item the ground truth indicates an event to be active, but the system as inactive.
+		\end{itemize}
+		
 	\end{frame}

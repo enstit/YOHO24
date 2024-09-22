@@ -102,23 +102,39 @@
 		}
 	\end{frame}
 
+\section[Work done and results]{Work done and results}	
 
-\section[Implementation details]{Implementation details}	
-
-	\begin{frame}{Implementation details}
-		\dots
+	\begin{frame}[fragile]{Implementation challenges}
+	
+		Starting from the original paper, we implemented the system using PyTorch\footnote{All the code is available at \url{https://github.com/enstit/YOHO24}.},
+		writing the code keeping in mind that it had to be \textbf{clear} and permit \textbf{reproducible tests}.
 		
-		\note{
-			\dots			
-		}		
+		\begin{lstlisting}[basicstyle=\tiny\ttfamily\color{white},language=bash,backgroundcolor=\color{black},caption={Training script parameters}, label={trainingParams},captionpos=b]
+$ python3 -m yoho.train --help
+usage: train.py [-h] [--name NAME] [--epochs EPOCHS] [--batch-size BATCH_SIZE] [--cosine-annealing]
+[--autocast] [--spec-augment]
+
+options:
+  -h, --help            show this help message and exit
+  --name NAME           The name of the model
+  --epochs EPOCHS       The number of epochs to train the model
+  --batch-size BATCH_SIZE
+                        The batch size for training the model
+  --cosine-annealing    Use cosine annealing learning rate scheduler
+  --autocast            Use autocast to reduce memory usage
+  --spec-augment        Augment the training data using SpecAugment
+		\end{lstlisting}
+
+		We used ORFEO\footnote{\url{https://www.areasciencepark.it/piattaforme-tecnologiche/data-center-orfeo/}} computational resources for the trainings of the models.
 		
 	\end{frame}
+	
+	\begin{frame}{Training results}
+		\begin{figure}
+			\centering
+			\includegraphics[width=.8\textwidth]{images/losses.png}
 
-	\begin{frame}{Problems}
-		\dots
-		
-		\note{
-			\dots			
-		}		
-		
+			\caption{Training and validation loss for YOHO model on UrbanSED dataset.}
+			\label{fig:trainingLosses}
+		\end{figure}
 	\end{frame}
