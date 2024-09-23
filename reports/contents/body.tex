@@ -21,7 +21,7 @@
 	
 	\begin{frame}{Input shape}
 	
-		We feed the network a mel-spectrogram: a compressed time-frequency representation of audio signal that allows the model to better capture relevant audio patterns.
+		The network accepts as input a mel-spectrogram: a compressed time-frequency representation of audio signal that allows the model to better capture relevant audio patterns.
 		
 		\begin{figure}
 			\centering
@@ -46,6 +46,8 @@
 		\end{itemize} 
 		
 		The final activation in the YOHO model is a sigmoid function, facilitating the interpretation of predictions as probabilities for sound event detection.
+		
+		The total number of trainable parameters is \SI{3930590}{}.
 		
 		\note{
 			\dots
@@ -149,12 +151,19 @@ options:
 		
 	\end{frame}
 	
-	\begin{frame}{Training results}
+	\begin{frame}[allowframebreaks]{Training results}
 		\begin{figure}
 			\centering
-			\includegraphics[width=.8\textwidth]{images/losses.png}
+			\includegraphics[width=.7\textwidth]{images/losses.png}
 
 			\caption{Training and validation loss for YOHO model on UrbanSED dataset.}
 			\label{fig:trainingLosses}
 		\end{figure}
+		
+		\framebreak
+		
+		F1 score that we obtained is \SI{0.41}{}.
+		
 	\end{frame}
+	
+	
