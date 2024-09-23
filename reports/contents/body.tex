@@ -21,7 +21,8 @@
 	
 	\begin{frame}{Input shape}
 	
-		The input of the network is a spectrogram
+		We feed the network a mel-spectrogram: a compressed time-frequency representation of audio signal that allows the model to better capture relevant audio patterns.
+		
 		\begin{figure}
 			\centering
 			\includegraphics[width=.75\textwidth]{images/spectrogram.png}
@@ -39,9 +40,9 @@
 	
 	\begin{frame}{Network Architecture}
 		\begin{itemize}
-			\item \textbf{Input layer}: The input consists of mel-spectrogram derived from the audio signal	
-			\item \textbf{MobileNet Backbone}:  it consists of alternating depthwise and pointwise convolution layers. This combination allows for efficient feature extraction and dimensionality reduction without significant loss of information.
-			\item \textbf{Additional layers}: these are designed to refine the feature maps extracted by the backbone, adjusting the representation to better suit the final task of sound event detection.
+			\item \textbf{Input layer}: mel-spectrogram derived from the audio signal.
+			\item \textbf{MobileNet Backbone}:  It consists of alternating depthwise and pointwise convolution layers, which significantly reduce the number of parameters and computational complexity. This efficient design makes it ideal for real-time applications where both speed and low resource consumption are critical.
+			\item \textbf{Additional layers}: these are designed to refine the feature maps extracted by the backbone, adjusting the representation to better suit the sound event detection task.
 		\end{itemize} 
 		
 		The final activation in the YOHO model is a sigmoid function, facilitating the interpretation of predictions as probabilities for sound event detection.
