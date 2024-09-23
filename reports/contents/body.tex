@@ -38,7 +38,13 @@
 	
 	
 	\begin{frame}{Network Architecture}
-		YOHO uses the MobileNet architecture as a backbone 
+		\begin{itemize}
+			\item \textbf{Input layer}: The input consists of mel-spectrogram derived from the audio signal	
+			\item \textbf{MobileNet Backbone}:  it consists of alternating depthwise and pointwise convolution layers. This combination allows for efficient feature extraction and dimensionality reduction without significant loss of information.
+			\item \textbf{Additional layers}: these are designed to refine the feature maps extracted by the backbone, adjusting the representation to better suit the final task of sound event detection.
+		\end{itemize} 
+		
+		The final activation in the YOHO model is a sigmoid function, facilitating the interpretation of predictions as probabilities for sound event detection.
 		
 		\note{
 			\dots
