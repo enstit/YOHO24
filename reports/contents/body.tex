@@ -7,9 +7,10 @@
 
 	\begin{frame}{YOHO model}
 			
-		Presented in 2021, \textbf{YOHO}\footcite{Venkatesh_2022} is a lightweight real-time algorithm for \textit{audio segmentation} and \textit{sound event detection}:
+		Presented in 2021, \textbf{YOHO}\footcite{Venkatesh_2022} is a novel and lightweight real-time algorithm for \textit{audio segmentation} and \textit{sound event detection}:
 		\begin{itemize}
-			\item it aims to detect acoustic classes and their temporal boundaries by treating the problem as a regression task;
+			\item it aims to detect acoustic classes and their temporal boundaries by treating the problem as a \textbf{regression task};
+			\item inspired by \textit{YOLO} algorithm for machine vision.
 		\end{itemize}
 		
 		\note{
@@ -20,10 +21,10 @@
 	
 	\begin{frame}{Input shape}
 	
-
+		The input of the network is a spectrogram
 		\begin{figure}
 			\centering
-			\includegraphics[width=.8\textwidth]{images/spectrogram.png}
+			\includegraphics[width=.75\textwidth]{images/spectrogram.png}
 
 			\caption{An example of mel-spectrogram.}
 			\label{fig:spectogram}
@@ -37,7 +38,7 @@
 	
 	
 	\begin{frame}{Network Architecture}
-		\dots
+		YOHO uses the MobileNet architecture as a backbone 
 		
 		\note{
 			\dots
