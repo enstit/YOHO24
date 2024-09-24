@@ -120,9 +120,9 @@
 		All the \textbf{hyperparameters} used in the model training process were replicated from the original paper to \textbf{ensure consistency}:
 		
 		\begin{itemize}
-			\item Learning Rate: 0.001
-			\item Optimizer: Adam with a weight decay of 0.01
-			\item Dropout Rate: 10\% (used to prevent overfitting)
+			\item Learning Rate: \SI{0.001}{};
+			\item Optimizer: Adam with a weight decay of \SI{0.01}{};
+			\item Dropout Rate: \SI{10}{\percent} (to prevent overfitting).
 
 		
 		\end{itemize}
@@ -134,7 +134,7 @@
 
 \section[Work done and results]{Work done and results}	
 
-\begin{frame}{Improvements}
+\begin{frame}{Our 2 cents}
 
 	\begin{itemize}
 	\item Cosine annealing
@@ -187,36 +187,27 @@ options:
 			\caption{Training and validation loss for YOHO model on UrbanSED dataset.}
 			\label{fig:trainingLosses}
 		\end{figure}
-		
 		\framebreak
-		
 		We obtained an F$_{1}$-score of \SI{54.23}{} and an error rate of \SI{62.49}{\percent}.
-		
 		\begin{table}[h!]
-    \centering
-    \begin{tabular}{||l|c||}
-        \hline
-        \textbf{Algorithm} & \textbf{F$_{1}$-score} \\
-        \hline
-        CRNN with envelope estimation & 64.70 \\
-        \rowcolor{lightgray!50} 
-        YOHO & 59.50 \\
-        CNN & 56.88 \\
-        CRNN & 55.96 \\
-        \rowcolor{lightgray!50} 
-        Our YOHO & 54.23 \\
-        \hline
-    \end{tabular}
-    \caption{Segment-based overall F$_{1}$-score on the UrbanSED dataset.}
-    \label{tab:performance}
-\end{table}
-
-	We did bad\dots but not that bad!
-
-
-		
-		
-		
+    		\centering
+    		\begin{tabular}{||l|c||}
+        		\hline
+        		\textbf{Algorithm} & \textbf{F$_{1}$-score} \\
+        		\hline
+        		CRNN with envelope estimation & 64.70 \\
+        		\rowcolor{UNITSIceBlue!50} 
+        		YOHO & 59.50 \\
+        		CNN & 56.88 \\
+        		CRNN & 55.96 \\
+        		\rowcolor{UNITSIceBlue!50} 
+        		Our YOHO & 54.23 \\
+        		\hline
+    		\end{tabular}
+    		\caption{Segment-based overall F$_{1}$-score on the UrbanSED dataset.}
+    		\label{tab:performance}
+		\end{table}
+		We did bad, but not that bad after all\dots
 	\end{frame}
 	
 	

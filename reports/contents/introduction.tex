@@ -59,18 +59,21 @@
 	
 	\begin{frame}[allowframebreaks]{Metrics}
 	
-		A popular toolbox for Sound Event Detection models evaluation is \textbf{SED Eval}\footcite{app6060162}.\vspace{-3em}
+		A popular toolbox for Sound Event Detection models evaluation is \textbf{SED Eval}\footcite{app6060162}.
+		
+		The \textbf{F$_{1}$-score} for a SED model prediction is defined as:
+		\vspace{-3em}
 		\begin{multicols}{2}
   			\begin{equation*}
-    			\text{Precision} = \frac{\text{TP}}{\text{TP} + \text{FP}}
+    			\text{P} = \frac{\text{TP}}{\text{TP} + \text{FP}}
   			\end{equation*}\break
   			\begin{equation*}
-    			\text{Recall} = \frac{\text{TP}}{\text{TP} + \text{FN}}
+    			\text{R} = \frac{\text{TP}}{\text{TP} + \text{FN}}
   			\end{equation*}
 		\end{multicols}
 		\vspace{-1em}
 		\begin{equation*}
-			\text{F$_{1}$-score} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}
+			\text{F$_{1}$-score} = 2 \times \frac{\text{P} \times \text{R}}{\text{P} + \text{R}}
 		\end{equation*}
 		
 		where TP, FP and FN are respectively (for each audio segment):
@@ -82,7 +85,25 @@
 		
 		\framebreak
 		
-		Error rate
+		The \textbf{Error rate} keeps in consideration \textit{Substitutions}, \textit{Insertions}, and \textit{Deletions}:\vspace{-2em}
 		
+		\begin{multicols}{2}		
+  			\begin{equation*}
+    			S(k)=\min(\text{FN}(k),\text{FP}(k))
+  			\end{equation*}
+  			\begin{equation*}
+    			D(k)=\max(0,\text{FN}(k)-\text{FP}(k))
+  			\end{equation*}
+  			\begin{equation*}
+    			I(k)=\max(0,\text{FP}(k)-\text{FN}(k))
+  			\end{equation*}
+			\break
+  			\begin{equation*}
+    			\text{ER}=\frac{\sum_{k=1}^{K}S(k)+\sum_{k=1}^{K}D(k)+\sum_{k=1}^{K}I(k)}{\sum_{k=1}^{K}N(k)}
+  			\end{equation*}
+		\end{multicols}
+		
+		where $N(k)$ is the number of events in segment $k$ in ground truth.
+
 	\end{frame}
 	
