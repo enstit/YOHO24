@@ -164,6 +164,24 @@ options:
 		
 		F1 score that we obtained is \SI{0.54}{} and \SI{0.62}{} as error rate.
 		
+		\begin{table}[h!]
+    \centering
+    \begin{tabular}{||l|c||}
+        \hline
+        \textbf{Algorithm} & \textbf{F\textsubscript{overall}} \\
+        \hline
+        CRNN with envelope estimation & 64.70 \\
+        YOHO & 59.50 \\
+        CNN & 56.88 \\
+        CRNN & 55.96 \\
+        \rowcolor{lightgray} 
+        Our YOHO & 54.00 \\
+        \hline
+    \end{tabular}
+    \caption{Segment-based overall F-measure on the Urban-SED dataset.}
+    \label{tab:performance}
+\end{table}
+		
 		\pagebreak
 		
 		\begin{itemize}
