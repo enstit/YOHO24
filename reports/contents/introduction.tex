@@ -25,9 +25,9 @@
 			\centering
 			\begin{tikzpicture}[samples=200, domain=0:5*360]
 			
-				\draw[draw=red,fill=red,fill opacity=0.2] (1,0) rectangle ++(4,2.25);
-				\draw[draw=blue,fill=blue,fill opacity=0.2] (4,0) rectangle ++(2,2.25);
-				\draw[draw=green,fill=green,fill opacity=0.2] (6.2,0) rectangle ++(1.5,2.25);
+				\draw[draw=red,fill=red,fill opacity=0.1] (1,0) rectangle ++(4,2.25);
+				\draw[draw=blue,fill=blue,fill opacity=0.1] (4,0) rectangle ++(2,2.25);
+				\draw[draw=green,fill=green,fill opacity=0.1] (6.2,0) rectangle ++(1.5,2.25);
 
         		\begin{axis}[
             		width=10cm, height=4cm,
@@ -85,7 +85,7 @@
 		
 		\framebreak
 		
-		The \textbf{Error rate} keeps in consideration \textit{Substitutions}, \textit{Insertions}, and \textit{Deletions}:\vspace{-2em}
+		The \textbf{Error rate} keeps in consideration \textit{Substitutions}, \textit{Insertions}, and \textit{Deletions}:\vspace{-1em}
 		
 		\begin{multicols}{2}		
   			\begin{equation*}
@@ -102,8 +102,38 @@
     			\text{ER}=\frac{\sum_{k=1}^{K}S(k)+\sum_{k=1}^{K}D(k)+\sum_{k=1}^{K}I(k)}{\sum_{k=1}^{K}N(k)}
   			\end{equation*}
 		\end{multicols}
-		
-		where $N(k)$ is the number of events in segment $k$ in ground truth.
+
+		\begin{figure}
+			\centering
+			\begin{tikzpicture}[samples=200, domain=0:5*360]
+			
+				\draw[dotted] (4.15,-.2) -- (4.15,1.45);
+				\draw[dotted] (8.3,-.2) -- (8.3,1.45);
+			
+				
+				\draw[draw=red,fill=red,fill opacity=0.1] (1,0) rectangle ++(3,1.25);
+				\node[above] at (2.5,1.25) {\tiny \textcolor{red}{Class $A$}};
+				\draw[draw=red,fill=red,fill opacity=0.1] (10.5,0) rectangle ++(1,1.25);
+				\node[above] at (11.0,1.25) {\tiny \textcolor{red}{Class $B$}};
+
+				\draw[draw=blue,fill=blue,fill opacity=0.1] (.8,0) rectangle ++(2.8,1.25);
+				\node[below] at (2.2,0) {\tiny \textcolor{blue}{Class $B$}};
+				\draw[draw=blue,fill=blue,fill opacity=0.1] (6.5,0) rectangle ++(0.5,1.25);
+				\node[below] at (6.75,0) {\tiny \textcolor{blue}{Class $A$}};
+
+        		\begin{axis}[
+            		width=\textwidth, height=3cm,
+            		enlarge x limits=false,
+            		hide x axis,
+            		hide y axis
+        		]
+        			\addplot [no markers, smooth] {sin(x)+rand*2};
+        		\end{axis}
+    		\end{tikzpicture}\vspace{-0.75em}
+			\caption{Example of \textcolor{red}{ground truth} and model \textcolor{blue}{predicted labels} in three segments.}
+			\label{fig:metrics}
+		\end{figure}
+
 
 	\end{frame}
 	
