@@ -134,7 +134,17 @@
 
 \section[Work done and results]{Work done and results}	
 
-	\begin{frame}[fragile]{Implementation challenges}
+\begin{frame}{Improvements}
+
+	\begin{itemize}
+	\item Cosine annealing
+	\item Autocast (training performances)
+	\item Bigger batch size (GPU \%)
+	\end{itemize}
+
+\end{frame}
+
+	\begin{frame}[fragile]{Used technologies}
 	
 		Starting from the original paper, we implemented the system using PyTorch\footnote{All the code is available at \url{https://github.com/enstit/YOHO24}.},
 		writing the code keeping in mind that it had to be \textbf{clear} and permit \textbf{reproducible tests}.
@@ -159,6 +169,16 @@ options:
 		
 	\end{frame}
 	
+	\begin{frame}{Implementation challenges}
+	\begin{itemize}
+		\item A major limitation is that the original paper lacks detailed metrics or loss curves, preventing direct comparison and raising concerns about the \textbf{reproducibility} and \textbf{transparency} of their research.
+		
+		\item The code was poorly documented and didn’t allow us to replicate their methods, hindering a clear understanding of their approach.
+		
+		\end{itemize} 
+	
+	\end{frame}
+	
 	\begin{frame}[allowframebreaks]{Training results}
 		\begin{figure}
 			\centering
@@ -170,34 +190,32 @@ options:
 		
 		\framebreak
 		
-		F1 score that we obtained is \SI{0.54}{} and \SI{0.62}{} as error rate.
+		We obtained an F$_{1}$-score of \SI{54.23}{} and an error rate of \SI{62.49}{\percent}.
 		
 		\begin{table}[h!]
     \centering
     \begin{tabular}{||l|c||}
         \hline
-        \textbf{Algorithm} & \textbf{F\textsubscript{overall}} \\
+        \textbf{Algorithm} & \textbf{F$_{1}$-score} \\
         \hline
         CRNN with envelope estimation & 64.70 \\
+        \rowcolor{lightgray!50} 
         YOHO & 59.50 \\
         CNN & 56.88 \\
         CRNN & 55.96 \\
-        \rowcolor{lightgray} 
-        Our YOHO & 54.00 \\
+        \rowcolor{lightgray!50} 
+        Our YOHO & 54.23 \\
         \hline
     \end{tabular}
-    \caption{Segment-based overall F-measure on the Urban-SED dataset.}
+    \caption{Segment-based overall F$_{1}$-score on the UrbanSED dataset.}
     \label{tab:performance}
 \end{table}
+
+	We did bad\dots but not that bad!
+
+
 		
-		\pagebreak
 		
-		\begin{itemize}
-		\item A major limitation is that the original paper lacks detailed metrics or loss curves, preventing direct comparison and raising concerns about the \textbf{reproducibility} and \textbf{transparency} of their research.
-		
-		\item The code was poorly documented and didn’t allow us to replicate their methods, hindering a clear understanding of their approach.
-		
-		\end{itemize}
 		
 	\end{frame}
 	
