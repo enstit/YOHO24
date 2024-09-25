@@ -159,19 +159,19 @@
 			label={trainingParams},
 			captionpos=b
 		]
-			$ python3 -m yoho.train --help
-			usage: train.py [-h] [--name NAME] [--epochs EPOCHS] [--batch-size BATCH_SIZE] [--cosine-annealing]
-			[--autocast] [--spec-augment]
+$ python3 -m yoho.train --help
+usage: train.py [-h] [--name NAME] [--epochs EPOCHS] [--batch-size BATCH_SIZE] [--cosine-annealing]
+[--autocast] [--spec-augment]
 
-			options:
-			-h, --help            show this help message and exit
-			--name NAME           The name of the model
-			--epochs EPOCHS       The number of epochs to train the model
-			--batch-size BATCH_SIZE
-									The batch size for training the model
-			--cosine-annealing    Use cosine annealing learning rate scheduler
-			--autocast            Use autocast to reduce memory usage
-			--spec-augment        Augment the training data using SpecAugment
+options:
+  -h, --help            show this help message and exit
+  --name NAME           The name of the model
+  --epochs EPOCHS       The number of epochs to train the model
+  --batch-size BATCH_SIZE    
+	                The batch size for training the model		  
+  --cosine-annealing    Use cosine annealing learning rate scheduler
+  --autocast            Use autocast to reduce memory usage
+  --spec-augment        Augment the training data using SpecAugment
 		\end{lstlisting}
 
 		We used ORFEO\footnote{\url{https://www.areasciencepark.it/piattaforme-tecnologiche/data-center-orfeo/}}
