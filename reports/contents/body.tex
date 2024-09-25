@@ -133,10 +133,14 @@
 
 	\begin{frame}{Our 2 cents}
 
+		We introuced a couple of imporvements to the model, in order to make the training more efficient:
+
 		\begin{itemize}
-		\item Cosine annealing
-		\item Autocast (training performances)
-		\item Bigger batch size (GPU \%)
+		\item {use of \textbf{cosine annealing}\footcite{DBLP:journals/corr/LoshchilovH16a} to dinamically adjust the
+  		learning rate during the training phase;}
+		\item {performance improving while maintaining accuracy with \textbf{autocast}, that automatically chooses
+  			the precision for GPU operations;}
+		\item take advantage of GPUs high-performances using a \textbf{bigger batch size} (128 vs 32).
 		\end{itemize}
 
 	\end{frame}
