@@ -6,189 +6,200 @@
 \section[YOHO model]{YOHO model}
 
 	\begin{frame}{YOHO model}
-			
-		Presented in 2021, \textbf{YOHO}\footcite{Venkatesh_2022} is a novel and lightweight real-time algorithm for \textit{audio segmentation} and \textit{sound event detection}:
+
+		Presented in 2021, \textbf{YOHO}\footcite{Venkatesh_2022} is a novel and lightweight real-time algorithm for
+		\textit{audio segmentation} and \textit{sound event detection}:
+
 		\begin{itemize}
-			\item it aims to detect acoustic classes and their temporal boundaries by treating the problem as a \textbf{regression task};
+			\item {it aims to detect acoustic classes and their temporal boundaries by treating the problem as a
+				\textbf{regression task};}
 			\item inspired by \textit{YOLO} algorithm for machine vision.
 		\end{itemize}
-		
-		\note{
-			\dots			
-		}		
-		
+
 	\end{frame}
-	
+
 	\begin{frame}{Input shape}
-	
-		The network accepts as input a mel-spectrogram: a compressed time-frequency representation of audio signal that allows the model to better capture relevant audio patterns.
-		
+
+		The network accepts as input a mel-spectrogram: a compressed time-frequency representation of audio signal that
+		allows the model to better capture relevant audio patterns.
+
 		\begin{figure}
 			\centering
 			\includegraphics[width=.75\textwidth]{images/spectrogram.png}
-
 			\caption{An example of mel-spectrogram.}
 			\label{fig:spectogram}
 		\end{figure}
-	
-		
-		\note{
-			\dots
-		}
+
 	\end{frame}
-	
-	
+
 	\begin{frame}{Network Architecture}
+
+		The YOHO model is composed of three main parts:
+
 		\begin{itemize}
-			\item \textbf{Input layer}: mel-spectrogram derived from the audio signal.
-			\item \textbf{MobileNet Backbone}:  It consists of alternating depthwise and pointwise convolution layers, which significantly reduce the number of parameters and computational complexity. This efficient design makes it ideal for real-time applications where both speed and low resource consumption are critical.
-			\item \textbf{Additional layers}: these are designed to refine the feature maps extracted by the backbone, adjusting the representation to better suit the sound event detection task.
+			\item \textbf{Input layer}: mel-spectrogram derived from the audio signal;
+			\item {\textbf{MobileNet Backbone}: It consists of alternating depthwise and pointwise convolution layers,
+				which significantly reduce the number of parameters and computational complexity. This efficient design
+				makes it ideal for real-time applications where both speed and low resource consumption are critical;}
+			\item {\textbf{Additional layers}: these are designed to refine the feature maps extracted by the backbone,
+				adjusting the representation to better suit the sound event detection task;}
+			\item {\textbf{Output layer}: a sigmoid function outputs the probability of each class being present in
+				each time advancement with the indication of start and stop of the event.}
 		\end{itemize} 
-		
-		The final activation in the YOHO model is a sigmoid function, facilitating the interpretation of predictions as probabilities for sound event detection.
-		
+
 		The total number of trainable parameters is \SI{3930590}{}.
-		
-		\note{
-			\dots
-		}
+
 	\end{frame}
-	
-	
+
 	\begin{frame}{Output shape}
-	
-	\begin{figure}
-			\centering
-			\begin{tikzpicture}[scale=.8]
-			
-				\draw [->,black] (1,6) -- node[midway,above]{\small Audio classes} (8.5,6);
-				\draw [->,black] (0,5) -- node[midway,left,below=5pt,sloped]{\small Time steps} (0,1.25);
+
+		The output shape of the YOHO model is a tensor of shape
+		$(\text{batch size}, \text{time steps}, \text{audio classes})$.
+
+		\begin{figure}
+				\centering
+				\begin{tikzpicture}[scale=.8]
 				
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (1,5) {Class $1$\\(Y/N)};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (2.5,5) {Class $1$\\start};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (4,5) {Class $1$\\stop};
+					\draw [->,black] (1,6) -- node[midway,above]{\small Audio classes} (8.5,6);
+					\draw [->,black] (0,5) -- node[midway,left,below=5pt,sloped]{\small Time steps} (0,1.25);
+					
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (1,5) {Class $1$\\(Y/N)};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (2.5,5) {Class $1$\\start};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (4,5) {Class $1$\\stop};
 
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (5.5,5) {Class $2$\\(Y/N)};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (7,5) {Class $2$\\start};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (8.5,5) {Class $2$\\stop};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (5.5,5) {Class $2$\\(Y/N)};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (7,5) {Class $2$\\start};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (8.5,5) {Class $2$\\stop};
 
 
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (1,3.5) {Class $1$\\(Y/N)};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (2.5,3.5) {Class $1$\\start};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (4,3.5) {Class $1$\\stop};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (1,3.5) {Class $1$\\(Y/N)};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (2.5,3.5) {Class $1$\\start};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (4,3.5) {Class $1$\\stop};
 
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (5.5,3.5) {Class $2$\\(Y/N)};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (7,3.5) {Class $2$\\start};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (8.5,3.5) {Class $2$\\stop};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (5.5,3.5) {Class $2$\\(Y/N)};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (7,3.5) {Class $2$\\start};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (8.5,3.5) {Class $2$\\stop};
 
-				\node[align=center] at (1.75,2.5) {$\vdots$};
-				\node[align=center] at (4.75,2.5) {$\vdots$};
-				\node[align=center] at (7.75,2.5) {$\vdots$};
+					\node[align=center] at (1.75,2.5) {$\vdots$};
+					\node[align=center] at (4.75,2.5) {$\vdots$};
+					\node[align=center] at (7.75,2.5) {$\vdots$};
 
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (1,1.25) {Class $1$\\(Y/N)};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (2.5,1.25) {Class $1$\\start};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (4,1.25) {Class $1$\\stop};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (1,1.25) {Class $1$\\(Y/N)};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (2.5,1.25) {Class $1$\\start};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (4,1.25) {Class $1$\\stop};
 
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (5.5,1.25) {Class $2$\\(Y/N)};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (7,1.25) {Class $2$\\start};
-				\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (8.5,1.25) {Class $2$\\stop};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (5.5,1.25) {Class $2$\\(Y/N)};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (7,1.25) {Class $2$\\start};
+					\node[circle,draw,align=center,inner sep=0pt,text width=1cm,font = {\scriptsize}] at (8.5,1.25) {Class $2$\\stop};
 
-			\end{tikzpicture}
-			\caption{The YOHO output shape.}
-			\label{fig:YOHOoutput}
-		\end{figure}
-		
+				\end{tikzpicture}
+				\caption{The YOHO output shape.}
+				\label{fig:YOHOoutput}
+			\end{figure}
+
 	\end{frame}
-	
 
 	\begin{frame}{Loss Function}
+
 		\begin{equation*}
 			\mathcal{L}_{c}(\hat{y},y) = \begin{cases}
 			(\hat{y}_1-y_1)^2+\\(\hat{y}_2-y_2)^2+(\hat{y}_3-y_3)^2 &\text{if $y_{1} = 1$}\\
 			(\hat{y}_1-y_1)^2, &\text{if $y_1 = 0$}
 			\end{cases}
 		\end{equation*}
-		
-		where $y$ and $\hat{y}$ are the ground-truth and predictions respectively. $y_1 = 1$ if the acoustic class is present and $y_1 = 0$ if the class is absent. $y_2$ and $y_3$, which are the start and endpoints for each acoustic class are considered only if $y = 1$.
-		In other words, $(\hat{y}_1-y_1)^2$ corresponds to \textbf{the classification loss} and $(\hat{y}_2-y_2)^2+(\hat{y}_3-y_3)^2$ corresponds to \textbf{the regression loss}.
-		\note{
-			\dots
-		}
+
+		where $y$ and $\hat{y}$ are the ground-truth and predictions respectively. $y_1 = 1$ if the acoustic class is
+		present and $y_1 = 0$ if the class is absent. $y_2$ and $y_3$, which are the start and endpoints for each
+		acoustic class are considered only if $y = 1$.
+		In other words, $(\hat{y}_1-y_1)^2$ corresponds to \textbf{the classification loss} and
+		$(\hat{y}_2-y_2)^2+(\hat{y}_3-y_3)^2$ corresponds to \textbf{the regression loss}.
+
 	\end{frame}
-	
+
 	\begin{frame}{Other Details}
-		All the \textbf{hyperparameters} used in the model training process were replicated from the original paper to \textbf{ensure consistency}:
-		
+
+		All the \textbf{hyperparameters} used in the model training process were replicated from the original paper to
+		\textbf{ensure consistency}:
+
 		\begin{itemize}
 			\item Learning Rate: \SI{0.001}{};
 			\item Optimizer: Adam with a weight decay of \SI{0.01}{};
 			\item Dropout Rate: \SI{10}{\percent} (to prevent overfitting).
-
-		
 		\end{itemize}
-		
-		\note{
-			\dots
-		}
+
 	\end{frame}
 
 \section[Work done and results]{Work done and results}	
 
-\begin{frame}{Our 2 cents}
+	\begin{frame}{Our 2 cents}
 
-	\begin{itemize}
-	\item Cosine annealing
-	\item Autocast (training performances)
-	\item Bigger batch size (GPU \%)
-	\end{itemize}
+		\begin{itemize}
+		\item Cosine annealing
+		\item Autocast (training performances)
+		\item Bigger batch size (GPU \%)
+		\end{itemize}
 
-\end{frame}
+	\end{frame}
 
 	\begin{frame}[fragile]{Used technologies}
 	
-		Starting from the original paper, we implemented the system using PyTorch\footnote{All the code is available at \url{https://github.com/enstit/YOHO24}.},
-		writing the code keeping in mind that it had to be \textbf{clear} and permit \textbf{reproducible tests}.
+		Starting from the original paper, we implemented the system using PyTorch\footnote{All the code is available at
+		\url{https://github.com/enstit/YOHO24}.}, writing the code keeping in mind that it had to be \textbf{clear} and
+		permit \textbf{reproducible tests}.
 		
-		\begin{lstlisting}[basicstyle=\tiny\ttfamily\color{white},language=bash,backgroundcolor=\color{black},caption={Training script parameters}, label={trainingParams},captionpos=b]
-$ python3 -m yoho.train --help
-usage: train.py [-h] [--name NAME] [--epochs EPOCHS] [--batch-size BATCH_SIZE] [--cosine-annealing]
-[--autocast] [--spec-augment]
+		\begin{lstlisting}[
+			basicstyle=\tiny\ttfamily\color{white},
+			language=bash,
+			backgroundcolor=\color{black},
+			caption={Training script parameters},
+			label={trainingParams},
+			captionpos=b
+		]
+			$ python3 -m yoho.train --help
+			usage: train.py [-h] [--name NAME] [--epochs EPOCHS] [--batch-size BATCH_SIZE] [--cosine-annealing]
+			[--autocast] [--spec-augment]
 
-options:
-  -h, --help            show this help message and exit
-  --name NAME           The name of the model
-  --epochs EPOCHS       The number of epochs to train the model
-  --batch-size BATCH_SIZE
-                        The batch size for training the model
-  --cosine-annealing    Use cosine annealing learning rate scheduler
-  --autocast            Use autocast to reduce memory usage
-  --spec-augment        Augment the training data using SpecAugment
+			options:
+			-h, --help            show this help message and exit
+			--name NAME           The name of the model
+			--epochs EPOCHS       The number of epochs to train the model
+			--batch-size BATCH_SIZE
+									The batch size for training the model
+			--cosine-annealing    Use cosine annealing learning rate scheduler
+			--autocast            Use autocast to reduce memory usage
+			--spec-augment        Augment the training data using SpecAugment
 		\end{lstlisting}
 
-		We used ORFEO\footnote{\url{https://www.areasciencepark.it/piattaforme-tecnologiche/data-center-orfeo/}} computational resources for the trainings of the models.
+		We used ORFEO\footnote{\url{https://www.areasciencepark.it/piattaforme-tecnologiche/data-center-orfeo/}}
+		computational resources for the trainings of the models.
 		
 	\end{frame}
 	
 	\begin{frame}{Implementation challenges}
+
 	\begin{itemize}
-		\item A major limitation is that the original paper lacks detailed metrics or loss curves, preventing direct comparison and raising concerns about the \textbf{reproducibility} and \textbf{transparency} of their research.
-		
-		\item The code was poorly documented and didn’t allow us to replicate their methods, hindering a clear understanding of their approach.
-		
-		\end{itemize} 
-	
+		\item {A major limitation is that the original paper lacks detailed metrics or loss curves, preventing direct
+			comparison and raising concerns about the \textbf{reproducibility} and \textbf{transparency} of their
+			research.}
+		\item {The code was poorly documented and didn’t allow us to replicate their methods, hindering a clear
+			understanding of their approach.}
+	\end{itemize}
+
 	\end{frame}
-	
+
 	\begin{frame}[allowframebreaks]{Training results}
+
 		\begin{figure}
 			\centering
 			\includegraphics[width=.7\textwidth]{images/losses.png}
-
 			\caption{Training and validation loss for YOHO model on UrbanSED dataset.}
 			\label{fig:trainingLosses}
 		\end{figure}
-		\framebreak
+
+	\framebreak
+
 		We obtained an F$_{1}$-score of \SI{54.23}{} and an error rate of \SI{62.49}{\percent}.
+
 		\begin{table}[h!]
     		\centering
     		\begin{tabular}{||l|c||}
@@ -207,7 +218,7 @@ options:
     		\caption{Segment-based overall F$_{1}$-score on the UrbanSED dataset.}
     		\label{tab:performance}
 		\end{table}
+
 		We did bad, but not that bad after all\dots
+
 	\end{frame}
-	
-	
