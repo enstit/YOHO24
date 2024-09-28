@@ -139,6 +139,22 @@ def train_model(
         # Compute the average train loss for this epoch
         avg_train_loss = running_train_loss / len(train_loader)
 
+        # Set the model to evaluation mode
+        model.eval()
+        running_val_loss = 0.0
+        # Disable gradient computation
+        with torch.no_grad():
+            for _, (inputs, labels) in enumerate(val_loader):
+                logger.debug(
+                    f"Computating metrics for observations [{_*val_loader.batch_size}:{(_ + 1)*val_loader.batch_size}] in validation dataset."
+                )
+                inputs, labels = inputs.to(device), labels.to(device)
+                outputs = model(inputs)
+                loss = criterion(outputs, labels)
+
+                running_val_loss += loss.detach()
+            avg_val_loss = running_val_loss / len(val_loader)
+
         if scheduler is not None:
             # Step the scheduler (cosine annealing)
             scheduler.step()
