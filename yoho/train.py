@@ -1,25 +1,33 @@
 import os
+import sys
+from pathlib import Path
+import argparse
+import logging
 import json
-import torch
 import pandas as pd
 import numpy as np
+import torch
 from torchvision.transforms import v2
 from torchaudio.transforms import TimeMasking, FrequencyMasking
 
+FILE = Path(__file__).resolve()
+ROOT = FILE.parents[0]  # YOHO root directory
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))  # add ROOT to PATH
+ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
+MODELS_DIR = Path(os.path.join(ROOT, "models"))
+
 from yoho import YOHOLoss, YOHO
-from yoho.utils import AudioFile, UrbanSEDDataset, YOHODataGenerator
+from yoho.utils import (
+    AudioFile,
+    YOHODataset,
+    UrbanSEDDataset,
+    YOHODataGenerator,
+)
 
 from timeit import default_timer as timer
-import logging
-import argparse
-
 import sed_eval
 import dcase_util
-
-SCRIPT_DIRPATH = os.path.abspath(os.path.dirname(__file__))
-MODELS_DIR = os.path.abspath(os.path.join(SCRIPT_DIRPATH, "..", "models"))
-
-logging.basicConfig(level=logging.INFO)
 
 
 def get_loss_function():
@@ -31,14 +39,20 @@ def save_checkpoint(state: dict, filename: str = "checkpoint.pth.tar") -> None:
     torch.save(state, os.path.join(MODELS_DIR, filename))
 
 
-def load_checkpoint(model, optimizer, filename="checkpoint.pth.tar") -> tuple:
+def load_checkpoint(
+    model,
+    optimizer,
+    filename="checkpoint.pth.tar",
+    scheduler=None,
+    logger: logging.Logger = None,
+) -> tuple:
     filepath = os.path.join(MODELS_DIR, filename)
 
     if not os.path.exists(filepath):
-        logging.info("No checkpoint found, starting training from scratch")
+        logger.info("No checkpoint found, starting training from scratch")
         return model, optimizer, 0, None, None
 
-    logging.info(f"Found checkpoint file at {filepath}, loading checkpoint")
+    logger.info(f"Found checkpoint file at {filepath}, loading checkpoint")
     checkpoint = torch.load(filepath)
 
     model.load_state_dict(checkpoint["state_dict"])
@@ -156,7 +170,6 @@ def compute_metrics(predictions, targets, classes, filepaths):
 
     N_events = 0
 
-
     segment_based_metrics = sed_eval.sound_event.SegmentBasedMetrics(
         event_label_list=classes,
         time_resolution=1.0,
@@ -165,7 +178,7 @@ def compute_metrics(predictions, targets, classes, filepaths):
     for pred, target, filepath in zip(
         processed_predictions, processed_targets, filepaths
     ):
-        
+
         if not pred and not target:
             temp_f1 += 1
             temp_error += 0
@@ -175,18 +188,16 @@ def compute_metrics(predictions, targets, classes, filepaths):
             temp_f1 += 0
             temp_error += 1
             continue
-        
+
         if not pred and target:
             temp_f1 += 0
             temp_error += 1
             N_events += len(target)
             continue
 
-
         if pred and target:
             N_events += len(target)
 
-            
             # Create the event list
             pred_event_list = dcase_util.containers.MetaDataContainer(
                 [
@@ -218,8 +229,6 @@ def compute_metrics(predictions, targets, classes, filepaths):
                 estimated_event_list=pred_event_list,
             )
 
-        
-
     overall_metrics = segment_based_metrics.results_overall_metrics()
 
     temp_error = temp_error / N_events
@@ -244,6 +253,7 @@ def train_model(
     start_epoch=0,
     scheduler=None,
     autocast=False,
+    logger: logging.Logger = None,
 ):
 
     criterion = get_loss_function()
@@ -267,7 +277,7 @@ def train_model(
             optimizer.zero_grad(set_to_none=True)
 
             if autocast:
-                logging.debug("Using autocast to reduce memory usage")
+                logger.debug("Using autocast to reduce memory usage")
                 # Use autocast to reduce memory usage
                 with torch.autocast(device_type=device):
                     # Forward pass
@@ -309,8 +319,10 @@ def train_model(
 
             for _, (inputs, labels) in enumerate(val_loader):
 
-                logging.debug(f"Computating metrics for observations [{_*val_loader.batch_size}:{(_ + 1)*val_loader.batch_size}] in validation dataset.")
-                
+                logger.debug(
+                    f"Computating metrics for observations [{_*val_loader.batch_size}:{(_ + 1)*val_loader.batch_size}] in validation dataset."
+                )
+
                 inputs, labels = inputs.to(device), labels.to(device)
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
@@ -336,13 +348,17 @@ def train_model(
                 error_rate += running_error_rate
                 f1_score += running_f1_score
 
-                logging.debug(f"Batch metrics - Error rate: {running_error_rate:.2f}, F1-score: {running_f1_score:.2f}")
+                logger.debug(
+                    f"Batch metrics - Error rate: {running_error_rate:.2f}, F1-score: {running_f1_score:.2f}"
+                )
 
             if val_loader:
                 error_rate /= len(val_loader)
                 f1_score /= len(val_loader)
 
-            logging.debug(f"Overall metrics - Error rate: {error_rate:.2f}, F1-score: {f1_score:.2f}")
+            logger.debug(
+                f"Overall metrics - Error rate: {error_rate:.2f}, F1-score: {f1_score:.2f}"
+            )
 
             avg_val_loss = running_val_loss / len(val_loader)
 
@@ -355,7 +371,7 @@ def train_model(
             avg_val_loss.item() if avg_val_loss is not None else None
         )
 
-        logging.info(
+        logger.info(
             f"Epoch [{epoch + 1}/{num_epochs}], "
             f"Train Loss: {avg_train_loss:.2f}, Val Loss: {avg_val_loss:.2f}, "
             f"Error Rate: {error_rate:.2f}, F1 Score: {f1_score:.2f}, "
@@ -387,7 +403,7 @@ def train_model(
         )
 
 
-def get_device():
+def get_device(logger: logging.Logger = None) -> str:
     return (
         "cuda"
         if torch.cuda.is_available()
@@ -396,23 +412,21 @@ def get_device():
     )
 
 
-def load_dataset(partition: str, augment: bool = False):
-
-    root_dir = os.path.join(SCRIPT_DIRPATH, "..")
+def load_dataset(
+    partition: str, augment: bool = False, logger: logging.Logger = None
+) -> YOHODataset:
 
     match partition:
         case "train":
-            filepath = os.path.join(
-                root_dir, "data/processed/UrbanSED/train.pkl"
-            )
+            filepath = os.path.join(ROOT, "data/processed/UrbanSED/train.pkl")
 
             if os.path.exists(filepath):
-                logging.info("Loading the train dataset from the pickle file")
+                logger.info("Loading the train dataset from the pickle file")
                 return UrbanSEDDataset.load(filepath)
 
             transform = None
             if augment:
-                logging.info("Augmenting the training data using SpecAugment")
+                logger.info("Augmenting the training data using SpecAugment")
                 transform = v2.Compose(
                     [
                         FrequencyMasking(freq_mask_param=8),
@@ -421,7 +435,7 @@ def load_dataset(partition: str, augment: bool = False):
                     ]
                 )
 
-            logging.info("Creating the train dataset")
+            logger.info("Creating the train dataset")
             urbansed_train = UrbanSEDDataset(
                 audios=[
                     audioclip
@@ -431,8 +445,8 @@ def load_dataset(partition: str, augment: bool = False):
                         )
                         for _, file in pd.read_csv(
                             os.path.join(
-                                SCRIPT_DIRPATH,
-                                "../data/raw/UrbanSED/train.csv",
+                                ROOT,
+                                "data/raw/UrbanSED/train.csv",
                             )
                         ).iterrows()
                     )
@@ -450,16 +464,16 @@ def load_dataset(partition: str, augment: bool = False):
         case "validate":
 
             filepath = os.path.join(
-                root_dir, "data/processed/UrbanSED/validate.pkl"
+                ROOT, "data/processed/UrbanSED/validate.pkl"
             )
 
             if os.path.exists(filepath):
-                logging.info(
+                logger.info(
                     "Loading the validation dataset from the pickle file"
                 )
                 return UrbanSEDDataset.load(filepath)
 
-            logging.info("Creating the validation dataset")
+            logger.info("Creating the validation dataset")
             urbansed_val = UrbanSEDDataset(
                 audios=[
                     audioclip
@@ -469,8 +483,8 @@ def load_dataset(partition: str, augment: bool = False):
                         )
                         for _, file in pd.read_csv(
                             os.path.join(
-                                SCRIPT_DIRPATH,
-                                "../data/raw/UrbanSED/validate.csv",
+                                ROOT,
+                                "data/raw/UrbanSED/validate.csv",
                             )
                         ).iterrows()
                     )
@@ -485,7 +499,7 @@ def load_dataset(partition: str, augment: bool = False):
             return urbansed_val
 
 
-if __name__ == "__main__":
+def parse_arguments():
 
     parser = argparse.ArgumentParser()
 
@@ -493,72 +507,123 @@ if __name__ == "__main__":
         "--name",
         type=str,
         default="UrbanSEDYOHO",
-        help="The name of the model",
+        help="name of the model",
     )
 
     parser.add_argument(
-        "--epochs",
-        type=int,
-        default=50,
-        help="The number of epochs to train the model",
+        "--weights",
+        type=str,
+        default=MODELS_DIR / "models/yoho.pt",
+        help="model weights path",
+    )
+
+    parser.add_argument(
+        "--train-path",
+        type=str,
+        default=None,
+        help="training CSV path",
+    )
+
+    parser.add_argument(
+        "--validate-path",
+        type=str,
+        default=None,
+        help="validation CSV path",
+    )
+
+    parser.add_argument(
+        "--classes",
+        type=str,
+        action="append",
+        nargs="+",
+        default=[],
+        help="list of classes",
     )
 
     parser.add_argument(
         "--batch-size",
         type=int,
         default=32,
-        help="The batch size for training the model",
+        help="batch size for training the model",
+    )
+
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=50,
+        help="maximum number of epochs to train the model",
+    )
+
+    parser.add_argument(
+        "--device",
+        type=str,
+        choices=["cpu", "cuda"],
+        default="cuda",
+        help="device to use for training the model",
     )
 
     parser.add_argument(
         "--cosine-annealing",
         action="store_true",  # default=False
-        help="Use cosine annealing learning rate scheduler",
+        help="use Cosine Annealing learning rate scheduler",
     )
 
     parser.add_argument(
         "--autocast",
         action="store_true",  # default=False
-        help="Use autocast to reduce memory usage",
+        help="use autocast to reduce memory usage",
     )
 
     parser.add_argument(
         "--spec-augment",
         action="store_true",  # default=False
-        help="Augment the training data using SpecAugment",
+        help="augment the training data using SpecAugment library",
     )
 
-    args = parser.parse_args()
+    parser.add_argument(
+        "--verbose",
+        action="store_true",  # default=False
+        help="log additional information during training",
+    )
 
-    if args.epochs:
-        logging.info(f"Training the model for {args.epochs} epochs")
+    return parser.parse_args()
 
-    device = get_device()
-    logging.info(f"Start training using device: {device}")
+
+def main(opt: argparse.Namespace):
+
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG if opt.verbose else logging.INFO)
+
+    logger.debug(f"Training the model for {opt.epochs} epochs")
+
+    device = (
+        opt.device if opt.device is not None else get_device(logger=logger)
+    )
+    logger.debug(f"Start training using device: {device}")
 
     # Set the seed for reproducibility
     torch.manual_seed(0)
 
-    urbansed_train = load_dataset(partition="train", augment=args.spec_augment)
+    urbansed_train = load_dataset(partition="train", augment=opt.spec_augment)
     urbansed_val = load_dataset(partition="validate")
 
-    logging.info("Creating the train data loader")
+    logger.info("Creating the train data loader")
 
     # Get number of workers from slurm (default: 4)
     num_workers = int(os.getenv("SLURM_CPUS_PER_TASK", 4))
 
     train_dataloader = YOHODataGenerator(
         urbansed_train,
-        batch_size=args.batch_size,
+        batch_size=opt.batch_size,
         shuffle=True,
         pin_memory=True,
         num_workers=num_workers,
     )
 
-    logging.info("Creating the validation data loader")
+    logger.info("Creating the validation data loader")
     val_dataloader = YOHODataGenerator(
         urbansed_val,
-        batch_size=args.batch_size,
+        batch_size=opt.batch_size,
         shuffle=False,
         pin_memory=True,
         num_workers=num_workers,
@@ -566,7 +631,7 @@ if __name__ == "__main__":
 
     # Create the model
     model = YOHO(
-        name=args.name,
+        name=opt.name,
         input_shape=(1, 40, 257),
         n_classes=len(urbansed_train.labels),
     ).to(device)
@@ -575,17 +640,21 @@ if __name__ == "__main__":
     optimizer = model.get_optimizer()
 
     scheduler = None
-    if args.cosine_annealing:  # Use cosine annealing learning rate scheduler
+    if opt.cosine_annealing:  # Use cosine annealing learning rate scheduler
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, T_max=args.epochs
+            optimizer, T_max=opt.epochs
         )
 
     # Load the model checkpoint if it exists
     model, optimizer, start_epoch, scheduler, _ = load_checkpoint(
-        model, optimizer, filename=f"{model.name}_checkpoint.pth.tar"
+        model,
+        optimizer,
+        filename=f"{model.name}_checkpoint.pth.tar",
+        scheduler=scheduler,
+        logger=logger,
     )
 
-    logging.info("Start training the model")
+    logger.info("Start training the model")
     start_training = timer()
 
     # Train the model
@@ -594,12 +663,19 @@ if __name__ == "__main__":
         device=device,
         train_loader=train_dataloader,
         val_loader=val_dataloader,
-        num_epochs=args.epochs,
+        num_epochs=opt.epochs,
         start_epoch=start_epoch,
         scheduler=scheduler,
-        autocast=args.autocast,
+        autocast=opt.autocast,
+        logger=logger,
     )
 
     end_training = timer()
     seconds_elapsed = end_training - start_training
-    logging.info(f"Training took {(seconds_elapsed)/60:.2f} mins")
+    logger.info(f"Training took {(seconds_elapsed)/60:.2f} mins")
+
+
+if __name__ == "__main__":
+
+    args = parse_arguments()
+    main(opt=args)
