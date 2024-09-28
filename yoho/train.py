@@ -24,7 +24,8 @@ ROOT = FILE.parents[1]  # project root directory
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
-MODELS_DIR = Path(os.path.join(ROOT, "models"))
+DATA_DIR = Path(ROOT / "data" / "processed")
+MODELS_DIR = Path(ROOT / "models")
 
 
 def load_checkpoint(
@@ -180,67 +181,57 @@ def get_device(logger: logging.Logger = None) -> str:
     )
 
 
-def load_dataset(partition: str, augment: bool = False, logger: logging.Logger = None) -> YOHODataset:
+def load_dataset(
+    filepath: str,
+    augment: bool = False,
+    logger: logging.Logger = None,
+    classes: list = [],
+    window_size: float = 2.56,
+    hop_size: float = 1.0,
+) -> YOHODataset:
 
-    match partition:
-        case "train":
-            filepath = os.path.join(ROOT, "data/processed/UrbanSED/train.pkl")
+    # Check if exists a pickle file on the same location
+    pickle_file = Path(filepath).with_suffix(".pkl")
+    if pickle_file.exists():
+        logger.info(f"Loading the dataset from the pickle file: {pickle_file}")
+        return YOHODataset.load(pickle_file)
 
-            if os.path.exists(filepath):
-                logger.info("Loading the train dataset from the pickle file")
-                return UrbanSEDDataset.load(filepath)
+    if not classes:
+        # Get the classes from the CSV file
+        logger.debug("Unique classes for the dataset not provided, getting them from the CSV file")
+        # Get the events column from the CSV file. This is a list of tuples (event, onset, offset)
+        classes = pd.read_csv(filepath).events.apply(eval).explode().apply(lambda x: x[0]).unique().tolist()
+        logger.debug(f"Unique classes found in the dataset: {classes}")
 
-            transform = None
-            if augment:
-                logger.info("Augmenting the training data using SpecAugment")
-                transform = v2.Compose(
-                    [
-                        FrequencyMasking(freq_mask_param=8),
-                        TimeMasking(time_mask_param=25),
-                        TimeMasking(time_mask_param=25),
-                    ]
-                )
+    transform = None
+    if augment is True:
+        logger.debug("Augmenting the data using SpecAugment")
+        transform = v2.Compose(
+            [
+                FrequencyMasking(freq_mask_param=8),
+                TimeMasking(time_mask_param=25),
+                TimeMasking(time_mask_param=25),
+            ]
+        )
 
-            logger.info("Creating the train dataset")
-            urbansed_train = UrbanSEDDataset(
-                audios=[
-                    audioclip
-                    for _, audio in enumerate(
-                        AudioFile(filepath=file.filepath, labels=eval(file.events))
-                        for _, file in pd.read_csv(os.path.join(ROOT, "data/raw/UrbanSED/train.csv")).iterrows()
-                    )
-                    for audioclip in audio.subdivide(win_len=2.56, hop_len=1.00)
-                ],
-                transform=transform,
+    logger.debug("Creating the dataset")
+    dataset = YOHODataset(
+        audios=[
+            audioclip
+            for _, audio in enumerate(
+                AudioFile(filepath=file.filepath, labels=eval(file.events))
+                for _, file in pd.read_csv(filepath).iterrows()
             )
+            for audioclip in audio.subdivide(win_len=window_size, hop_len=hop_size)
+        ],
+        labels=classes,
+        transform=transform,
+    )
 
-            # Save the dataset
-            urbansed_train.save(filepath)
-            return urbansed_train
+    # Save the dataset
+    dataset.save(pickle_file)
 
-        case "validate":
-
-            filepath = os.path.join(ROOT, "data/processed/UrbanSED/validate.pkl")
-
-            if os.path.exists(filepath):
-                logger.info("Loading the validation dataset from the pickle file")
-                return UrbanSEDDataset.load(filepath)
-
-            logger.info("Creating the validation dataset")
-            urbansed_val = UrbanSEDDataset(
-                audios=[
-                    audioclip
-                    for _, audio in enumerate(
-                        AudioFile(filepath=file.filepath, labels=eval(file.events))
-                        for _, file in pd.read_csv(os.path.join(ROOT, "data/raw/UrbanSED/validate.csv")).iterrows()
-                    )
-                    for audioclip in audio.subdivide(win_len=2.56, hop_len=1.00)
-                ]
-            )
-
-            # Save the dataset
-            urbansed_val.save(filepath)
-            return urbansed_val
+    return dataset
 
 
 def parse_arguments():
@@ -260,9 +251,11 @@ def parse_arguments():
     parser.add_argument("--name", type=str, default="YOHO", help="name of the model")
     parser.add_argument("--weights-path", type=file_path, default=MODELS_DIR / "model.pt", help="model weights path")
     parser.add_argument("--losses-path", type=file_path, default=MODELS_DIR / "losses.json", help="model losses path")
-    parser.add_argument("--train-path", type=str, default=None, help="training CSV path")
-    parser.add_argument("--validate-path", type=str, default=None, help="validation CSV path")
+    parser.add_argument("--train-path", type=str, default=DATA_DIR / "train.csv", help="training CSV path")
+    parser.add_argument("--validate-path", type=str, default=DATA_DIR / "validate.csv", help="validation CSV path")
     parser.add_argument("--classes", type=str, action="append", nargs="+", default=[], help="list of classes")
+    parser.add_argument("--window-size", type=float, default=2.56, help="window size, in seconds, for model inputs")
+    parser.add_argument("--hop-size", type=float, default=1.00, help="hop size, in seconds, for model inputs")
     parser.add_argument("--batch-size", type=int, default=32, help="batch size for training the model")
     parser.add_argument("--epochs", type=int, default=50, help="maximum number of epochs to train the model")
     parser.add_argument("--device", type=str, choices=["cpu", "cuda"], default="cuda", help="device to use")
@@ -296,7 +289,14 @@ def main(opt: argparse.Namespace):
     device = opt.device if opt.device is not None else get_device(logger=logger)
     logger.debug(f"Using device: {device}")
 
-    urbansed_train = load_dataset(partition="train", augment=opt.spec_augment, logger=logger)
+    urbansed_train = load_dataset(
+        filepath=opt.train_path,
+        augment=opt.spec_augment,
+        logger=logger,
+        classes=opt.classes,
+        window_size=opt.window_size,
+        hop_size=opt.hop_size,
+    )
     urbansed_val = load_dataset(partition="validate", logger=logger)
 
     logger.info("Creating the train data loader")
