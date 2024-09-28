@@ -58,8 +58,7 @@ def load_checkpoint(
     return model, optimizer, start_epoch, scheduler, loss
 
 
-def append_loss_dict(filename="losses.json", epoch=1, **kargs):
-    filepath = os.path.join(MODELS_DIR, filename)
+def append_loss_dict(filepath="losses.json", epoch=1, **kargs):
 
     if os.path.exists(filepath):
         with open(filepath, "r") as f:
@@ -161,7 +160,7 @@ def train_model(
 
         # Append the losses to the file
         append_loss_dict(
-            filename=losses,
+            filepath=losses,
             epoch=epoch + 1,
             avg_train_loss=avg_train_loss,
             avg_val_loss=avg_val_loss,
