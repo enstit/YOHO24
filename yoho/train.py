@@ -33,20 +33,19 @@ def save_checkpoint(state: dict, filename: str = "checkpoint.pth.tar") -> None:
 
 
 def load_checkpoint(
-    model,
-    optimizer,
-    filename="checkpoint.pth.tar",
-    scheduler=None,
+    model: YOHO,
+    optimizer: torch.optim.Optimizer,
+    weights: str,
+    scheduler: torch.optim.lr_scheduler = None,
     logger: logging.Logger = None,
 ) -> tuple:
-    filepath = os.path.join(MODELS_DIR, filename)
 
-    if not os.path.exists(filepath):
+    if not os.path.exists(weights):
         logger.info("No checkpoint found, starting training from scratch")
         return model, optimizer, 0, None, None
 
-    logger.info(f"Found checkpoint file at {filepath}, loading checkpoint")
-    checkpoint = torch.load(filepath)
+    logger.info(f"Found checkpoint file at {weights}, loading checkpoint")
+    checkpoint = torch.load(weights)
 
     model.load_state_dict(checkpoint["state_dict"])
     optimizer.load_state_dict(checkpoint["optimizer"])
@@ -324,7 +323,7 @@ def main(opt: argparse.Namespace):
 
     # Load the model checkpoint if it exists
     model, optimizer, start_epoch, scheduler, _ = load_checkpoint(
-        model, optimizer, filename=f"{model.name}_checkpoint.pth.tar", scheduler=scheduler, logger=logger
+        model, optimizer, weights=opt.weights, scheduler=scheduler, logger=logger
     )
 
     logger.info("Start training the model")
