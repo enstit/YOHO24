@@ -325,7 +325,7 @@ def main(opt: argparse.Namespace):
 
     # Load the model checkpoint if it exists
     model, optimizer, start_epoch, scheduler, _ = load_checkpoint(
-        model, optimizer, weights=opt.weights_path, scheduler=scheduler, logger=logger
+        model, optimizer, weights_path=opt.weights_path, scheduler=scheduler, logger=logger
     )
 
     logger.info("Start training the model")
