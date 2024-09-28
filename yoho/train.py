@@ -604,8 +604,10 @@ def main(opt: argparse.Namespace):
     # Set the seed for reproducibility
     torch.manual_seed(0)
 
-    urbansed_train = load_dataset(partition="train", augment=opt.spec_augment)
-    urbansed_val = load_dataset(partition="validate")
+    urbansed_train = load_dataset(
+        partition="train", augment=opt.spec_augment, logger=logger
+    )
+    urbansed_val = load_dataset(partition="validate", logger=logger)
 
     logger.info("Creating the train data loader")
 
