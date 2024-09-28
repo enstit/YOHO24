@@ -27,9 +27,9 @@ ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 MODELS_DIR = Path(os.path.join(ROOT, "models"))
 
 
-def save_checkpoint(state: dict, filename: str = "checkpoint.pth.tar") -> None:
+def save_checkpoint(state: dict, file) -> None:
     """Save the model checkpoint to a file."""
-    torch.save(state, os.path.join(MODELS_DIR, filename))
+    torch.save(state, file)
 
 
 def load_checkpoint(
@@ -58,7 +58,7 @@ def load_checkpoint(
     return model, optimizer, start_epoch, scheduler, loss
 
 
-def append_loss_dict(epoch, train_loss, val_loss, error_rate, f1_score, filename="losses.json"):
+def append_loss_dict(filename="losses.json", epoch=1, *args):
     filepath = os.path.join(MODELS_DIR, filename)
 
     if os.path.exists(filepath):
@@ -67,12 +67,7 @@ def append_loss_dict(epoch, train_loss, val_loss, error_rate, f1_score, filename
     else:
         loss_dict = {}
 
-    loss_dict[epoch] = {
-        "train_loss": train_loss,
-        "val_loss": val_loss,
-        "error_rate": error_rate,
-        "f1_score": f1_score,
-    }
+    loss_dict[epoch] = {args[i]: args[i + 1] for i in range(0, len(args), 2)}
 
     with open(filepath, "w") as f:
         json.dump(loss_dict, f)
@@ -88,6 +83,8 @@ def train_model(
     scheduler=None,
     autocast=False,
     logger: logging.Logger = None,
+    losses=None,
+    weights=None,
 ):
 
     criterion = YOHOLoss()
@@ -144,9 +141,6 @@ def train_model(
         # Disable gradient computation
         with torch.no_grad():
             for _, (inputs, labels) in enumerate(val_loader):
-                logger.debug(
-                    f"Computating metrics for observations [{_*val_loader.batch_size}:{(_ + 1)*val_loader.batch_size}] in validation dataset."
-                )
                 inputs, labels = inputs.to(device), labels.to(device)
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
@@ -166,7 +160,12 @@ def train_model(
         )
 
         # Append the losses to the file
-        append_loss_dict(epoch + 1, avg_train_loss, avg_val_loss, filename=model.name + "_losses.json")
+        append_loss_dict(
+            filename=losses,
+            epoch=epoch + 1,
+            avg_train_loss=avg_train_loss,
+            avg_val_loss=avg_val_loss,
+        )
 
         # Save the model checkpoint after each epoch
         save_checkpoint(
@@ -177,7 +176,7 @@ def train_model(
                 "scheduler_state_dict": (scheduler.state_dict() if scheduler is not None else None),
                 "loss": avg_train_loss,
             },
-            model.name + "_checkpoint.pth.tar",
+            weights,
         )
 
 
@@ -258,7 +257,8 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--name", type=str, default="UrbanSEDYOHO", help="name of the model")
-    parser.add_argument("--weights", type=str, default=MODELS_DIR / "yoho.pt", help="model weights path")
+    parser.add_argument("--weights", type=str, default=MODELS_DIR / "model.pt", help="model weights path")
+    parser.add_argument("--losses", type=str, default=MODELS_DIR / "losses.json", help="model losses path")
     parser.add_argument("--train-path", type=str, default=None, help="training CSV path")
     parser.add_argument("--validate-path", type=str, default=None, help="validation CSV path")
     parser.add_argument("--classes", type=str, action="append", nargs="+", default=[], help="list of classes")
@@ -293,6 +293,7 @@ def main(opt: argparse.Namespace):
     logger.debug(f"Random seed set to {torch.initial_seed()}")
 
     device = opt.device if opt.device is not None else get_device(logger=logger)
+    logger.debug(f"Using device: {device}")
 
     urbansed_train = load_dataset(partition="train", augment=opt.spec_augment, logger=logger)
     urbansed_val = load_dataset(partition="validate", logger=logger)
@@ -339,6 +340,8 @@ def main(opt: argparse.Namespace):
         scheduler=scheduler,
         autocast=opt.autocast,
         logger=logger,
+        losses=opt.losses,
+        weights=opt.weights,
     )
 
 
