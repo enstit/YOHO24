@@ -27,25 +27,20 @@ ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 MODELS_DIR = Path(os.path.join(ROOT, "models"))
 
 
-def save_checkpoint(state: dict, file) -> None:
-    """Save the model checkpoint to a file."""
-    torch.save(state, file)
-
-
 def load_checkpoint(
     model: YOHO,
     optimizer: torch.optim.Optimizer,
-    weights: str,
+    weights_path: Path,
     scheduler: torch.optim.lr_scheduler = None,
     logger: logging.Logger = None,
 ) -> tuple:
 
-    if not os.path.exists(weights):
+    if not os.path.exists(weights_path):
         logger.info("No checkpoint found, starting training from scratch")
         return model, optimizer, 0, None, None
 
-    logger.info(f"Found checkpoint file at {weights}, loading checkpoint")
-    checkpoint = torch.load(weights)
+    logger.info(f"Found checkpoint file at {weights_path}, loading checkpoint")
+    checkpoint = torch.load(weights_path)
 
     model.load_state_dict(checkpoint["state_dict"])
     optimizer.load_state_dict(checkpoint["optimizer"])
@@ -58,32 +53,32 @@ def load_checkpoint(
     return model, optimizer, start_epoch, scheduler, loss
 
 
-def append_loss_dict(filepath="losses.json", epoch=1, **kargs):
+def append_to_filesystem_dict(filepath, key, **kargs):
 
     if os.path.exists(filepath):
         with open(filepath, "r") as f:
-            loss_dict = json.load(f)
+            dict = json.load(f)
     else:
-        loss_dict = {}
+        dict = {}
 
-    loss_dict[epoch] = {k: v for k, v in kargs.items()}
+    dict[key] = {k: v for k, v in kargs.items()}
 
     with open(filepath, "w") as f:
-        json.dump(loss_dict, f)
+        json.dump(dict, f)
 
 
 def train_model(
-    model,
+    model: YOHO,
     device,
     train_loader,
     val_loader,
-    num_epochs,
-    start_epoch=0,
+    num_epochs: int,
+    start_epoch: int = 0,
     scheduler=None,
     autocast=False,
     logger: logging.Logger = None,
-    losses=None,
-    weights=None,
+    losses_path: Path = None,
+    weights_path: Path = None,
 ):
 
     criterion = YOHOLoss()
@@ -159,15 +154,12 @@ def train_model(
         )
 
         # Append the losses to the file
-        append_loss_dict(
-            filepath=losses,
-            epoch=epoch + 1,
-            avg_train_loss=avg_train_loss,
-            avg_val_loss=avg_val_loss,
+        append_to_filesystem_dict(
+            filepath=losses_path, key=epoch + 1, avg_train_loss=avg_train_loss, avg_val_loss=avg_val_loss
         )
 
         # Save the model checkpoint after each epoch
-        save_checkpoint(
+        torch.save(
             {
                 "epoch": epoch + 1,
                 "state_dict": model.state_dict(),
@@ -175,7 +167,7 @@ def train_model(
                 "scheduler_state_dict": (scheduler.state_dict() if scheduler is not None else None),
                 "loss": avg_train_loss,
             },
-            weights,
+            weights_path,
         )
 
 
@@ -253,11 +245,21 @@ def load_dataset(partition: str, augment: bool = False, logger: logging.Logger =
 
 def parse_arguments():
 
-    parser = argparse.ArgumentParser()
+    def file_path(path):
+        if os.path.isfile(path):
+            return Path(path)
+        else:
+            try:
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                return Path(path)
+            except OSError:
+                raise argparse.ArgumentTypeError(f"Invalid path: {path}")
 
-    parser.add_argument("--name", type=str, default="UrbanSEDYOHO", help="name of the model")
-    parser.add_argument("--weights", type=str, default=MODELS_DIR / "model.pt", help="model weights path")
-    parser.add_argument("--losses", type=str, default=MODELS_DIR / "losses.json", help="model losses path")
+    parser = argparse.ArgumentParser(description="Train YOHO model with provided arguments")
+
+    parser.add_argument("--name", type=str, default="YOHO", help="name of the model")
+    parser.add_argument("--weights-path", type=file_path, default=MODELS_DIR / "model.pt", help="model weights path")
+    parser.add_argument("--losses-path", type=file_path, default=MODELS_DIR / "losses.json", help="model losses path")
     parser.add_argument("--train-path", type=str, default=None, help="training CSV path")
     parser.add_argument("--validate-path", type=str, default=None, help="validation CSV path")
     parser.add_argument("--classes", type=str, action="append", nargs="+", default=[], help="list of classes")
@@ -323,7 +325,7 @@ def main(opt: argparse.Namespace):
 
     # Load the model checkpoint if it exists
     model, optimizer, start_epoch, scheduler, _ = load_checkpoint(
-        model, optimizer, weights=opt.weights, scheduler=scheduler, logger=logger
+        model, optimizer, weights=opt.weights_path, scheduler=scheduler, logger=logger
     )
 
     logger.info("Start training the model")
@@ -339,8 +341,8 @@ def main(opt: argparse.Namespace):
         scheduler=scheduler,
         autocast=opt.autocast,
         logger=logger,
-        losses=opt.losses,
-        weights=opt.weights,
+        losses_path=opt.losses_path,
+        weights_path=opt.weights_path,
     )
 
 
