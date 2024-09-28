@@ -243,7 +243,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--name", type=str, default="UrbanSEDYOHO", help="name of the model")
-    parser.add_argument("--weights", type=str, default=MODELS_DIR / "models/yoho.pt", help="model weights path")
+    parser.add_argument("--weights", type=str, default=MODELS_DIR / "yoho.pt", help="model weights path")
     parser.add_argument("--train-path", type=str, default=None, help="training CSV path")
     parser.add_argument("--validate-path", type=str, default=None, help="validation CSV path")
     parser.add_argument("--classes", type=str, action="append", nargs="+", default=[], help="list of classes")
@@ -253,7 +253,7 @@ def parse_arguments():
     parser.add_argument("--cosine-annealing", action="store_true", help="use Cosine Annealing learning rate scheduler")
     parser.add_argument("--autocast", action="store_true", help="use autocast to reduce memory usage")
     parser.add_argument("--spec-augment", action="store_true", help="augment the training data using SpecAugment")
-    parser.add_argument("--seed", type=int, default=0, help="random seed for reproducibility")
+    parser.add_argument("--random-seed", type=int, default=None, help="random seed for reproducibility")
     parser.add_argument("--verbose", action="store_true", help="log additional information during training")
 
     return parser.parse_args()
@@ -274,7 +274,8 @@ def main(opt: argparse.Namespace):
         logger.debug(f"\t{arg}: {value}")
 
     # Set the seed for reproducibility
-    torch.manual_seed(opt.seed)
+    torch.manual_seed(opt.random_seed) if opt.random_seed is not None else None
+    logger.debug(f"Random seed set to {torch.initial_seed()}")
 
     device = opt.device if opt.device is not None else get_device(logger=logger)
 
