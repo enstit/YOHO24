@@ -15,7 +15,6 @@ from yoho import YOHOLoss, YOHO
 from yoho.utils import (
     AudioFile,
     YOHODataset,
-    UrbanSEDDataset,
     YOHODataGenerator,
 )
 
@@ -226,6 +225,8 @@ def load_dataset(
         ],
         labels=classes,
         transform=transform,
+        hop_len=0.01,
+        win_len=0.04,
     )
 
     # Save the dataset
@@ -253,7 +254,7 @@ def parse_arguments():
     parser.add_argument("--losses-path", type=file_path, default=MODELS_DIR / "losses.json", help="model losses path")
     parser.add_argument("--train-path", type=str, default=DATA_DIR / "train.csv", help="training CSV path")
     parser.add_argument("--validate-path", type=str, default=DATA_DIR / "validate.csv", help="validation CSV path")
-    parser.add_argument("--classes", type=str, action="append", default=[], help="list of classes")
+    parser.add_argument("--classes", type=str, nargs="+", default=[], help="list of classes")
     parser.add_argument("--window-size", type=float, default=2.56, help="window size, in seconds, for model inputs")
     parser.add_argument("--hop-size", type=float, default=1.00, help="hop size, in seconds, for model inputs")
     parser.add_argument("--batch-size", type=int, default=32, help="batch size for training the model")
