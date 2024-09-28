@@ -36,7 +36,7 @@ def load_checkpoint(
 ) -> tuple:
 
     if not os.path.exists(weights_path):
-        logger.info("No checkpoint found, starting training from scratch")
+        logger.info("No checkpoint found at {weights_path}, start training from scratch")
         return model, optimizer, 0, None, None
 
     logger.info(f"Found checkpoint file at {weights_path}, loading checkpoint")
@@ -171,17 +171,8 @@ def train_model(
         )
 
 
-def get_device(logger: logging.Logger = None) -> str:
-    return (
-        "cuda"
-        if torch.cuda.is_available()
-        # else "mps" if torch.backends.mps.is_available()
-        else "cpu"
-    )
-
-
 def load_dataset(
-    filepath: str,
+    filepath: Path,
     augment: bool = False,
     logger: logging.Logger = None,
     classes: list = [],
@@ -195,6 +186,8 @@ def load_dataset(
         logger.info(f"Loading the dataset from the pickle file: {pickle_file}")
         return YOHODataset.load(pickle_file)
 
+    logging.debug(f"Loading dataset from CSV file: {filepath}")
+
     if not classes:
         # Get the classes from the CSV file
         logger.debug("Unique classes for the dataset not provided, getting them from the CSV file")
@@ -202,6 +195,7 @@ def load_dataset(
         classes = pd.read_csv(filepath).events.apply(eval).explode().apply(lambda x: x[0]).unique().tolist()
         logger.debug(f"Unique classes found in the dataset: {classes}")
 
+    # Set the data augmentation transformations, if required
     transform = None
     if augment is True:
         logger.debug("Augmenting the data using SpecAugment")
@@ -212,8 +206,9 @@ def load_dataset(
                 TimeMasking(time_mask_param=25),
             ]
         )
+    else:
+        logger.debug("No augmentation applied to the data")
 
-    logger.debug("Creating the dataset")
     dataset = YOHODataset(
         audios=[
             audioclip
@@ -256,8 +251,11 @@ def parse_arguments():
     parser.add_argument("--train-path", type=str, default=DATA_DIR / "train.csv", help="training CSV path")
     parser.add_argument("--validate-path", type=str, default=DATA_DIR / "validate.csv", help="validation CSV path")
     parser.add_argument("--classes", type=str, nargs="+", default=[], help="list of classes")
-    parser.add_argument("--window-size", type=float, default=2.56, help="window size, in seconds, for model inputs")
-    parser.add_argument("--hop-size", type=float, default=1.00, help="hop size, in seconds, for model inputs")
+    parser.add_argument("--audio-win", type=float, default=2.56, help="audio duration, in seconds, for dataset data")
+    parser.add_argument("--audio-hop", type=float, default=1.00, help="audio hop size, in seconds, for dataset data")
+    parser.add_argument("--mel-bands", type=int, default=40, help="number of mel bands for input spectrogram")
+    parser.add_argument("--mel-win", type=float, default=0.04, help="window size, in seconds, for input spectrogram")
+    parser.add_argument("--mel-hop", type=float, default=0.01, help="hop size, in seconds, for input spectrogram")
     parser.add_argument("--batch-size", type=int, default=32, help="batch size for training the model")
     parser.add_argument("--epochs", type=int, default=50, help="maximum number of epochs to train the model")
     parser.add_argument("--device", type=str, choices=["cpu", "cuda"], default="cuda", help="device to use")
@@ -286,43 +284,38 @@ def main(opt: argparse.Namespace):
 
     # Set the seed for reproducibility
     torch.manual_seed(opt.random_seed) if opt.random_seed is not None else None
-    logger.debug(f"Random seed set to {torch.initial_seed()}")
 
-    device = opt.device if opt.device is not None else get_device(logger=logger)
-    logger.debug(f"Using device: {device}")
+    # Set the device to train the model
+    if opt.device is not None:
+        device = opt.device
+    else:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        logger.debug(f"Device not provided, using the available device: {device}")
 
     train_dataset = load_dataset(
         filepath=opt.train_path,
         augment=opt.spec_augment,
         logger=logger,
         classes=opt.classes,
-        window_size=opt.window_size,
-        hop_size=opt.hop_size,
+        window_size=opt.audio_win,
+        hop_size=opt.audio_hop,
     )
     val_dataset = load_dataset(
         filepath=opt.validate_path,
         logger=logger,
         classes=opt.classes,
-        window_size=opt.window_size,
-        hop_size=opt.hop_size,
+        window_size=opt.audio_win,
+        hop_size=opt.audio_hop,
     )
-
-    logger.info("Creating the train data loader")
-
-    # Get number of workers from slurm (default: 4)
-    num_workers = int(os.getenv("SLURM_CPUS_PER_TASK", 4))
 
     train_dataloader = YOHODataGenerator(
-        train_dataset, batch_size=opt.batch_size, shuffle=True, pin_memory=True, num_workers=num_workers
+        train_dataset, batch_size=opt.batch_size, shuffle=True, pin_memory=True, num_workers=4
     )
 
-    logger.info("Creating the validation data loader")
-    val_dataloader = YOHODataGenerator(
-        val_dataset, batch_size=opt.batch_size, shuffle=False, pin_memory=True, num_workers=num_workers
-    )
+    val_dataloader = YOHODataGenerator(val_dataset, batch_size=opt.batch_size, pin_memory=True, num_workers=4)
 
     # Create the model
-    model = YOHO(name=opt.name, input_shape=(1, 40, 257), n_classes=len(train_dataset.labels)).to(device)
+    model = YOHO(name=opt.name, input_shape=(1, opt.mel_bands, 257), n_classes=len(train_dataset.labels)).to(device)
 
     # Get optimizer
     optimizer = model.get_optimizer()
@@ -335,8 +328,6 @@ def main(opt: argparse.Namespace):
     model, optimizer, start_epoch, scheduler, _ = load_checkpoint(
         model, optimizer, weights_path=opt.weights_path, scheduler=scheduler, logger=logger
     )
-
-    logger.info("Start training the model")
 
     # Train the model
     train_model(

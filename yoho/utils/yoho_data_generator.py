@@ -121,7 +121,7 @@ class YOHODataGenerator(DataLoader):
         self,
         dataset: YOHODataset,
         batch_size: int = 32,
-        shuffle: bool = True,
+        shuffle: bool = False,
         pin_memory: bool = False,
         num_workers: int = 0,
     ):
