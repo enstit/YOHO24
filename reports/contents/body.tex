@@ -53,8 +53,7 @@
 
 	\begin{frame}{Output shape}
 
-		The output shape of the YOHO model is a tensor of shape
-		$(\text{batch size}, \text{time steps}, \text{audio classes})$.
+		The output shape of the YOHO model is a matrix shaped $\text{time steps} \times (3\times\text{\#classes})$.
 
 		\begin{figure}
 				\centering
@@ -131,7 +130,7 @@
 
 	\begin{frame}{Our 2 cents}
 
-		We introuced a couple of imporvements to the model, in order to make the training more efficient:
+		We introduced a couple of improvements to the model, in order to make the training more efficient:
 
 		\begin{itemize}
 		\item {use of \textbf{cosine annealing}\footcite{DBLP:journals/corr/LoshchilovH16a} to dinamically adjust the
@@ -182,13 +181,15 @@ options:
 	
 	\begin{frame}{Implementation challenges}
 
+	During the implementation we faced several issues:
+	
 	\begin{itemize}
-		\item {A major limitation is that the original paper lacks detailed metrics or loss curves, preventing direct
+		\item {a major limitation was that the original paper lacks of detailed metrics or loss curves, preventing direct
 			comparison and raising concerns about the \textbf{reproducibility} and \textbf{transparency} of their
-			research.}
-		\item {The code was poorly documented and didn’t allow us to replicate their methods, hindering a clear
-			understanding of their approach.}
-		\item {One of the dataset used by the authors (used to test the algorithm on music--speech detection problem) was not publicly available due to copyrights (was manually recorder and labelled by the authors).}
+			research;}
+		\item {the code was \textbf{poorly documented} and didn’t allow us to replicate their methods, hindering a clear
+			understanding of their approach;}
+		\item {one of the dataset used by the authors (used to test the algorithm on music--speech detection problem) was \textbf{not publicly available} due to copyrights (was manually recorder and labelled by the authors).}
 	\end{itemize}
 
 	\end{frame}
