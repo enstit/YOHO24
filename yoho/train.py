@@ -253,7 +253,7 @@ def parse_arguments():
     parser.add_argument("--losses-path", type=file_path, default=MODELS_DIR / "losses.json", help="model losses path")
     parser.add_argument("--train-path", type=str, default=DATA_DIR / "train.csv", help="training CSV path")
     parser.add_argument("--validate-path", type=str, default=DATA_DIR / "validate.csv", help="validation CSV path")
-    parser.add_argument("--classes", type=str, action="append", nargs="+", default=[], help="list of classes")
+    parser.add_argument("--classes", type=str, action="append", default=[], help="list of classes")
     parser.add_argument("--window-size", type=float, default=2.56, help="window size, in seconds, for model inputs")
     parser.add_argument("--hop-size", type=float, default=1.00, help="hop size, in seconds, for model inputs")
     parser.add_argument("--batch-size", type=int, default=32, help="batch size for training the model")
@@ -289,7 +289,7 @@ def main(opt: argparse.Namespace):
     device = opt.device if opt.device is not None else get_device(logger=logger)
     logger.debug(f"Using device: {device}")
 
-    urbansed_train = load_dataset(
+    train_dataset = load_dataset(
         filepath=opt.train_path,
         augment=opt.spec_augment,
         logger=logger,
@@ -297,7 +297,13 @@ def main(opt: argparse.Namespace):
         window_size=opt.window_size,
         hop_size=opt.hop_size,
     )
-    urbansed_val = load_dataset(partition="validate", logger=logger)
+    val_dataset = load_dataset(
+        filepath=opt.validate_path,
+        logger=logger,
+        classes=opt.classes,
+        window_size=opt.window_size,
+        hop_size=opt.hop_size,
+    )
 
     logger.info("Creating the train data loader")
 
@@ -305,16 +311,16 @@ def main(opt: argparse.Namespace):
     num_workers = int(os.getenv("SLURM_CPUS_PER_TASK", 4))
 
     train_dataloader = YOHODataGenerator(
-        urbansed_train, batch_size=opt.batch_size, shuffle=True, pin_memory=True, num_workers=num_workers
+        train_dataset, batch_size=opt.batch_size, shuffle=True, pin_memory=True, num_workers=num_workers
     )
 
     logger.info("Creating the validation data loader")
     val_dataloader = YOHODataGenerator(
-        urbansed_val, batch_size=opt.batch_size, shuffle=False, pin_memory=True, num_workers=num_workers
+        val_dataset, batch_size=opt.batch_size, shuffle=False, pin_memory=True, num_workers=num_workers
     )
 
     # Create the model
-    model = YOHO(name=opt.name, input_shape=(1, 40, 257), n_classes=len(urbansed_train.labels)).to(device)
+    model = YOHO(name=opt.name, input_shape=(1, 40, 257), n_classes=len(train_dataset.labels)).to(device)
 
     # Get optimizer
     optimizer = model.get_optimizer()
