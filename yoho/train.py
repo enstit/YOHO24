@@ -11,7 +11,7 @@ from torchvision.transforms import v2
 from torchaudio.transforms import TimeMasking, FrequencyMasking
 
 FILE = Path(__file__).resolve()
-ROOT = FILE.parents[0]  # YOHO root directory
+ROOT = FILE.parents[1]  # project root directory
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
@@ -66,9 +66,7 @@ def load_checkpoint(
     return model, optimizer, start_epoch, scheduler, loss
 
 
-def append_loss_dict(
-    epoch, train_loss, val_loss, error_rate, f1_score, filename="losses.json"
-):
+def append_loss_dict(epoch, train_loss, val_loss, error_rate, f1_score, filename="losses.json"):
     filepath = os.path.join(MODELS_DIR, filename)
 
     if os.path.exists(filepath):
@@ -88,9 +86,7 @@ def append_loss_dict(
         json.dump(loss_dict, f)
 
 
-def process_output(
-    output: np.array, classes: list[str]
-) -> list[tuple[str, float, float]]:
+def process_output(output: np.array, classes: list[str]) -> list[tuple[str, float, float]]:
 
     STEPS_NO = 9
     step_duration = 2.56 / STEPS_NO
@@ -107,14 +103,8 @@ def process_output(
             for j in range(0, output.shape[1], 3):
                 if output[k, j, i] >= 0.5:
                     label = classes[j // 3]
-                    start = (
-                        i * step_duration
-                        + output[k, j + 1, i].item() * step_duration
-                    )
-                    end = (
-                        i * step_duration
-                        + output[k, j + 2, i].item() * step_duration
-                    )
+                    start = i * step_duration + output[k, j + 1, i].item() * step_duration
+                    end = i * step_duration + output[k, j + 2, i].item() * step_duration
                     labels.append((label, round(start, 2), round(end, 2)))
 
         # Order the labels by class
@@ -127,26 +117,19 @@ def process_output(
                 merged_labels.append((label, start, end))
             else:
                 prev_label, prev_start, prev_end = merged_labels[-1]
-                if (
-                    prev_label == label
-                    and start - prev_end < MIN_SILENCE_DURATION
-                ):
+                if prev_label == label and start - prev_end < MIN_SILENCE_DURATION:
                     merged_labels[-1] = (label, prev_start, end)
                 else:
                     merged_labels.append((label, start, end))
 
         # Remove events that are too short
         merged_labels = [
-            (label, start, end)
-            for label, start, end in merged_labels
-            if end - start >= MIN_EVENT_DURATION
+            (label, start, end) for label, start, end in merged_labels if end - start >= MIN_EVENT_DURATION
         ]
 
         # Order the labels by start time
         # If two events start at the same time, order by class index
-        merged_labels = sorted(
-            merged_labels, key=lambda x: (x[1], classes.index(x[0]))
-        )
+        merged_labels = sorted(merged_labels, key=lambda x: (x[1], classes.index(x[0])))
 
         processed_output.append(merged_labels)
 
@@ -175,9 +158,7 @@ def compute_metrics(predictions, targets, classes, filepaths):
         time_resolution=1.0,
     )
 
-    for pred, target, filepath in zip(
-        processed_predictions, processed_targets, filepaths
-    ):
+    for pred, target, filepath in zip(processed_predictions, processed_targets, filepaths):
 
         if not pred and not target:
             temp_f1 += 1
@@ -200,34 +181,15 @@ def compute_metrics(predictions, targets, classes, filepaths):
 
             # Create the event list
             pred_event_list = dcase_util.containers.MetaDataContainer(
-                [
-                    {
-                        "file": filepath,
-                        "event_label": event[0],
-                        "onset": event[1],
-                        "offset": event[2],
-                    }
-                    for event in pred
-                ]
+                [{"file": filepath, "event_label": event[0], "onset": event[1], "offset": event[2]} for event in pred]
             )
 
             # Create the target event list
             target_event_list = dcase_util.containers.MetaDataContainer(
-                [
-                    {
-                        "file": filepath,
-                        "event_label": event[0],
-                        "onset": event[1],
-                        "offset": event[2],
-                    }
-                    for event in target
-                ]
+                [{"file": filepath, "event_label": event[0], "onset": event[1], "offset": event[2]} for event in target]
             )
 
-            segment_based_metrics.evaluate(
-                reference_event_list=target_event_list,
-                estimated_event_list=pred_event_list,
-            )
+            segment_based_metrics.evaluate(reference_event_list=target_event_list, estimated_event_list=pred_event_list)
 
     overall_metrics = segment_based_metrics.results_overall_metrics()
 
@@ -329,36 +291,25 @@ def train_model(
 
                 filepaths = [
                     audio.filepath
-                    for audio in val_loader.dataset.audios[
-                        _
-                        * val_loader.batch_size : (_ + 1)
-                        * val_loader.batch_size
-                    ]
+                    for audio in val_loader.dataset.audios[_ * val_loader.batch_size : (_ + 1) * val_loader.batch_size]
                 ]
 
                 # Compute the error rate and f1 score
                 running_error_rate, running_f1_score = compute_metrics(
-                    predictions=outputs,
-                    targets=labels,
-                    classes=train_loader.dataset.labels,
-                    filepaths=filepaths,
+                    predictions=outputs, targets=labels, classes=train_loader.dataset.labels, filepaths=filepaths
                 )
 
                 running_val_loss += loss.detach()
                 error_rate += running_error_rate
                 f1_score += running_f1_score
 
-                logger.debug(
-                    f"Batch metrics - Error rate: {running_error_rate:.2f}, F1-score: {running_f1_score:.2f}"
-                )
+                logger.debug(f"Batch metrics - Error rate: {running_error_rate:.2f}, F1-score: {running_f1_score:.2f}")
 
             if val_loader:
                 error_rate /= len(val_loader)
                 f1_score /= len(val_loader)
 
-            logger.debug(
-                f"Overall metrics - Error rate: {error_rate:.2f}, F1-score: {f1_score:.2f}"
-            )
+            logger.debug(f"Overall metrics - Error rate: {error_rate:.2f}, F1-score: {f1_score:.2f}")
 
             avg_val_loss = running_val_loss / len(val_loader)
 
@@ -367,9 +318,7 @@ def train_model(
             scheduler.step()
 
         avg_train_loss = avg_train_loss.item()
-        avg_val_loss = (
-            avg_val_loss.item() if avg_val_loss is not None else None
-        )
+        avg_val_loss = avg_val_loss.item() if avg_val_loss is not None else None
 
         logger.info(
             f"Epoch [{epoch + 1}/{num_epochs}], "
@@ -380,12 +329,7 @@ def train_model(
 
         # Append the losses to the file
         append_loss_dict(
-            epoch + 1,
-            avg_train_loss,
-            avg_val_loss,
-            error_rate,
-            f1_score,
-            filename=model.name + "_losses.json",
+            epoch + 1, avg_train_loss, avg_val_loss, error_rate, f1_score, filename=model.name + "_losses.json"
         )
 
         # Save the model checkpoint after each epoch
@@ -394,9 +338,7 @@ def train_model(
                 "epoch": epoch + 1,
                 "state_dict": model.state_dict(),
                 "optimizer": optimizer.state_dict(),
-                "scheduler_state_dict": (
-                    scheduler.state_dict() if scheduler is not None else None
-                ),
+                "scheduler_state_dict": (scheduler.state_dict() if scheduler is not None else None),
                 "loss": avg_train_loss,
             },
             model.name + "_checkpoint.pth.tar",
@@ -412,9 +354,7 @@ def get_device(logger: logging.Logger = None) -> str:
     )
 
 
-def load_dataset(
-    partition: str, augment: bool = False, logger: logging.Logger = None
-) -> YOHODataset:
+def load_dataset(partition: str, augment: bool = False, logger: logging.Logger = None) -> YOHODataset:
 
     match partition:
         case "train":
@@ -440,19 +380,10 @@ def load_dataset(
                 audios=[
                     audioclip
                     for _, audio in enumerate(
-                        AudioFile(
-                            filepath=file.filepath, labels=eval(file.events)
-                        )
-                        for _, file in pd.read_csv(
-                            os.path.join(
-                                ROOT,
-                                "data/raw/UrbanSED/train.csv",
-                            )
-                        ).iterrows()
+                        AudioFile(filepath=file.filepath, labels=eval(file.events))
+                        for _, file in pd.read_csv(os.path.join(ROOT, "data/raw/UrbanSED/train.csv")).iterrows()
                     )
-                    for audioclip in audio.subdivide(
-                        win_len=2.56, hop_len=1.00
-                    )
+                    for audioclip in audio.subdivide(win_len=2.56, hop_len=1.00)
                 ],
                 transform=transform,
             )
@@ -463,14 +394,10 @@ def load_dataset(
 
         case "validate":
 
-            filepath = os.path.join(
-                ROOT, "data/processed/UrbanSED/validate.pkl"
-            )
+            filepath = os.path.join(ROOT, "data/processed/UrbanSED/validate.pkl")
 
             if os.path.exists(filepath):
-                logger.info(
-                    "Loading the validation dataset from the pickle file"
-                )
+                logger.info("Loading the validation dataset from the pickle file")
                 return UrbanSEDDataset.load(filepath)
 
             logger.info("Creating the validation dataset")
@@ -478,19 +405,10 @@ def load_dataset(
                 audios=[
                     audioclip
                     for _, audio in enumerate(
-                        AudioFile(
-                            filepath=file.filepath, labels=eval(file.events)
-                        )
-                        for _, file in pd.read_csv(
-                            os.path.join(
-                                ROOT,
-                                "data/raw/UrbanSED/validate.csv",
-                            )
-                        ).iterrows()
+                        AudioFile(filepath=file.filepath, labels=eval(file.events))
+                        for _, file in pd.read_csv(os.path.join(ROOT, "data/raw/UrbanSED/validate.csv")).iterrows()
                     )
-                    for audioclip in audio.subdivide(
-                        win_len=2.56, hop_len=1.00
-                    )
+                    for audioclip in audio.subdivide(win_len=2.56, hop_len=1.00)
                 ]
             )
 
@@ -503,88 +421,18 @@ def parse_arguments():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument(
-        "--name",
-        type=str,
-        default="UrbanSEDYOHO",
-        help="name of the model",
-    )
-
-    parser.add_argument(
-        "--weights",
-        type=str,
-        default=MODELS_DIR / "models/yoho.pt",
-        help="model weights path",
-    )
-
-    parser.add_argument(
-        "--train-path",
-        type=str,
-        default=None,
-        help="training CSV path",
-    )
-
-    parser.add_argument(
-        "--validate-path",
-        type=str,
-        default=None,
-        help="validation CSV path",
-    )
-
-    parser.add_argument(
-        "--classes",
-        type=str,
-        action="append",
-        nargs="+",
-        default=[],
-        help="list of classes",
-    )
-
-    parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=32,
-        help="batch size for training the model",
-    )
-
-    parser.add_argument(
-        "--epochs",
-        type=int,
-        default=50,
-        help="maximum number of epochs to train the model",
-    )
-
-    parser.add_argument(
-        "--device",
-        type=str,
-        choices=["cpu", "cuda"],
-        default="cuda",
-        help="device to use for training the model",
-    )
-
-    parser.add_argument(
-        "--cosine-annealing",
-        action="store_true",  # default=False
-        help="use Cosine Annealing learning rate scheduler",
-    )
-
-    parser.add_argument(
-        "--autocast",
-        action="store_true",  # default=False
-        help="use autocast to reduce memory usage",
-    )
-
-    parser.add_argument(
-        "--spec-augment",
-        action="store_true",  # default=False
-        help="augment the training data using SpecAugment library",
-    )
-
-    parser.add_argument(
-        "--verbose",
-        action="store_true",  # default=False
-        help="log additional information during training",
-    )
+    parser.add_argument("--name", type=str, default="UrbanSEDYOHO", help="name of the model")
+    parser.add_argument("--weights", type=str, default=MODELS_DIR / "models/yoho.pt", help="model weights path")
+    parser.add_argument("--train-path", type=str, default=None, help="training CSV path")
+    parser.add_argument("--validate-path", type=str, default=None, help="validation CSV path")
+    parser.add_argument("--classes", type=str, action="append", nargs="+", default=[], help="list of classes")
+    parser.add_argument("--batch-size", type=int, default=32, help="batch size for training the model")
+    parser.add_argument("--epochs", type=int, default=50, help="maximum number of epochs to train the model")
+    parser.add_argument("--device", type=str, choices=["cpu", "cuda"], default="cuda", help="device to use")
+    parser.add_argument("--cosine-annealing", action="store_true", help="use Cosine Annealing learning rate scheduler")
+    parser.add_argument("--autocast", action="store_true", help="use autocast to reduce memory usage")
+    parser.add_argument("--spec-augment", action="store_true", help="augment the training data using SpecAugment")
+    parser.add_argument("--verbose", action="store_true", help="log additional information during training")
 
     return parser.parse_args()
 
@@ -593,20 +441,19 @@ def main(opt: argparse.Namespace):
 
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG if opt.verbose else logging.INFO)
+    logger.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+
+    logger.info(f"Logging level set to {logger.getEffectiveLevel()}")
 
     logger.debug(f"Training the model for {opt.epochs} epochs")
 
-    device = (
-        opt.device if opt.device is not None else get_device(logger=logger)
-    )
+    device = opt.device if opt.device is not None else get_device(logger=logger)
     logger.debug(f"Start training using device: {device}")
 
     # Set the seed for reproducibility
     torch.manual_seed(0)
 
-    urbansed_train = load_dataset(
-        partition="train", augment=opt.spec_augment, logger=logger
-    )
+    urbansed_train = load_dataset(partition="train", augment=opt.spec_augment, logger=logger)
     urbansed_val = load_dataset(partition="validate", logger=logger)
 
     logger.info("Creating the train data loader")
@@ -615,45 +462,27 @@ def main(opt: argparse.Namespace):
     num_workers = int(os.getenv("SLURM_CPUS_PER_TASK", 4))
 
     train_dataloader = YOHODataGenerator(
-        urbansed_train,
-        batch_size=opt.batch_size,
-        shuffle=True,
-        pin_memory=True,
-        num_workers=num_workers,
+        urbansed_train, batch_size=opt.batch_size, shuffle=True, pin_memory=True, num_workers=num_workers
     )
 
     logger.info("Creating the validation data loader")
     val_dataloader = YOHODataGenerator(
-        urbansed_val,
-        batch_size=opt.batch_size,
-        shuffle=False,
-        pin_memory=True,
-        num_workers=num_workers,
+        urbansed_val, batch_size=opt.batch_size, shuffle=False, pin_memory=True, num_workers=num_workers
     )
 
     # Create the model
-    model = YOHO(
-        name=opt.name,
-        input_shape=(1, 40, 257),
-        n_classes=len(urbansed_train.labels),
-    ).to(device)
+    model = YOHO(name=opt.name, input_shape=(1, 40, 257), n_classes=len(urbansed_train.labels)).to(device)
 
     # Get optimizer
     optimizer = model.get_optimizer()
 
     scheduler = None
     if opt.cosine_annealing:  # Use cosine annealing learning rate scheduler
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, T_max=opt.epochs
-        )
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=opt.epochs)
 
     # Load the model checkpoint if it exists
     model, optimizer, start_epoch, scheduler, _ = load_checkpoint(
-        model,
-        optimizer,
-        filename=f"{model.name}_checkpoint.pth.tar",
-        scheduler=scheduler,
-        logger=logger,
+        model, optimizer, filename=f"{model.name}_checkpoint.pth.tar", scheduler=scheduler, logger=logger
     )
 
     logger.info("Start training the model")
