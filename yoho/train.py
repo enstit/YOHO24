@@ -441,7 +441,8 @@ def main(opt: argparse.Namespace):
 
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG if opt.verbose else logging.INFO)
-    logger.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+    logger.addHandler(logging.StreamHandler())
+    logger.handlers[0].setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
 
     logger.info(f"Logging level set to {logger.getEffectiveLevel()}")
 
