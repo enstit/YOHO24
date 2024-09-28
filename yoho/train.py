@@ -225,6 +225,7 @@ def load_dataset(
         ],
         labels=classes,
         transform=transform,
+        n_mels=40,
         hop_len=0.01,
         win_len=0.04,
     )

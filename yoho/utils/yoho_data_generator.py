@@ -38,9 +38,9 @@ class YOHODataset(Dataset):
         self.transform = transform
         # Function to apply to the labels before returning them
         self.target_transform = target_transform
+        self.n_mels = n_mels  # Number of Mel bins
         self.hop_len = hop_len  # Hop length in seconds
         self.win_len = win_len  # Window length in seconds
-        self.n_mels = n_mels  # Number of Mel bins
 
     def __len__(self):
         return len(self.audios)
