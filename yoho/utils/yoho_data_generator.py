@@ -38,6 +38,7 @@ class YOHODataset(Dataset):
         self.transform = transform
         # Function to apply to the labels before returning them
         self.target_transform = target_transform
+        self.target_timesteps = 9  # Number of timesteps in the output
         self.n_mels = n_mels  # Number of Mel bins
         self.hop_len = hop_len  # Hop length in seconds
         self.win_len = win_len  # Window length in seconds
@@ -68,11 +69,9 @@ class YOHODataset(Dataset):
 
     def _get_output(self, idx: int) -> np.array:
 
-        STEPS_NO = 9  # Number of steps in the output
+        step_duration = self.audios[idx].duration / self.target_timesteps
 
-        step_duration = self.audios[idx].duration / STEPS_NO
-
-        output_size = (3 * len(self.labels), STEPS_NO)
+        output_size = (3 * len(self.labels), self.target_timesteps)
 
         output = np.zeros(output_size)
 

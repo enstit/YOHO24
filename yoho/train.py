@@ -308,11 +308,15 @@ def main(opt: argparse.Namespace):
         hop_size=opt.audio_hop,
     )
 
+    # Get number of workers from slurm (default: 4)
+    num_workers = int(os.getenv("SLURM_CPUS_PER_TASK", 4))
+    logging.debug(f"Number of workers for the data loader: {num_workers}")
+
     train_dataloader = YOHODataGenerator(
-        train_dataset, batch_size=opt.batch_size, shuffle=True, pin_memory=True, num_workers=4
+        train_dataset, batch_size=opt.batch_size, shuffle=True, pin_memory=True, num_workers=num_workers
     )
 
-    val_dataloader = YOHODataGenerator(val_dataset, batch_size=opt.batch_size, pin_memory=True, num_workers=4)
+    val_dataloader = YOHODataGenerator(val_dataset, batch_size=opt.batch_size, pin_memory=True, num_workers=num_workers)
 
     # Create the model
     model = YOHO(name=opt.name, input_shape=(1, opt.mel_bands, 257), n_classes=len(train_dataset.labels)).to(device)
