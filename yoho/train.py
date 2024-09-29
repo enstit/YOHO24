@@ -183,10 +183,10 @@ def load_dataset(
     # Check if exists a pickle file on the same location
     pickle_file = Path(filepath).with_suffix(".pkl")
     if pickle_file.exists():
-        logger.info(f"Loading the dataset from the pickle file: {pickle_file}")
+        logger.debug(f"Loading the dataset from the pickle file: {pickle_file}")
         return YOHODataset.load(pickle_file)
 
-    logging.debug(f"Loading dataset from CSV file: {filepath}")
+    logger.debug(f"Loading dataset from CSV file: {filepath}")
 
     if not classes:
         # Get the classes from the CSV file
@@ -310,7 +310,7 @@ def main(opt: argparse.Namespace):
 
     # Get number of workers from slurm (default: 4)
     num_workers = int(os.getenv("SLURM_CPUS_PER_TASK", 4))
-    logging.debug(f"Number of workers for the data loader: {num_workers}")
+    logger.debug(f"Number of workers for the data loader: {num_workers}")
 
     train_dataloader = YOHODataGenerator(
         train_dataset, batch_size=opt.batch_size, shuffle=True, pin_memory=True, num_workers=num_workers
