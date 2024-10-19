@@ -25,11 +25,37 @@ specifying wheter if you want to download `urbansed` dataset or `tut` dataset.
 Regarding the relevant licenses, please refer to the individual sources.
 
 ### Train
-Model weight are available in the [`models`](./models) folder. If you want to train your personal version of `YOHO`, modify the [`yoho/train.py`](./yoho/train.py) script and start the training with
+Model weight are available in the [`models`](./models) folder, but it is possible to call the [`yoho/train.py`](./yoho/train.py) script to train a custom model.
+
+The optional arguments to the script are:
+
+|**Argument**|**default**|**Description**|
+|:--|:-:|:--|
+`--name` | `YOHO` | name of the model to train
+`--weights-path` | `models/model.pt` | where to save model weights during training
+`--losses-path` | `models/losses.json` | where to save training losses during training
+`--train-path` | `data/processed/train.csv` | CSV file path for the training set
+`--validate-path` | `data/processed/validate.csv` | CSV file path for the validation set
+`--classes` | None | list of unique audio classes in the sets. If not specifyied, it is guessed by looking at training set labels
+`--audio-win` | 2.56 | audio duration (in seconds) of model inputs (extracted from dataset audios)
+`--audio-hop` | 1.00 | hop length (in seconds) of model inputs (extracted from dataset audios)
+`--mel-bands` | 40 | number of mel bands for the mel spectrogram
+`--mel-win` | 0.04 | mel spectrogram window length (in seconds)
+`--mel-hop` | 0.01 | mel spectrogram window hop (in seconds)
+`--batch-size` | 32 | batch size for the training
+`--epochs` | 50 | maximum number of epochs to train the model for
+`--device` | `cuda` | device to use for model training
+`--cosine-annealing` | False | specify this argument if you want to use Cosine Annealing[^10] during training
+`--autocast` | False | specify this argument if you want to use autocast during training
+`--spec-augment` | False | specify this argument if you want to augment the training dataset with SpecAugment augmentations[^4]
+`--random-seed` | 0 | random seed used during training
+`--verbose` | False | specify this argument if you want to log additional information during training
+
+An example of training call is:
 ```python
-python3 -m yoho.train [--name YourCustomModelName] [--epochs 50] [--batch-size 32] [--cosine-annealing]
+python3 -m yoho.train --name MyCustomYOHO --train-path data/processed/train.csv --validate-path data/processed/validate.csv --classes speech music --batch-size 128 --epochs 100 --cosine-annealing --spec-augment --verbose
 ```
-It is also possible to pass the `[--spec-augment]` parameter if you want to augment your training dataset with SpecAugment augmentations[^4].
+to train a music-speech detector.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
@@ -60,3 +86,6 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 [^9]:
     Wang, C.-Y., Bochkovskiy, A., and Liao, H.-Y. M., "YOLOv7: Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors", *arXiv e-prints*, 2022. [doi:10.48550/arXiv.2207.02696](https://doi.org/10.48550/arXiv.2207.02696).
+
+[^10]:
+    Loshchilov, I. and Hutter, F., "SGDR: Stochastic Gradient Descent with Restarts", *arXiv e-prints*, 2016. [doi:10.48550/arXiv.1608.03983](https://doi.org/10.48550/arXiv.1608.03983).
