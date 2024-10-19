@@ -36,10 +36,10 @@ def load_checkpoint(
 ) -> tuple:
 
     if not os.path.exists(weights_path):
-        logger.info("No checkpoint found at {weights_path}, start training from scratch")
+        logger.debug("No checkpoint found at {weights_path}, start training from scratch")
         return model, optimizer, 0, None, None
 
-    logger.info(f"Found checkpoint file at {weights_path}, loading checkpoint")
+    logger.debug(f"Found checkpoint file at {weights_path}, loading checkpoint")
     checkpoint = torch.load(weights_path)
 
     model.load_state_dict(checkpoint["state_dict"])
